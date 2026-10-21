@@ -537,7 +537,11 @@ Qt6 Widgets application `gkey-config` (implemented in milestone 4):
   (also started/stopped with MR on the device), playback on the device.
 * Status bar and tray icon show whether the daemon runs; it can be started, stopped and
   restarted (`systemctl --user`). Single instance; closing the window keeps the tray icon.
-* Translations via Qt Linguist: English (source) and German.
+* Translations via Qt Linguist, chosen by the system language (`LANGUAGE`, `LC_ALL`, `LC_MESSAGES`,
+  `LANG`) without a language setting of its own: English (source and fallback), German, French,
+  Italian, Spanish and Portuguese (Brazilian), built into the binary. The desktop files carry the
+  same languages. Daemon log messages stay English; LCD day names follow the daemon's locale and are
+  reduced to ASCII (é → e, ä → ae). A test fails when a translation is missing or unfinished.
 * `gkey-config --screenshot file [--show-key G4 --show-tab 0]` renders the window to an image
   (documentation).
 

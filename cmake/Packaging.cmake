@@ -30,6 +30,8 @@ set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "systemd, udev")
 # Both drive the G13; the old libusb driver detaches the kernel driver.
 set(CPACK_DEBIAN_PACKAGE_CONFLICTS "linux-g13-driver")
+# Qt's own translations (standard buttons such as "Cancel") in the system language.
+set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "qt6-translations-l10n")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     "${GKEY_PACKAGING_DIR}/deb/postinst"
     "${GKEY_PACKAGING_DIR}/deb/postrm")
@@ -41,6 +43,7 @@ set(CPACK_RPM_PACKAGE_LICENSE "GPL-2.0-only")
 set(CPACK_RPM_PACKAGE_GROUP "Applications/System")
 set(CPACK_RPM_PACKAGE_REQUIRES "systemd, systemd-udev")
 set(CPACK_RPM_PACKAGE_CONFLICTS "linux-g13-driver")
+set(CPACK_RPM_PACKAGE_SUGGESTS "qt6-qttranslations")
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE   "${GKEY_PACKAGING_DIR}/rpm/post")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${GKEY_PACKAGING_DIR}/rpm/postun")
 # Directories owned by the base system must not be claimed by the package.

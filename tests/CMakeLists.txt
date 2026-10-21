@@ -27,3 +27,13 @@ if(DBUS_RUN_SESSION)
 else()
     message(STATUS "dbus-run-session not found: D-Bus test disabled")
 endif()
+
+# Completeness of the GUI translations (needs lupdate from Qt Linguist).
+if(BUILD_GUI)
+    gkey_add_test(tst_translations)
+    target_compile_definitions(tst_translations PRIVATE
+        GKEY_LUPDATE="$<TARGET_FILE:Qt6::lupdate>"
+        GKEY_GUI_SOURCE_DIR="${CMAKE_SOURCE_DIR}/src/gui"
+        GKEY_TS_DIR="${CMAKE_SOURCE_DIR}/translations"
+    )
+endif()

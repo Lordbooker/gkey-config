@@ -33,7 +33,7 @@ target_link_libraries(gkey-config PRIVATE
 # Translations: English is the source language and the fallback. The .qm
 # files are built into the binary under :/i18n. After text changes:
 #   cmake --build build --target update_translations
-set(GKEY_GUI_LANGUAGES de)
+set(GKEY_GUI_LANGUAGES de es fr it pt)
 set(GKEY_GUI_TS_FILES)
 foreach(lang IN LISTS GKEY_GUI_LANGUAGES)
     list(APPEND GKEY_GUI_TS_FILES ${CMAKE_SOURCE_DIR}/translations/gkey-config_${lang}.ts)

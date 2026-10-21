@@ -124,6 +124,25 @@ immediately and the daemon picks it up. The profile list and the layer buttons M
 device as well. Macros are created and recorded in the *Macros* tab; MR on the device starts and
 stops a recording. Closing the window keeps the tray icon running.
 
+## Translations
+
+The configuration tool uses the system language (`LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG`);
+there is no language setting of its own. Included are **English** (source and fallback), **German**,
+**French**, **Italian**, **Spanish** and **Portuguese** (Brazilian); all other languages use English.
+The translations are built into `gkey-config`, no extra files are installed. The French, Italian,
+Spanish and Portuguese texts have not been reviewed by native speakers yet – corrections are welcome.
+
+Standard dialog buttons (e.g. *Cancel*) come from Qt's own translations – package
+`qt6-translations` (Arch), `qt6-translations-l10n` (Debian/Ubuntu) or `qt6-qttranslations`
+(Fedora). The daemon's log messages are English; the day names on the LCD clock follow the language
+of the user session.
+
+To add a language, append its code to `GKEY_GUI_LANGUAGES` in `src/gui/CMakeLists.txt`, run
+`cmake --build build --target update_translations` to create `translations/gkey-config_<code>.ts`,
+translate it with Qt Linguist (`linguist6` or `linguist`) and rebuild. The same target updates all
+`.ts` files after text changes in the code; the test `tst_translations` fails while a text is
+untranslated.
+
 ## Permissions
 
 The udev rule `70-gkey-config.rules` gives the user of the active local session access to the

@@ -69,6 +69,11 @@ void TestLcd::ascii()
     QCOMPARE(LcdFrame::toAscii(QStringLiteral("Grüße")), QStringLiteral("Gruesse"));
     QCOMPARE(LcdFrame::toAscii(QStringLiteral("Café")), QStringLiteral("Cafe"));
     QCOMPARE(LcdFrame::toAscii(QStringLiteral("日")), QStringLiteral("?"));
+    // Day names and punctuation of the supported GUI languages.
+    QCOMPARE(LcdFrame::toAscii(QStringLiteral("sábado, março")), QStringLiteral("sabado, marco"));
+    QCOMPARE(LcdFrame::toAscii(QStringLiteral("miércoles, año")), QStringLiteral("miercoles, ano"));
+    QCOMPARE(LcdFrame::toAscii(QStringLiteral("«\u00a0œuvre\u00a0» l’été")), QStringLiteral("\" oeuvre \" l'ete"));
+    QCOMPARE(LcdFrame::toAscii(QStringLiteral("1ª 2º")), QStringLiteral("1a 2o"));
 }
 
 void TestLcd::elide()

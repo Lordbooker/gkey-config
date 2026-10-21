@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="de_DE">
 <context>
@@ -208,8 +208,8 @@
         <translation>Diese Seite am Gerät anzeigen</translation>
     </message>
     <message>
-        <source>Scripts can write to the text page, e.g.:&lt;br&gt;&lt;tt&gt;busctl --user call io.github.lordbooker.GKeyConfig /io/github/lordbooker/GKeyConfig io.github.lordbooker.GKeyConfig1 LcdText si "Hello" 5&lt;/tt&gt;</source>
-        <translation>Skripte können auf die Textseite schreiben, z. B.:&lt;br&gt;&lt;tt&gt;busctl --user call io.github.lordbooker.GKeyConfig /io/github/lordbooker/GKeyConfig io.github.lordbooker.GKeyConfig1 LcdText si "Hallo" 5&lt;/tt&gt;</translation>
+        <source>Scripts can write to the text page, e.g.:&lt;br&gt;&lt;tt&gt;busctl --user call io.github.lordbooker.GKeyConfig /io/github/lordbooker/GKeyConfig io.github.lordbooker.GKeyConfig1 LcdText si &quot;Hello&quot; 5&lt;/tt&gt;</source>
+        <translation>Skripte können auf die Textseite schreiben, z. B.:&lt;br&gt;&lt;tt&gt;busctl --user call io.github.lordbooker.GKeyConfig /io/github/lordbooker/GKeyConfig io.github.lordbooker.GKeyConfig1 LcdText si &quot;Hallo&quot; 5&lt;/tt&gt;</translation>
     </message>
     <message>
         <source>Status (profile and layer)</source>
@@ -331,7 +331,7 @@
         <translation>Ungespeicherte Änderungen</translation>
     </message>
     <message>
-        <source>Discard the changes to the macro "%1"?</source>
+        <source>Discard the changes to the macro &quot;%1&quot;?</source>
         <translation>Die Änderungen am Makro „%1“ verwerfen?</translation>
     </message>
     <message>
@@ -339,7 +339,7 @@
         <translation>Neues Makro</translation>
     </message>
     <message>
-        <source>A macro "%1" already exists.</source>
+        <source>A macro &quot;%1&quot; already exists.</source>
         <translation>Ein Makro „%1“ existiert bereits.</translation>
     </message>
     <message>
@@ -347,7 +347,7 @@
         <translation>Makro löschen</translation>
     </message>
     <message>
-        <source>Delete the macro "%1"? Keys bound to it will do nothing.</source>
+        <source>Delete the macro &quot;%1&quot;? Keys bound to it will do nothing.</source>
         <translation>Das Makro „%1“ löschen? Damit belegte Tasten haben dann keine Funktion.</translation>
     </message>
     <message>
@@ -446,7 +446,7 @@
         <translation>Farbe:</translation>
     </message>
     <message>
-        <source>The daemon may not change the LEDs. Add your user to the group "gkey" (sudo usermod -aG gkey $USER), log out and back in, and replug the device.</source>
+        <source>The daemon may not change the LEDs. Add your user to the group &quot;gkey&quot; (sudo usermod -aG gkey $USER), log out and back in, and replug the device.</source>
         <translation>Der Daemon darf die LEDs nicht ändern. Füge deinen Benutzer der Gruppe „gkey“ hinzu (sudo usermod -aG gkey $USER), melde dich ab und wieder an und stecke das Gerät neu ein.</translation>
     </message>
     <message>
@@ -486,8 +486,8 @@
         <translation>Über gkey-config</translation>
     </message>
     <message>
-        <source>&lt;b&gt;gkey-config&lt;/b&gt; %1&lt;br&gt;Configuration of the gaming keys of Logitech G keyboards driven by the Linux kernel driver hid-lg-g15.&lt;br&gt;&lt;br&gt;License: GPL-2.0-only&lt;br&gt;&lt;a href="https://github.com/Lordbooker/gkey-config"&gt;github.com/Lordbooker/gkey-config&lt;/a&gt;</source>
-        <translation>&lt;b&gt;gkey-config&lt;/b&gt; %1&lt;br&gt;Konfiguration der G-Tasten von Logitech-G-Tastaturen mit dem Linux-Kerneltreiber hid-lg-g15.&lt;br&gt;&lt;br&gt;Lizenz: GPL-2.0-only&lt;br&gt;&lt;a href="https://github.com/Lordbooker/gkey-config"&gt;github.com/Lordbooker/gkey-config&lt;/a&gt;</translation>
+        <source>&lt;b&gt;gkey-config&lt;/b&gt; %1&lt;br&gt;Configuration of the gaming keys of Logitech G keyboards driven by the Linux kernel driver hid-lg-g15.&lt;br&gt;&lt;br&gt;License: GPL-2.0-only&lt;br&gt;&lt;a href=&quot;https://github.com/Lordbooker/gkey-config&quot;&gt;github.com/Lordbooker/gkey-config&lt;/a&gt;</source>
+        <translation>&lt;b&gt;gkey-config&lt;/b&gt; %1&lt;br&gt;Konfiguration der G-Tasten von Logitech-G-Tastaturen mit dem Linux-Kerneltreiber hid-lg-g15.&lt;br&gt;&lt;br&gt;Lizenz: GPL-2.0-only&lt;br&gt;&lt;a href=&quot;https://github.com/Lordbooker/gkey-config&quot;&gt;github.com/Lordbooker/gkey-config&lt;/a&gt;</translation>
     </message>
     <message>
         <source>%1 — layer M%2</source>
@@ -510,7 +510,7 @@
         <translation>Name:</translation>
     </message>
     <message>
-        <source>A profile "%1" already exists.</source>
+        <source>A profile &quot;%1&quot; already exists.</source>
         <translation>Ein Profil „%1“ existiert bereits.</translation>
     </message>
     <message>
@@ -542,7 +542,7 @@
         <translation>Das letzte Profil kann nicht gelöscht werden.</translation>
     </message>
     <message>
-        <source>Delete the profile "%1"?</source>
+        <source>Delete the profile &quot;%1&quot;?</source>
         <translation>Das Profil „%1“ löschen?</translation>
     </message>
     <message>
@@ -562,7 +562,7 @@
         <translation>Daemon läuft, %1 nicht verbunden.</translation>
     </message>
     <message>
-        <source>Active on the device: profile "%1".</source>
+        <source>Active on the device: profile &quot;%1&quot;.</source>
         <translation>Am Gerät aktiv: Profil „%1“.</translation>
     </message>
     <message>
