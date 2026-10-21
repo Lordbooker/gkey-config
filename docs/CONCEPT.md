@@ -29,18 +29,25 @@ The Logitech Z-10 speakers are also handled by `hid-lg-g15`, but are out of scop
 
 ### 1.2 Minimum kernel
 
-* G13: **Linux 6.19** (first release with G13 support in `hid-lg-g15`).
-* G11, G15, G15 v2, G510: present in all kernels shipped by the target distributions *(verify per
-  release before publishing packages)*.
+**Linux 6.19** for the whole project (first release with G13 support in `hid-lg-g15`). G11, G15,
+G15 v2 and G510 are supported by older kernels as well, but packages are only built for
+distribution releases that ship 6.19 or newer *(decided)*.
 
 The daemon checks at runtime which models are actually usable and reports missing support instead
 of failing silently (see 9.2).
 
 ### 1.3 Target platforms
 
-Arch Linux, Debian-based (Debian, Ubuntu and derivatives) and Fedora-based distributions;
-KDE Plasma (Wayland) and GNOME (Wayland). X11 is not a target but is expected to work, because
-nothing below the GUI depends on the display server.
+Arch Linux, Debian-based (Debian, Ubuntu and derivatives) and Fedora-based distributions, each only
+in releases with kernel ≥ 6.19 *(decided)*; the exact release list is fixed when packaging starts
+(milestone 8). KDE Plasma (Wayland) and GNOME (Wayland). X11 is not a target but is expected to
+work, because nothing below the GUI depends on the display server.
+
+### 1.3a Test hardware
+
+Only a **G13** is available for testing *(decided)*. The model files for G11, G15, G15 v2 and G510
+are derived from the kernel source only and are marked **untested** in the GUI and documentation
+until someone with the device confirms them.
 
 ### 1.4 Version 1 includes
 
@@ -360,7 +367,7 @@ The daemon reports (log, D-Bus status, GUI) why a connected device is not usable
 * `/dev/uinput` not accessible.
 
 linux-g13-driver and gkey-config cannot drive the same G13 at the same time; the packages declare a
-conflict for that reason *(to decide: hard conflict or warning only)*.
+**package conflict** with `linux-g13-driver` (and the AUR `linux-g13-driver-git`) *(decided)*.
 
 ### 9.3 Virtual device
 
@@ -418,21 +425,22 @@ Service `io.github.lordbooker.GKeyConfig`, object `/io/github/lordbooker/GKeyCon
 | 4 | GUI: device image, bindings, macros, backlight, tray | G13 |
 | 5 | G13 stick modes, G13 LCD | G13 |
 | 6 | Per-application profiles (KWin script, GNOME extension) | – |
-| 7 | G11/G15/G15 v2/G510 model files and image areas, diagnostics, import from linux-g13-driver | each model |
+| 7 | G11/G15/G15 v2/G510 model files (untested) and image areas, diagnostics, import from linux-g13-driver | – (G13 only) |
 | 8 | Packages (Arch/AUR, Debian/Ubuntu, Fedora), release workflow, documentation | – |
 
 ---
 
-## 14. Open points
+## 14. Decisions
 
-1. **File format** for settings, profiles and macros: JSON (Qt built-in, no extra dependency, no
-   comments) or TOML (comments, nicer to edit by hand, needs a TOML library such as toml++).
-2. **Package targets**: same list as linux-g13-driver (Debian 12/13, Ubuntu 22.04/24.04/26.04,
-   Fedora 43/44, AUR)? On releases with a kernel older than 6.19 the G13 is not usable.
-3. **Test hardware**: which models are available for testing? Models without test hardware can be
-   shipped as "untested".
-4. **Conflict with linux-g13-driver**: hard package conflict or warning only.
-5. **LED permissions**: sysfs attributes cannot carry ACLs. Options: (a) world-writable
-   `brightness`/`multi_intensity` of the matching LEDs only (simple; any local user could change LED
-   colours), (b) group-writable for a dedicated group the user is added to (needs a one-time setup
-   step), (c) a small privileged helper (most effort).
+| # | Topic | Decision (2026-10-21) |
+|---|---|---|
+| 1 | File format for settings, profiles, macros | JSON (Qt built-in, no extra dependency) |
+| 2 | Package targets | only distribution releases with kernel ≥ 6.19 |
+| 3 | Test hardware | G13 only; other models shipped as untested |
+| 4 | linux-g13-driver | package conflict |
+
+## 15. Open points
+
+1. **LED permissions**: sysfs attributes cannot carry ACLs, so `uaccess` does not work for them.
+   Options: (a) world-writable `brightness`/`multi_intensity` of the matching LEDs only,
+   (b) group-writable for a dedicated group, (c) a small privileged helper. Under discussion.
