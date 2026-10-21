@@ -189,7 +189,10 @@ void Daemon::onProfilesChanged(const QString &modelId)
     ModelContext &ctx = it.value();
     logStoreMessages(ctx);
     const QString previous = ctx.profile.name();
+    const QByteArray previousContent = ctx.profile.toJson();
     selectProfile(ctx, previous);
+    if (ctx.profile.name() == previous && ctx.profile.toJson() == previousContent)
+        return;   // e.g. our own write of the default profile, or another profile changed
     applyProfile(ctx);
     if (ctx.profile.name() == previous)
         qCInfo(lcDaemon).noquote() << QStringLiteral("%1: profile \"%2\" reloaded").arg(ctx.model.name(), previous);
