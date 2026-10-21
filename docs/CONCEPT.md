@@ -49,6 +49,18 @@ Only a **G13** is available for testing *(decided)*. The model files for G11, G1
 are derived from the kernel source only and are marked **untested** in the GUI and documentation
 until someone with the device confirms them.
 
+**G13 verified on hardware on 2026-10-21** (Arch Linux, kernel 7.2.11, `scripts/probe-g13.sh` and
+`evtest`):
+
+* Keypad: all event codes of section 2.2 confirmed (G1–G22, L1–L4, round button, M1–M3, MR,
+  light button).
+* Stick: `BTN_THUMB`, `BTN_BASE`, `BTN_BASE2` confirmed; `ABS_X` and `ABS_Y` reach the full range
+  0–255. The **rest position is not 128**: it was measured at X ≈ 137–139, Y ≈ 138–140 with a jitter
+  of about ±3 (see 7.1).
+* LEDs: names, types and ranges as in section 2.3; power-on backlight was `multi_intensity` 0 255 0.
+* Permissions without our udev rule: keypad and hidraw root/`input` only; the stick node already
+  carries an ACL for the session user (set by the system's joystick rules); LEDs root-only.
+
 ### 1.4 Version 1 includes
 
 Keys, M1–M3 modes, MR, LEDs, profiles, macros, G13 stick modes, G13 LCD, per-application profiles,
@@ -313,6 +325,10 @@ when the GUI is open (daemon emits a D-Bus signal) and toggles the MR LED.
 | `passthrough` | stick device is not grabbed; games see the joystick |
 
 The stick buttons (`BTN_BASE`, `BTN_BASE2`, `BTN_THUMB`) are always bindable keys.
+
+The dead zone is centred on the stick's **rest position**, not on 128 (the measured rest position of
+the test G13 is about 138/139). Default: the position read when the device is connected, if it is
+plausible (within ±24 of 128), otherwise 128; a calibration in the GUI follows with milestone 5.
 
 ### 7.2 LCD (version 1)
 

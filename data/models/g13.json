@@ -1,7 +1,7 @@
 {
   "id": "g13",
   "name": "Logitech G13",
-  "tested": false,
+  "tested": true,
   "minKernel": "6.19",
   "usb": [
     { "vendor": "046d", "product": "c21c" }
