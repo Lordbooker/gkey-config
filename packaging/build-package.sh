@@ -59,7 +59,31 @@ cmake -S "$REPO_DIR" -B "$BUILD_DIR" "$@"
 cmake --build "$BUILD_DIR" -j "$(nproc)"
 (cd "$BUILD_DIR" && cpack -G "$GENERATOR")
 
+# Check the package: it installs with its dependencies (and runs its scripts),
+# and every recommended package exists in the distribution.
+PACKAGE=$(find "$BUILD_DIR" -maxdepth 1 \( -name '*.deb' -o -name '*.rpm' \) | head -n 1)
+case "$GENERATOR" in
+    DEB)
+        dpkg-deb -I "$PACKAGE"
+        apt-get install -y -q --no-install-recommends "$PACKAGE"
+        for dep in $(dpkg-deb -f "$PACKAGE" Recommends | tr -d ' ' | tr ',' ' '); do
+            apt-cache show "$dep" >/dev/null 2>&1 || { echo "Recommended package not found: $dep" >&2; exit 1; }
+        done
+        ;;
+    RPM)
+        rpm -qpi "$PACKAGE"
+        echo "Requires:";   rpm -qp --requires "$PACKAGE"
+        echo "Recommends:"; rpm -qp --recommends "$PACKAGE"
+        echo "Suggests:";   rpm -qp --suggests "$PACKAGE"
+        dnf install -y -q --setopt=install_weak_deps=False "$PACKAGE"
+        for dep in $(rpm -qp --recommends "$PACKAGE") $(rpm -qp --suggests "$PACKAGE"); do
+            dnf -q repoquery --whatprovides "$dep" | grep -q . || { echo "Recommended package not found: $dep" >&2; exit 1; }
+        done
+        ;;
+esac
+gkeyd --list-models
+
 mkdir -p "$OUT_DIR"
-find "$BUILD_DIR" -maxdepth 1 \( -name '*.deb' -o -name '*.rpm' \) -exec cp {} "$OUT_DIR"/ \;
+cp "$PACKAGE" "$OUT_DIR"/
 echo "Packages in $OUT_DIR:"
 ls -1 "$OUT_DIR"

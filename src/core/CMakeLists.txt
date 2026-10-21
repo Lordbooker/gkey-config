@@ -13,6 +13,8 @@ add_library(gkey-core STATIC
     ConfigPaths.h
     DaemonState.cpp
     DaemonState.h
+    DeviceDiagnosis.cpp
+    DeviceDiagnosis.h
     DeviceModel.cpp
     DeviceModel.h
     DirectoryWatcher.cpp

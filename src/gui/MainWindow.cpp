@@ -7,6 +7,7 @@
 #include "BindingEditor.h"
 #include "ConfigPaths.h"
 #include "DaemonClient.h"
+#include "DeviceDiagnosis.h"
 #include "DeviceView.h"
 #include "LcdPage.h"
 #include "Settings.h"
@@ -21,6 +22,8 @@
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QCloseEvent>
+#include <QDesktopServices>
+#include <QDir>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QColorDialog>
@@ -43,6 +46,7 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
+#include <QUrl>
 #include <QVBoxLayout>
 
 #include <linux/input-event-codes.h>
@@ -148,6 +152,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
             [this](const QString &message) { statusBar()->showMessage(message, 8000); });
     connect(m_session, &SessionSetup::ledAccessFinished, this, &MainWindow::onLedAccessFinished);
     m_session->refreshDaemonAutostart();
+    // Plugging in or replugging a device that the kernel does not provide
+    // raises no daemon signal: re-check the reason while the window is shown.
+    auto *diagnosisTimer = new QTimer(this);
+    diagnosisTimer->setInterval(3000);
+    connect(diagnosisTimer, &QTimer::timeout, this, [this] {
+        if (isVisible())
+            updateStatusText();
+    });
+    diagnosisTimer->start();
 
     // Start with a connected model, else the first one.
     const QStringList connected = m_client->connectedModels();
@@ -273,6 +286,9 @@ void MainWindow::setupUi()
 
     // --- Status bar: daemon state ---------------------------------------------------------
     m_daemonLabel = new QLabel(this);
+    // Long diagnosis texts wrap instead of widening the window.
+    m_daemonLabel->setWordWrap(true);
+    m_daemonLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     m_daemonButton = new QPushButton(this);
     statusBar()->addWidget(m_daemonLabel, 1);
     statusBar()->addPermanentWidget(m_daemonButton);
@@ -283,10 +299,9 @@ void MainWindow::setupUi()
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(tr("Open profile folder"), this, [this] {
         if (m_store)
-            QProcess::startDetached(QStringLiteral("xdg-open"), {m_store->directory()});
+            openFolder(m_store->directory());
     });
-    fileMenu->addAction(tr("Open macro folder"), this,
-                        [this] { QProcess::startDetached(QStringLiteral("xdg-open"), {m_macros->directory()}); });
+    fileMenu->addAction(tr("Open macro folder"), this, [this] { openFolder(m_macros->directory()); });
     fileMenu->addSeparator();
     fileMenu->addAction(tr("&Quit"), QKeySequence::Quit, this, [this] {
         m_quitting = true;
@@ -626,17 +641,7 @@ void MainWindow::onChooseBacklight()
 void MainWindow::updateDaemonState()
 {
     const bool available = m_client->available();
-    QString text;
-    if (!available) {
-        text = tr("The daemon gkeyd is not running: changes are saved but not active.");
-    } else {
-        const bool connected = m_client->connectedModels().contains(m_model.id());
-        text = connected ? tr("Daemon running, %1 connected.").arg(m_model.name())
-                         : tr("Daemon running, %1 not connected.").arg(m_model.name());
-        if (connected && m_client->activeProfile(m_model.id()) != m_profileName && !m_profileName.isEmpty())
-            text += u' ' + tr("Active on the device: profile \"%1\".").arg(m_client->activeProfile(m_model.id()));
-    }
-    m_daemonLabel->setText(text);
+    updateStatusText();
     m_daemonButton->setText(available ? tr("Restart daemon") : tr("Start daemon"));
     updateLedHint();
     m_stickPage->setRestPosition(m_client->stickCenter(m_model.id()));
@@ -646,6 +651,63 @@ void MainWindow::updateDaemonState()
     if (m_trayStatus) {
         m_trayStatus->setText(available ? tr("Daemon: running") : tr("Daemon: stopped"));
         m_trayStartStop->setText(available ? tr("Stop daemon") : tr("Start daemon"));
+    }
+}
+
+QString MainWindow::diagnosisText() const
+{
+    const DeviceDiagnosis::Result result = DeviceDiagnosis::diagnose(m_model);
+    switch (result.problem) {
+    case DeviceDiagnosis::Problem::KernelTooOld:
+        return tr("%1 is plugged in, but the kernel %2 is too old: Linux %3 or newer is needed.")
+            .arg(m_model.name(), result.detail, m_model.minKernel());
+    case DeviceDiagnosis::Problem::UsedByOtherProgram:
+        return tr("%1 is used directly by another program (e.g. linux-g13-driver). Stop it and replug the device.")
+            .arg(m_model.name());
+    case DeviceDiagnosis::Problem::NoKernelDriver:
+        return tr("%1 is plugged in, but the kernel driver hid-lg-g15 does not drive it (driver: %2).")
+            .arg(m_model.name(), result.detail.isEmpty() ? tr("none") : result.detail);
+    case DeviceDiagnosis::Problem::None:
+        break;
+    }
+    if (result.plugged && m_client->available() && !m_client->connectedModels().contains(m_model.id()))
+        return tr("%1 is plugged in, but the daemon cannot use it. Replug the device; if that does not help, "
+                  "check the udev rule and the daemon log (journalctl --user -u gkeyd).")
+            .arg(m_model.name());
+    return {};
+}
+
+// Status bar: daemon state and, while the device is not usable, the reason.
+void MainWindow::updateStatusText()
+{
+    const bool available = m_client->available();
+    const bool connected = available && m_client->connectedModels().contains(m_model.id());
+    QString text;
+    if (!available) {
+        text = tr("The daemon gkeyd is not running: changes are saved but not active.");
+    } else if (connected) {
+        text = tr("Daemon running, %1 connected.").arg(m_model.name());
+        if (m_client->activeProfile(m_model.id()) != m_profileName && !m_profileName.isEmpty())
+            text += u' ' + tr("Active on the device: profile \"%1\".").arg(m_client->activeProfile(m_model.id()));
+    } else {
+        text = tr("Daemon running, %1 not connected.").arg(m_model.name());
+    }
+    if (!connected && !m_model.id().isEmpty()) {
+        const QString reason = diagnosisText();
+        if (!reason.isEmpty())
+            text = available ? reason : text + u' ' + reason;
+    }
+    m_daemonLabel->setText(text);
+    m_daemonLabel->setToolTip(text);
+}
+
+void MainWindow::openFolder(const QString &path)
+{
+    QDir().mkpath(path);
+    if (!QDesktopServices::openUrl(QUrl::fromLocalFile(path))) {
+        // No file manager handler (e.g. xdg-utils missing): show the path instead.
+        QMessageBox::information(this, tr("Open folder"),
+                                 tr("The folder could not be opened. It is located at:\n%1").arg(path));
     }
 }
 

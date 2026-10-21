@@ -23,6 +23,8 @@ First release.
 - D-Bus API on the session bus, with D-Bus activation of the daemon.
 - Application *G-Key Configuration* with drawn device picture, tray icon, first-start setup of
   the daemon autostart and LED access, per-user autostart settings.
+- Diagnosis in the status bar when a plugged-in device is not usable (kernel too old, kernel driver
+  not active, device used by another program).
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR packages `gkey-config` and `gkey-config-git`.
 

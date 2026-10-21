@@ -13,7 +13,10 @@ url="https://github.com/Lordbooker/gkey-config"
 license=('GPL-2.0-only')
 depends=('qt6-base' 'libevdev' 'systemd-libs' 'systemd')
 makedepends=('cmake' 'qt6-tools')
-optdepends=('qt6-translations: translated standard buttons in the configuration tool')
+optdepends=('polkit: allow LED control from the configuration tool'
+            'qt6-wayland: native Wayland support'
+            'xdg-utils: open the profile and macro folders'
+            'qt6-translations: translated standard buttons in the configuration tool')
 conflicts=('gkey-config-git' 'linux-g13-driver' 'linux-g13-driver-git')
 install=gkey-config.install
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
