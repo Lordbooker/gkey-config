@@ -23,6 +23,7 @@ gkey_add_test(tst_leds LIBS gkeyd-lib)
 gkey_add_test(tst_stick)
 gkey_add_test(tst_lcd)
 gkey_add_test(tst_session)
+gkey_add_test(tst_diagnosis)
 
 # The D-Bus test needs a private session bus.
 find_program(DBUS_RUN_SESSION dbus-run-session)

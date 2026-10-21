@@ -57,6 +57,8 @@ sudo dnf install ./gkey-config-<version>-1.fc44.x86_64.rpm
 yay -S gkey-config
 ```
 
+The package manager installs all dependencies. Recommended packages are installed by default
+as well: `pkexec`/`polkit` (LED access from the application), the Qt Wayland plugin and `xdg-utils`.
 gkey-config conflicts with [linux-g13-driver](#relation-to-linux-g13-driver); the package manager
 removes the old driver or asks you to.
 
@@ -92,7 +94,9 @@ the device as well.
 | LCD | pages and their order; the round key next to the LCD keys pages through them |
 | Macros | create, record and edit macros (shared by all profiles and devices) |
 
-Closing the window keeps the tray icon running; the daemon works without the application.
+Closing the window keeps the tray icon running; the daemon works without the application. GNOME
+shows tray icons only with the extension *AppIndicator and KStatusNotifierItem Support* (preinstalled
+on Ubuntu); without it the application simply runs without a tray icon.
 
 ### Files
 
@@ -136,8 +140,11 @@ Without membership in `gkey` everything except the LEDs works. To add a user by 
 
 - **Daemon log:** `journalctl --user -u gkeyd -f`
 - **Daemon state:** *Settings* menu and status bar of the application, or the `Status` call above
-- **Keys do nothing:** check that no other tool grabs the device (e.g. linux-g13-driver, input-remapper)
-  and replug the device.
+- **Device not connected:** the status bar of the application names the reason when the device is
+  plugged in but not usable – kernel older than 6.19, kernel driver `hid-lg-g15` not active, or
+  another program (e.g. linux-g13-driver) using the device directly.
+- **Keys do nothing:** check that no other tool grabs the device (e.g. input-remapper) and replug
+  the device.
 - **LEDs do not change:** see the *Backlight* tab; after joining the group `gkey` a complete
   logout is needed.
 - **Report a problem:** attach the output of [`scripts/probe-g13.sh`](scripts/probe-g13.sh) and the

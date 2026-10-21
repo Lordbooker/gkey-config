@@ -693,6 +693,36 @@
         <source>Later</source>
         <translation>Später</translation>
     </message>
+    <message>
+        <source>%1 is plugged in, but the kernel %2 is too old: Linux %3 or newer is needed.</source>
+        <translation>%1 ist angeschlossen, aber der Kernel %2 ist zu alt: Linux %3 oder neuer wird benötigt.</translation>
+    </message>
+    <message>
+        <source>%1 is used directly by another program (e.g. linux-g13-driver). Stop it and replug the device.</source>
+        <translation>%1 wird direkt von einem anderen Programm verwendet (z. B. linux-g13-driver). Beende es und stecke das Gerät neu ein.</translation>
+    </message>
+    <message>
+        <source>%1 is plugged in, but the kernel driver hid-lg-g15 does not drive it (driver: %2).</source>
+        <translation>%1 ist angeschlossen, wird aber nicht vom Kerneltreiber hid-lg-g15 gesteuert (Treiber: %2).</translation>
+    </message>
+    <message>
+        <source>none</source>
+        <translation>keiner</translation>
+    </message>
+    <message>
+        <source>%1 is plugged in, but the daemon cannot use it. Replug the device; if that does not help, check the udev rule and the daemon log (journalctl --user -u gkeyd).</source>
+        <translation>%1 ist angeschlossen, aber der Daemon kann es nicht verwenden. Stecke das Gerät neu ein; hilft das nicht, prüfe die udev-Regel und das Daemon-Protokoll (journalctl --user -u gkeyd).</translation>
+    </message>
+    <message>
+        <source>Open folder</source>
+        <translation>Ordner öffnen</translation>
+    </message>
+    <message>
+        <source>The folder could not be opened. It is located at:
+%1</source>
+        <translation>Der Ordner konnte nicht geöffnet werden. Er liegt hier:
+%1</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

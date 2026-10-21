@@ -693,6 +693,36 @@
         <source>Later</source>
         <translation>Mais tarde</translation>
     </message>
+    <message>
+        <source>%1 is plugged in, but the kernel %2 is too old: Linux %3 or newer is needed.</source>
+        <translation>%1 está conectado, mas o kernel %2 é antigo demais: é necessário o Linux %3 ou mais recente.</translation>
+    </message>
+    <message>
+        <source>%1 is used directly by another program (e.g. linux-g13-driver). Stop it and replug the device.</source>
+        <translation>%1 está sendo usado diretamente por outro programa (p. ex. linux-g13-driver). Encerre-o e reconecte o dispositivo.</translation>
+    </message>
+    <message>
+        <source>%1 is plugged in, but the kernel driver hid-lg-g15 does not drive it (driver: %2).</source>
+        <translation>%1 está conectado, mas o driver do kernel hid-lg-g15 não o controla (driver: %2).</translation>
+    </message>
+    <message>
+        <source>none</source>
+        <translation>nenhum</translation>
+    </message>
+    <message>
+        <source>%1 is plugged in, but the daemon cannot use it. Replug the device; if that does not help, check the udev rule and the daemon log (journalctl --user -u gkeyd).</source>
+        <translation>%1 está conectado, mas o daemon não consegue usá-lo. Reconecte o dispositivo; se não resolver, verifique a regra udev e o log do daemon (journalctl --user -u gkeyd).</translation>
+    </message>
+    <message>
+        <source>Open folder</source>
+        <translation>Abrir pasta</translation>
+    </message>
+    <message>
+        <source>The folder could not be opened. It is located at:
+%1</source>
+        <translation>Não foi possível abrir a pasta. Ela fica em:
+%1</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

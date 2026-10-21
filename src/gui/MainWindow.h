@@ -82,6 +82,9 @@ private:
     void updateDaemonState();
     void runSystemctl(const QString &verb);
     void updateLedHint();
+    void updateStatusText();
+    QString diagnosisText() const;
+    void openFolder(const QString &path);
     void onLedAccessFinished(bool success, const QString &message);
     void onDaemonAutostartChanged();
     void askFirstRunSetup();

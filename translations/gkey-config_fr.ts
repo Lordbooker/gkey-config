@@ -693,6 +693,36 @@
         <source>Later</source>
         <translation>Plus tard</translation>
     </message>
+    <message>
+        <source>%1 is plugged in, but the kernel %2 is too old: Linux %3 or newer is needed.</source>
+        <translation>%1 est branché, mais le noyau %2 est trop ancien&#xa0;: Linux %3 ou plus récent est nécessaire.</translation>
+    </message>
+    <message>
+        <source>%1 is used directly by another program (e.g. linux-g13-driver). Stop it and replug the device.</source>
+        <translation>%1 est utilisé directement par un autre programme (p. ex. linux-g13-driver). Arrêtez-le et rebranchez l’appareil.</translation>
+    </message>
+    <message>
+        <source>%1 is plugged in, but the kernel driver hid-lg-g15 does not drive it (driver: %2).</source>
+        <translation>%1 est branché, mais le pilote du noyau hid-lg-g15 ne le gère pas (pilote&#xa0;: %2).</translation>
+    </message>
+    <message>
+        <source>none</source>
+        <translation>aucun</translation>
+    </message>
+    <message>
+        <source>%1 is plugged in, but the daemon cannot use it. Replug the device; if that does not help, check the udev rule and the daemon log (journalctl --user -u gkeyd).</source>
+        <translation>%1 est branché, mais le démon ne peut pas l’utiliser. Rebranchez l’appareil&#xa0;; si cela ne suffit pas, vérifiez la règle udev et le journal du démon (journalctl --user -u gkeyd).</translation>
+    </message>
+    <message>
+        <source>Open folder</source>
+        <translation>Ouvrir le dossier</translation>
+    </message>
+    <message>
+        <source>The folder could not be opened. It is located at:
+%1</source>
+        <translation>Le dossier n’a pas pu être ouvert. Il se trouve ici&#xa0;:
+%1</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

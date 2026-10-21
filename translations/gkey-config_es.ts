@@ -693,6 +693,36 @@
         <source>Later</source>
         <translation>Más tarde</translation>
     </message>
+    <message>
+        <source>%1 is plugged in, but the kernel %2 is too old: Linux %3 or newer is needed.</source>
+        <translation>%1 está conectado, pero el kernel %2 es demasiado antiguo: se necesita Linux %3 o posterior.</translation>
+    </message>
+    <message>
+        <source>%1 is used directly by another program (e.g. linux-g13-driver). Stop it and replug the device.</source>
+        <translation>%1 lo usa directamente otro programa (p. ej. linux-g13-driver). Deténgalo y reconecte el dispositivo.</translation>
+    </message>
+    <message>
+        <source>%1 is plugged in, but the kernel driver hid-lg-g15 does not drive it (driver: %2).</source>
+        <translation>%1 está conectado, pero el controlador del kernel hid-lg-g15 no lo gestiona (controlador: %2).</translation>
+    </message>
+    <message>
+        <source>none</source>
+        <translation>ninguno</translation>
+    </message>
+    <message>
+        <source>%1 is plugged in, but the daemon cannot use it. Replug the device; if that does not help, check the udev rule and the daemon log (journalctl --user -u gkeyd).</source>
+        <translation>%1 está conectado, pero el demonio no puede usarlo. Reconecte el dispositivo; si no basta, compruebe la regla udev y el registro del demonio (journalctl --user -u gkeyd).</translation>
+    </message>
+    <message>
+        <source>Open folder</source>
+        <translation>Abrir carpeta</translation>
+    </message>
+    <message>
+        <source>The folder could not be opened. It is located at:
+%1</source>
+        <translation>No se pudo abrir la carpeta. Se encuentra en:
+%1</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

@@ -43,8 +43,9 @@ set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "systemd, udev")
 # Both drive the G13; the old libusb driver detaches the kernel driver.
 set(CPACK_DEBIAN_PACKAGE_CONFLICTS "linux-g13-driver")
-# Qt's own translations (standard buttons such as "Cancel") in the system language.
-set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "qt6-translations-l10n")
+# Optional at runtime: pkexec (LED access from the GUI), native Wayland,
+# xdg-open ("Open folder"), Qt's own translations (standard buttons).
+set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "pkexec, qt6-wayland, xdg-utils, qt6-translations-l10n")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     "${GKEY_PACKAGING_DIR}/deb/postinst"
     "${GKEY_PACKAGING_DIR}/deb/postrm")
@@ -54,10 +55,15 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_STRICT_PERMISSION ON)
 set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
 set(CPACK_RPM_PACKAGE_RELEASE "${GKEY_PACKAGE_RELEASE}")
 set(CPACK_RPM_PACKAGE_RELEASE_DIST ON)   # appends %{?dist}, e.g. .fc44
+# Not relocatable: the systemd unit and the D-Bus service contain absolute paths.
+set(CPACK_PACKAGE_RELOCATABLE OFF)
 set(CPACK_RPM_PACKAGE_LICENSE "GPL-2.0-only")
 set(CPACK_RPM_PACKAGE_GROUP "Applications/System")
 set(CPACK_RPM_PACKAGE_REQUIRES "systemd, systemd-udev")
 set(CPACK_RPM_PACKAGE_CONFLICTS "linux-g13-driver")
+# Weak dependencies, see Debian above (Recommends needs CMake >= 4.1, older
+# versions ignore it).
+set(CPACK_RPM_PACKAGE_RECOMMENDS "polkit, qt6-qtwayland, xdg-utils")
 set(CPACK_RPM_PACKAGE_SUGGESTS "qt6-qttranslations")
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE   "${GKEY_PACKAGING_DIR}/rpm/post")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${GKEY_PACKAGING_DIR}/rpm/postun")

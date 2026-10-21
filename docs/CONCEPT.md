@@ -478,12 +478,16 @@ state, G13 only).
 
 ### 9.2 Diagnostics and coexistence
 
-The daemon reports (log, D-Bus status, GUI) why a connected device is not usable:
+Why a connected device is not usable is reported in two places:
 
-* device present on USB but not bound to `lg-g15` (e.g. linux-g13-driver or another libusb driver
-  has detached the kernel driver, or the kernel is too old for this model),
-* input device, hidraw node or LED attributes not accessible (udev rule missing),
-* `/dev/uinput` not accessible.
+* The GUI checks sysfs for the model's USB IDs while the device is not connected and names the
+  reason in the status bar *(implemented for 1.0)*: kernel older than the model's `minKernel`; a USB
+  interface claimed through `usbfs` (linux-g13-driver or another libusb program); HID device
+  missing or not providing the model's input devices (`hid-lg-g15` not active); plugged in and
+  provided by the kernel but not used by the daemon (udev rule, see the log).
+* The daemon logs a HID device bound to another driver than `lg-g15`, input devices, hidraw nodes
+  or LED attributes that cannot be opened, and an inaccessible `/dev/uinput` (exits with an error).
+  The LED permission is also part of the D-Bus `Status`.
 
 linux-g13-driver and gkey-config cannot drive the same G13 at the same time; the packages declare a
 **package conflict** with `linux-g13-driver` (and the AUR `linux-g13-driver-git`) *(decided)*.

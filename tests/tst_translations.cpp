@@ -22,7 +22,10 @@ struct Message {
     QString type; // "", "unfinished", "vanished", "obsolete"
 };
 
-// Key: context + '\n' + source (+ '\n' + comment).
+// Key: context, source and comment joined by a unit separator (texts may
+// contain line breaks).
+constexpr QChar Separator(0x1f);
+
 QHash<QString, Message> readTs(const QString &path, QString *error)
 {
     QHash<QString, Message> messages;
@@ -55,9 +58,9 @@ QHash<QString, Message> readTs(const QString &path, QString *error)
                 message.translation = xml.readElementText(QXmlStreamReader::IncludeChildElements);
             }
         } else if (xml.isEndElement() && xml.name() == u"message") {
-            QString key = context + u'\n' + source;
+            QString key = context + Separator + source;
             if (!comment.isEmpty())
-                key += u'\n' + comment;
+                key += Separator + comment;
             messages.insert(key, message);
         }
     }
@@ -87,7 +90,7 @@ int accelerators(const QString &text)
 
 QString shortKey(const QString &key)
 {
-    return QString(key).replace(u'\n', QStringLiteral(" / "));
+    return QString(key).replace(Separator, QStringLiteral(" / "));
 }
 
 }
@@ -146,7 +149,7 @@ void TestTranslations::complete()
 
     QStringList problems;
     for (auto it = m_reference.constBegin(); it != m_reference.constEnd(); ++it) {
-        const QString source = it.key().section(u'\n', 1, 1);
+        const QString source = it.key().section(Separator, 1, 1);
         const auto found = messages.constFind(it.key());
         if (found == messages.constEnd()) {
             problems << QStringLiteral("missing (run update_translations): ") + shortKey(it.key());
