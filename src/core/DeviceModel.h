@@ -13,7 +13,7 @@
 //
 // The model maps the kernel's event codes to stable key IDs ("G1", "L1",
 // "M1", ...) that are used in profiles, and describes LEDs, stick, LCD and the
-// clickable areas of the device image in the GUI.
+// schematic drawing of the device in the GUI.
 class DeviceModel {
 public:
     struct UsbId {
@@ -67,14 +67,33 @@ public:
 
     enum class AreaShape { Rect, Ellipse };
 
-    // Clickable area of a key in the device image (image coordinates).
-    struct Area {
-        QString   key;
+    // Geometry shared by decorations and key areas (view coordinates).
+    struct Shape {
         AreaShape shape = AreaShape::Rect;
         double    x = 0;
         double    y = 0;
         double    width = 0;
         double    height = 0;
+        double    radius = 4;   // corner radius of rectangles
+    };
+
+    // Non-interactive part of the schematic drawing, e.g. "body", "lcd".
+    struct Decoration : Shape {
+        QString role;
+    };
+
+    // Clickable key in the schematic drawing.
+    struct Area : Shape {
+        QString key;
+        QString label;   // text drawn on the key; defaults to the key ID
+    };
+
+    // Schematic drawing of the device used by the GUI (drawn, not an image).
+    struct View {
+        double width = 0;
+        double height = 0;
+        QList<Decoration> decorations;
+        QList<Area> areas;
     };
 
     // Key IDs of the four stick directions; they exist when the model has a stick.
@@ -94,8 +113,7 @@ public:
     const QList<Led> &leds() const { return m_leds; }
     const std::optional<Stick> &stick() const { return m_stick; }
     const std::optional<Lcd> &lcd() const { return m_lcd; }
-    const QString &image() const { return m_image; }
-    const QList<Area> &areas() const { return m_areas; }
+    const View &view() const { return m_view; }
 
     bool matchesUsb(quint16 vendor, quint16 product) const;
 
@@ -122,6 +140,5 @@ private:
     QList<Led> m_leds;
     std::optional<Stick> m_stick;
     std::optional<Lcd> m_lcd;
-    QString m_image;
-    QList<Area> m_areas;
+    View m_view;
 };

@@ -3,6 +3,7 @@
 #include "ModelRegistry.h"
 
 #include <QDir>
+#include <QSet>
 #include <QFile>
 #include <QTemporaryDir>
 #include <QTest>
@@ -83,6 +84,16 @@ void TestDeviceModel::g13Model()
     QVERIFY(model->lcd());
     QCOMPARE(model->lcd()->width, 160);
     QCOMPARE(model->lcd()->height, 43);
+
+    // Every bindable key and every fixed key is drawn exactly once.
+    QSet<QString> drawn;
+    for (const auto &area : model->view().areas)
+        drawn.insert(area.key);
+    for (const QString &id : model->bindableKeyIds())
+        QVERIFY2(drawn.contains(id), qPrintable(id));
+    for (const auto &key : model->keys())
+        QVERIFY2(drawn.contains(key.id), qPrintable(key.id));
+    QCOMPARE(drawn.size(), model->view().areas.size());
 }
 
 void TestDeviceModel::invalidModels_data()
@@ -112,10 +123,25 @@ void TestDeviceModel::invalidModels_data()
         << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
                         R"(, "leds": { "disco": { "suffix": "x" } })")
         << QStringLiteral("unknown LED role");
-    QTest::newRow("area for unknown key")
+    QTest::newRow("view area for unknown key")
         << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
-                        R"(, "areas": [{ "key": "G9", "shape": "rect", "x": 1, "y": 1, "w": 5, "h": 5 }])")
+                        R"(, "view": { "width": 10, "height": 10,
+                             "keys": [{ "key": "G9", "x": 1, "y": 1, "w": 5, "h": 5 }] })")
         << QStringLiteral("unknown key");
+    QTest::newRow("view key drawn twice")
+        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
+                        R"(, "view": { "width": 10, "height": 10, "keys": [
+                             { "key": "G1", "x": 1, "y": 1, "w": 5, "h": 5 },
+                             { "key": "G1", "x": 2, "y": 2, "w": 5, "h": 5 }] })")
+        << QStringLiteral("drawn twice");
+    QTest::newRow("view bad shape")
+        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
+                        R"(, "view": { "width": 10, "height": 10,
+                             "keys": [{ "key": "G1", "shape": "star", "x": 1, "y": 1, "w": 5, "h": 5 }] })")
+        << QStringLiteral("invalid shape");
+    QTest::newRow("view without size")
+        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])", R"(, "view": { "keys": [] })")
+        << QStringLiteral("width");
     QTest::newRow("bad usb id")
         << QByteArray(R"({ "id": "test", "name": "Test", "usb": [{ "vendor": "46d", "product": "ffff" }],
                          "inputs": { "keys": "x" }, "keys": [{ "id": "G1", "code": "KEY_MACRO1" }] })")

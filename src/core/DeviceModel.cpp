@@ -224,30 +224,55 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
         model.m_lcd = lcd;
     }
 
-    // --- Image and clickable areas ----------------------------------------------
-    model.m_image = root.value(u"image").toString();
-    const QList<QString> bindableIds = model.bindableKeyIds();
-    const QSet<QString> bindable(bindableIds.begin(), bindableIds.end());
-    for (const QJsonValue &entry : root.value(u"areas").toArray()) {
-        const QJsonObject object = entry.toObject();
-        Area area;
-        area.key = object.value(u"key").toString();
-        if (!keyIds.contains(area.key) && !bindable.contains(area.key))
-            return error(QStringLiteral("area for unknown key \"%1\"").arg(area.key));
-        const QString shape = object.value(u"shape").toString();
-        if (shape == u"rect")
-            area.shape = AreaShape::Rect;
-        else if (shape == u"ellipse")
-            area.shape = AreaShape::Ellipse;
-        else
-            return error(QStringLiteral("area \"%1\": shape must be \"rect\" or \"ellipse\"").arg(area.key));
-        area.x = object.value(u"x").toDouble();
-        area.y = object.value(u"y").toDouble();
-        area.width = object.value(u"w").toDouble();
-        area.height = object.value(u"h").toDouble();
-        if (area.width <= 0 || area.height <= 0)
-            return error(QStringLiteral("area \"%1\": \"w\" and \"h\" must be positive").arg(area.key));
-        model.m_areas.append(area);
+    // --- Schematic view (GUI) ---------------------------------------------------
+    if (root.contains(u"view")) {
+        const QJsonObject view = root.value(u"view").toObject();
+        model.m_view.width = view.value(u"width").toDouble();
+        model.m_view.height = view.value(u"height").toDouble();
+        if (model.m_view.width <= 0 || model.m_view.height <= 0)
+            return error(QStringLiteral("view: \"width\" and \"height\" must be positive"));
+
+        const auto parseShape = [](const QJsonObject &object, Shape &shape) -> bool {
+            const QString type = object.value(u"shape").toString(QStringLiteral("rect"));
+            if (type == u"rect")
+                shape.shape = AreaShape::Rect;
+            else if (type == u"ellipse")
+                shape.shape = AreaShape::Ellipse;
+            else
+                return false;
+            shape.x = object.value(u"x").toDouble();
+            shape.y = object.value(u"y").toDouble();
+            shape.width = object.value(u"w").toDouble();
+            shape.height = object.value(u"h").toDouble();
+            shape.radius = object.value(u"radius").toDouble(4);
+            return shape.width > 0 && shape.height > 0;
+        };
+
+        for (const QJsonValue &entry : view.value(u"decorations").toArray()) {
+            Decoration decoration;
+            decoration.role = entry.toObject().value(u"role").toString();
+            if (!parseShape(entry.toObject(), decoration))
+                return error(QStringLiteral("view decoration \"%1\": invalid shape or size").arg(decoration.role));
+            model.m_view.decorations.append(decoration);
+        }
+
+        const QList<QString> bindableIds = model.bindableKeyIds();
+        const QSet<QString> bindable(bindableIds.begin(), bindableIds.end());
+        QSet<QString> drawn;
+        for (const QJsonValue &entry : view.value(u"keys").toArray()) {
+            const QJsonObject object = entry.toObject();
+            Area area;
+            area.key = object.value(u"key").toString();
+            if (!keyIds.contains(area.key) && !bindable.contains(area.key))
+                return error(QStringLiteral("view: area for unknown key \"%1\"").arg(area.key));
+            if (drawn.contains(area.key))
+                return error(QStringLiteral("view: key \"%1\" is drawn twice").arg(area.key));
+            if (!parseShape(object, area))
+                return error(QStringLiteral("view: key \"%1\" has an invalid shape or size").arg(area.key));
+            area.label = object.value(u"label").toString(area.key);
+            drawn.insert(area.key);
+            model.m_view.areas.append(area);
+        }
     }
 
     return model;

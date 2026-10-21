@@ -6,10 +6,7 @@
   "usb": [
     { "vendor": "046d", "product": "c21c" }
   ],
-  "inputs": {
-    "keys": "Logitech G13 Gaming Keypad",
-    "stick": "Logitech G13 Thumbstick"
-  },
+  "inputs": { "keys": "Logitech G13 Gaming Keypad", "stick": "Logitech G13 Thumbstick" },
   "keys": [
     { "id": "G1", "code": "KEY_MACRO1" },
     { "id": "G2", "code": "KEY_MACRO2" },
@@ -48,35 +45,63 @@
     { "id": "STICK_PRESS", "code": "BTN_THUMB", "input": "stick" }
   ],
   "leds": {
-    "backlight": {
-      "suffix": "kbd_backlight",
-      "type": "rgb"
-    },
-    "mode1": {
-      "suffix": "macro_preset_1"
-    },
-    "mode2": {
-      "suffix": "macro_preset_2"
-    },
-    "mode3": {
-      "suffix": "macro_preset_3"
-    },
-    "record": {
-      "suffix": "macro_record"
-    }
+    "backlight": { "suffix": "kbd_backlight", "type": "rgb" },
+    "mode1": { "suffix": "macro_preset_1" },
+    "mode2": { "suffix": "macro_preset_2" },
+    "mode3": { "suffix": "macro_preset_3" },
+    "record": { "suffix": "macro_record" }
   },
-  "stick": {
-    "input": "stick",
-    "axisX": "ABS_X",
-    "axisY": "ABS_Y",
-    "min": 0,
-    "max": 255
-  },
-  "lcd": {
-    "type": "g13-hidraw",
-    "width": 160,
-    "height": 43
-  },
-  "image": "g13.png",
-  "areas": []
+  "stick": { "input": "stick", "axisX": "ABS_X", "axisY": "ABS_Y", "min": 0, "max": 255 },
+  "lcd": { "type": "g13-hidraw", "width": 160, "height": 43 },
+  "view": {
+    "width": 500,
+    "height": 620,
+    "decorations": [
+      { "role": "body", "x": 30, "y": 20, "w": 440, "h": 350, "radius": 48 },
+      { "role": "body", "x": 70, "y": 330, "w": 380, "h": 270, "radius": 120 },
+      { "role": "lcd", "x": 150, "y": 38, "w": 200, "h": 62, "radius": 6 },
+      { "role": "stick-base", "shape": "ellipse", "x": 342, "y": 394, "w": 92, "h": 92 }
+    ],
+    "keys": [
+      { "key": "BD", "shape": "ellipse", "x": 118, "y": 111, "w": 20, "h": 20, "label": "" },
+      { "key": "L1", "x": 158, "y": 114, "w": 38, "h": 14, "radius": 4 },
+      { "key": "L2", "x": 203, "y": 114, "w": 38, "h": 14, "radius": 4 },
+      { "key": "L3", "x": 248, "y": 114, "w": 38, "h": 14, "radius": 4 },
+      { "key": "L4", "x": 293, "y": 114, "w": 38, "h": 14, "radius": 4 },
+      { "key": "LIGHT", "shape": "ellipse", "x": 361, "y": 112, "w": 18, "h": 18, "label": "" },
+      { "key": "M1", "x": 100, "y": 142, "w": 68, "h": 20 },
+      { "key": "M2", "x": 175, "y": 142, "w": 68, "h": 20 },
+      { "key": "M3", "x": 250, "y": 142, "w": 68, "h": 20 },
+      { "key": "MR", "x": 325, "y": 142, "w": 68, "h": 20 },
+      { "key": "G1", "x": 50, "y": 180, "w": 50, "h": 36 },
+      { "key": "G2", "x": 107, "y": 180, "w": 50, "h": 36 },
+      { "key": "G3", "x": 164, "y": 180, "w": 50, "h": 36 },
+      { "key": "G4", "x": 221, "y": 180, "w": 50, "h": 36 },
+      { "key": "G5", "x": 278, "y": 180, "w": 50, "h": 36 },
+      { "key": "G6", "x": 335, "y": 180, "w": 50, "h": 36 },
+      { "key": "G7", "x": 392, "y": 180, "w": 50, "h": 36 },
+      { "key": "G8", "x": 50, "y": 224, "w": 50, "h": 36 },
+      { "key": "G9", "x": 107, "y": 224, "w": 50, "h": 36 },
+      { "key": "G10", "x": 164, "y": 224, "w": 50, "h": 36 },
+      { "key": "G11", "x": 221, "y": 224, "w": 50, "h": 36 },
+      { "key": "G12", "x": 278, "y": 224, "w": 50, "h": 36 },
+      { "key": "G13", "x": 335, "y": 224, "w": 50, "h": 36 },
+      { "key": "G14", "x": 392, "y": 224, "w": 50, "h": 36 },
+      { "key": "G15", "x": 95, "y": 268, "w": 66, "h": 36 },
+      { "key": "G16", "x": 168, "y": 268, "w": 50, "h": 36 },
+      { "key": "G17", "x": 225, "y": 268, "w": 50, "h": 36 },
+      { "key": "G18", "x": 282, "y": 268, "w": 50, "h": 36 },
+      { "key": "G19", "x": 339, "y": 268, "w": 66, "h": 36 },
+      { "key": "G20", "x": 135, "y": 312, "w": 83, "h": 36 },
+      { "key": "G21", "x": 225, "y": 312, "w": 50, "h": 36 },
+      { "key": "G22", "x": 282, "y": 312, "w": 83, "h": 36 },
+      { "key": "THUMB_LEFT", "x": 318, "y": 405, "w": 22, "h": 66, "radius": 8, "label": "" },
+      { "key": "THUMB_DOWN", "x": 353, "y": 500, "w": 70, "h": 22, "radius": 8, "label": "" },
+      { "key": "STICK_UP", "x": 377, "y": 402, "w": 22, "h": 16, "radius": 4, "label": "▲" },
+      { "key": "STICK_DOWN", "x": 377, "y": 462, "w": 22, "h": 16, "radius": 4, "label": "▼" },
+      { "key": "STICK_LEFT", "x": 350, "y": 429, "w": 16, "h": 22, "radius": 4, "label": "◀" },
+      { "key": "STICK_RIGHT", "x": 410, "y": 429, "w": 16, "h": 22, "radius": 4, "label": "▶" },
+      { "key": "STICK_PRESS", "shape": "ellipse", "x": 373, "y": 425, "w": 30, "h": 30, "label": "" }
+    ]
+  }
 }

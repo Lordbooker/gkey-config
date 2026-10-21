@@ -1,6 +1,8 @@
 # gkey-config: Qt6 configuration tool.
 add_executable(gkey-config
     main.cpp
+    DeviceView.cpp
+    DeviceView.h
 )
 
 target_link_libraries(gkey-config PRIVATE
