@@ -8,6 +8,7 @@
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QLocale>
+#include <QStandardPaths>
 #include <QTimer>
 #include <QTranslator>
 
@@ -51,7 +52,12 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName(QStringLiteral("gkey-config"));
     QApplication::setOrganizationName(QStringLiteral("gkey-config"));
     QApplication::setApplicationVersion(QStringLiteral(GKEY_VERSION));
-    QApplication::setDesktopFileName(QStringLiteral("io.github.lordbooker.GKeyConfig"));
+    // The desktop file name is also the Wayland app ID; Qt registers it with
+    // the XDG desktop portal, which fails (with a warning) when the desktop
+    // file is not installed, e.g. when started from the build directory.
+    const QString desktopFile = QStringLiteral("io.github.lordbooker.GKeyConfig");
+    if (!QStandardPaths::locate(QStandardPaths::ApplicationsLocation, desktopFile + QStringLiteral(".desktop")).isEmpty())
+        QApplication::setDesktopFileName(desktopFile);
     installTranslations(app);
 
     QCommandLineParser parser;
