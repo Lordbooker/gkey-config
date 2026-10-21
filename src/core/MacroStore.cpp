@@ -80,3 +80,18 @@ bool MacroStore::save(const Macro &macro, QString *error)
     m_macros.insert(macro.name(), macro);
     return true;
 }
+
+bool MacroStore::remove(const QString &name, QString *error)
+{
+    const QString path = m_files.value(name);
+    QFile file(path);
+    if (path.isEmpty() || !file.remove()) {
+        if (error)
+            *error = path.isEmpty() ? QStringLiteral("macro \"%1\" does not exist").arg(name)
+                                    : QStringLiteral("%1: %2").arg(path, file.errorString());
+        return false;
+    }
+    m_files.remove(name);
+    m_macros.remove(name);
+    return true;
+}

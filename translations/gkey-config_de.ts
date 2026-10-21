@@ -1,0 +1,593 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE TS>
+<TS version="2.1" language="de_DE">
+<context>
+    <name>BindingEditor</name>
+    <message>
+        <source>Click a key in the picture or press it on the device.</source>
+        <translation>Klicke eine Taste im Bild an oder drücke sie am Gerät.</translation>
+    </message>
+    <message>
+        <source>Not bound</source>
+        <translation>Nicht belegt</translation>
+    </message>
+    <message>
+        <source>Key</source>
+        <translation>Taste</translation>
+    </message>
+    <message>
+        <source>Key combination</source>
+        <translation>Tastenkombination</translation>
+    </message>
+    <message>
+        <source>Mouse button</source>
+        <translation>Maustaste</translation>
+    </message>
+    <message>
+        <source>Macro</source>
+        <translation>Makro</translation>
+    </message>
+    <message>
+        <source>Switch layer</source>
+        <translation>Ebene wechseln</translation>
+    </message>
+    <message>
+        <source>Switch profile</source>
+        <translation>Profil wechseln</translation>
+    </message>
+    <message>
+        <source>LCD page</source>
+        <translation>LCD-Seite</translation>
+    </message>
+    <message>
+        <source>Action:</source>
+        <translation>Aktion:</translation>
+    </message>
+    <message>
+        <source>The key does nothing in this layer.</source>
+        <translation>Die Taste hat in dieser Ebene keine Funktion.</translation>
+    </message>
+    <message>
+        <source>Key:</source>
+        <translation>Taste:</translation>
+    </message>
+    <message>
+        <source>Keys:</source>
+        <translation>Tasten:</translation>
+    </message>
+    <message>
+        <source>Press all keys together, e.g. Ctrl+C.</source>
+        <translation>Alle Tasten gemeinsam drücken, z. B. Strg+C.</translation>
+    </message>
+    <message>
+        <source>Button:</source>
+        <translation>Taste:</translation>
+    </message>
+    <message>
+        <source>Run once</source>
+        <translation>Einmal ausführen</translation>
+    </message>
+    <message>
+        <source>Repeat while held</source>
+        <translation>Wiederholen, solange gedrückt</translation>
+    </message>
+    <message>
+        <source>Start/stop with each press</source>
+        <translation>Mit jedem Druck starten/stoppen</translation>
+    </message>
+    <message>
+        <source>Run several times</source>
+        <translation>Mehrmals ausführen</translation>
+    </message>
+    <message>
+        <source>Macro:</source>
+        <translation>Makro:</translation>
+    </message>
+    <message>
+        <source>Run:</source>
+        <translation>Ausführung:</translation>
+    </message>
+    <message>
+        <source>Times:</source>
+        <translation>Anzahl:</translation>
+    </message>
+    <message>
+        <source>Pressing the key again stops a running macro.</source>
+        <translation>Ein erneuter Druck auf die Taste stoppt ein laufendes Makro.</translation>
+    </message>
+    <message>
+        <source>Layer:</source>
+        <translation>Ebene:</translation>
+    </message>
+    <message>
+        <source>Profile:</source>
+        <translation>Profil:</translation>
+    </message>
+    <message>
+        <source>Next page</source>
+        <translation>Nächste Seite</translation>
+    </message>
+    <message>
+        <source>Previous page</source>
+        <translation>Vorherige Seite</translation>
+    </message>
+    <message>
+        <source>Page:</source>
+        <translation>Seite:</translation>
+    </message>
+    <message>
+        <source>The LCD is supported in a later version.</source>
+        <translation>Das LCD wird in einer späteren Version unterstützt.</translation>
+    </message>
+    <message>
+        <source>Next profile</source>
+        <translation>Nächstes Profil</translation>
+    </message>
+    <message>
+        <source>Previous profile</source>
+        <translation>Vorheriges Profil</translation>
+    </message>
+    <message>
+        <source>No key selected</source>
+        <translation>Keine Taste ausgewählt</translation>
+    </message>
+</context>
+<context>
+    <name>DeviceView</name>
+    <message>
+        <source>%1 (fixed function)</source>
+        <translation>%1 (feste Funktion)</translation>
+    </message>
+</context>
+<context>
+    <name>KeyCaptureEdit</name>
+    <message>
+        <source>Click here and press a key</source>
+        <translation>Hier klicken und eine Taste drücken</translation>
+    </message>
+    <message>
+        <source>Click into the field and press a key on your keyboard.</source>
+        <translation>In das Feld klicken und eine Taste auf der Tastatur drücken.</translation>
+    </message>
+    <message>
+        <source>Click here and press the key combination</source>
+        <translation>Hier klicken und die Tastenkombination drücken</translation>
+    </message>
+    <message>
+        <source>Click into the field and press the keys together, e.g. Ctrl+Shift+T.</source>
+        <translation>In das Feld klicken und die Tasten gemeinsam drücken, z. B. Strg+Umschalt+T.</translation>
+    </message>
+</context>
+<context>
+    <name>KeyNames</name>
+    <message>
+        <source>Mouse left</source>
+        <translation>Maus links</translation>
+    </message>
+    <message>
+        <source>Mouse right</source>
+        <translation>Maus rechts</translation>
+    </message>
+    <message>
+        <source>Mouse middle</source>
+        <translation>Maus Mitte</translation>
+    </message>
+    <message>
+        <source>Mouse side</source>
+        <translation>Maus Seite</translation>
+    </message>
+    <message>
+        <source>Mouse extra</source>
+        <translation>Maus Extra</translation>
+    </message>
+    <message>
+        <source>Mouse forward</source>
+        <translation>Maus vor</translation>
+    </message>
+    <message>
+        <source>Mouse back</source>
+        <translation>Maus zurück</translation>
+    </message>
+    <message>
+        <source>Mouse task</source>
+        <translation>Maus Task</translation>
+    </message>
+    <message>
+        <source>Key %1</source>
+        <translation>Taste %1</translation>
+    </message>
+</context>
+<context>
+    <name>MacroEditor</name>
+    <message>
+        <source>Press</source>
+        <translation>Drücken</translation>
+    </message>
+    <message>
+        <source>Release</source>
+        <translation>Loslassen</translation>
+    </message>
+    <message>
+        <source>Tap</source>
+        <translation>Antippen</translation>
+    </message>
+    <message>
+        <source>Wait</source>
+        <translation>Warten</translation>
+    </message>
+    <message>
+        <source>New</source>
+        <translation>Neu</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Löschen</translation>
+    </message>
+    <message>
+        <source>Name:</source>
+        <translation>Name:</translation>
+    </message>
+    <message>
+        <source>Description:</source>
+        <translation>Beschreibung:</translation>
+    </message>
+    <message>
+        <source>Start recording</source>
+        <translation>Aufnahme starten</translation>
+    </message>
+    <message>
+        <source>Type on your keyboard; MR on the device starts and stops as well.</source>
+        <translation>Auf der Tastatur tippen; MR am Gerät startet und stoppt ebenfalls.</translation>
+    </message>
+    <message>
+        <source>Step</source>
+        <translation>Schritt</translation>
+    </message>
+    <message>
+        <source>Key</source>
+        <translation>Taste</translation>
+    </message>
+    <message>
+        <source>Time (ms)</source>
+        <translation>Zeit (ms)</translation>
+    </message>
+    <message>
+        <source>Up</source>
+        <translation>Nach oben</translation>
+    </message>
+    <message>
+        <source>Down</source>
+        <translation>Nach unten</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Entfernen</translation>
+    </message>
+    <message>
+        <source>Insert step</source>
+        <translation>Schritt einfügen</translation>
+    </message>
+    <message>
+        <source> ms</source>
+        <translation> ms</translation>
+    </message>
+    <message>
+        <source>Set all waits</source>
+        <translation>Alle Wartezeiten setzen</translation>
+    </message>
+    <message>
+        <source>Key:</source>
+        <translation>Taste:</translation>
+    </message>
+    <message>
+        <source>Time:</source>
+        <translation>Zeit:</translation>
+    </message>
+    <message>
+        <source>Play on device</source>
+        <translation>Am Gerät abspielen</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Speichern</translation>
+    </message>
+    <message>
+        <source>Unsaved changes</source>
+        <translation>Ungespeicherte Änderungen</translation>
+    </message>
+    <message>
+        <source>Discard the changes to the macro "%1"?</source>
+        <translation>Die Änderungen am Makro „%1“ verwerfen?</translation>
+    </message>
+    <message>
+        <source>New macro</source>
+        <translation>Neues Makro</translation>
+    </message>
+    <message>
+        <source>A macro "%1" already exists.</source>
+        <translation>Ein Makro „%1“ existiert bereits.</translation>
+    </message>
+    <message>
+        <source>Delete macro</source>
+        <translation>Makro löschen</translation>
+    </message>
+    <message>
+        <source>Delete the macro "%1"? Keys bound to it will do nothing.</source>
+        <translation>Das Makro „%1“ löschen? Damit belegte Tasten haben dann keine Funktion.</translation>
+    </message>
+    <message>
+        <source>Save macro</source>
+        <translation>Makro speichern</translation>
+    </message>
+    <message>
+        <source>These keys are pressed but never released: %1. They are released when the macro ends. Save anyway?</source>
+        <translation>Diese Tasten werden gedrückt, aber nie losgelassen: %1. Sie werden am Ende des Makros losgelassen. Trotzdem speichern?</translation>
+    </message>
+    <message>
+        <source>Saved</source>
+        <translation>Gespeichert</translation>
+    </message>
+    <message>
+        <source>The daemon could not play the macro.</source>
+        <translation>Der Daemon konnte das Makro nicht abspielen.</translation>
+    </message>
+    <message>
+        <source>Select or create a macro before recording.</source>
+        <translation>Vor der Aufnahme ein Makro auswählen oder anlegen.</translation>
+    </message>
+    <message>
+        <source>Stop recording</source>
+        <translation>Aufnahme beenden</translation>
+    </message>
+    <message>
+        <source>Recording...</source>
+        <translation>Aufnahme läuft …</translation>
+    </message>
+</context>
+<context>
+    <name>MainWindow</name>
+    <message>
+        <source>G-Key Configuration</source>
+        <translation>G-Tasten-Konfiguration</translation>
+    </message>
+    <message>
+        <source>Profile</source>
+        <translation>Profil</translation>
+    </message>
+    <message>
+        <source>%1 (untested)</source>
+        <translation>%1 (ungetestet)</translation>
+    </message>
+    <message>
+        <source> Device: </source>
+        <translation> Gerät: </translation>
+    </message>
+    <message>
+        <source> Profile: </source>
+        <translation> Profil: </translation>
+    </message>
+    <message>
+        <source>Manage</source>
+        <translation>Verwalten</translation>
+    </message>
+    <message>
+        <source>New...</source>
+        <translation>Neu …</translation>
+    </message>
+    <message>
+        <source>Duplicate...</source>
+        <translation>Duplizieren …</translation>
+    </message>
+    <message>
+        <source>Rename...</source>
+        <translation>Umbenennen …</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Löschen</translation>
+    </message>
+    <message>
+        <source> Layer: </source>
+        <translation> Ebene: </translation>
+    </message>
+    <message>
+        <source>Show and edit layer M%1; switches the device as well</source>
+        <translation>Ebene M%1 anzeigen und bearbeiten; schaltet auch das Gerät um</translation>
+    </message>
+    <message>
+        <source>Key</source>
+        <translation>Taste</translation>
+    </message>
+    <message>
+        <source>This profile sets the backlight colour</source>
+        <translation>Dieses Profil setzt die Farbe der Beleuchtung</translation>
+    </message>
+    <message>
+        <source>Choose colour...</source>
+        <translation>Farbe wählen …</translation>
+    </message>
+    <message>
+        <source>Colour:</source>
+        <translation>Farbe:</translation>
+    </message>
+    <message>
+        <source>The daemon may not change the LEDs. Add your user to the group "gkey" (sudo usermod -aG gkey $USER), log out and back in, and replug the device.</source>
+        <translation>Der Daemon darf die LEDs nicht ändern. Füge deinen Benutzer der Gruppe „gkey“ hinzu (sudo usermod -aG gkey $USER), melde dich ab und wieder an und stecke das Gerät neu ein.</translation>
+    </message>
+    <message>
+        <source>Backlight</source>
+        <translation>Beleuchtung</translation>
+    </message>
+    <message>
+        <source>Macros</source>
+        <translation>Makros</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;Datei</translation>
+    </message>
+    <message>
+        <source>Open profile folder</source>
+        <translation>Profilordner öffnen</translation>
+    </message>
+    <message>
+        <source>Open macro folder</source>
+        <translation>Makroordner öffnen</translation>
+    </message>
+    <message>
+        <source>&amp;Quit</source>
+        <translation>&amp;Beenden</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Hilfe</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>Über</translation>
+    </message>
+    <message>
+        <source>About gkey-config</source>
+        <translation>Über gkey-config</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;gkey-config&lt;/b&gt; %1&lt;br&gt;Configuration of the gaming keys of Logitech G keyboards driven by the Linux kernel driver hid-lg-g15.&lt;br&gt;&lt;br&gt;License: GPL-2.0-only&lt;br&gt;&lt;a href="https://github.com/Lordbooker/gkey-config"&gt;github.com/Lordbooker/gkey-config&lt;/a&gt;</source>
+        <translation>&lt;b&gt;gkey-config&lt;/b&gt; %1&lt;br&gt;Konfiguration der G-Tasten von Logitech-G-Tastaturen mit dem Linux-Kerneltreiber hid-lg-g15.&lt;br&gt;&lt;br&gt;Lizenz: GPL-2.0-only&lt;br&gt;&lt;a href="https://github.com/Lordbooker/gkey-config"&gt;github.com/Lordbooker/gkey-config&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <source>%1 — layer M%2</source>
+        <translation>%1 – Ebene M%2</translation>
+    </message>
+    <message>
+        <source>Save profile</source>
+        <translation>Profil speichern</translation>
+    </message>
+    <message>
+        <source>Saved</source>
+        <translation>Gespeichert</translation>
+    </message>
+    <message>
+        <source>New profile</source>
+        <translation>Neues Profil</translation>
+    </message>
+    <message>
+        <source>Name:</source>
+        <translation>Name:</translation>
+    </message>
+    <message>
+        <source>A profile "%1" already exists.</source>
+        <translation>Ein Profil „%1“ existiert bereits.</translation>
+    </message>
+    <message>
+        <source>Duplicate profile</source>
+        <translation>Profil duplizieren</translation>
+    </message>
+    <message>
+        <source>Name of the copy:</source>
+        <translation>Name der Kopie:</translation>
+    </message>
+    <message>
+        <source>%1 (copy)</source>
+        <translation>%1 (Kopie)</translation>
+    </message>
+    <message>
+        <source>Rename profile</source>
+        <translation>Profil umbenennen</translation>
+    </message>
+    <message>
+        <source>New name:</source>
+        <translation>Neuer Name:</translation>
+    </message>
+    <message>
+        <source>Delete profile</source>
+        <translation>Profil löschen</translation>
+    </message>
+    <message>
+        <source>The last profile cannot be deleted.</source>
+        <translation>Das letzte Profil kann nicht gelöscht werden.</translation>
+    </message>
+    <message>
+        <source>Delete the profile "%1"?</source>
+        <translation>Das Profil „%1“ löschen?</translation>
+    </message>
+    <message>
+        <source>Backlight colour</source>
+        <translation>Farbe der Beleuchtung</translation>
+    </message>
+    <message>
+        <source>The daemon gkeyd is not running: changes are saved but not active.</source>
+        <translation>Der Daemon gkeyd läuft nicht: Änderungen werden gespeichert, sind aber nicht aktiv.</translation>
+    </message>
+    <message>
+        <source>Daemon running, %1 connected.</source>
+        <translation>Daemon läuft, %1 verbunden.</translation>
+    </message>
+    <message>
+        <source>Daemon running, %1 not connected.</source>
+        <translation>Daemon läuft, %1 nicht verbunden.</translation>
+    </message>
+    <message>
+        <source>Active on the device: profile "%1".</source>
+        <translation>Am Gerät aktiv: Profil „%1“.</translation>
+    </message>
+    <message>
+        <source>Restart daemon</source>
+        <translation>Daemon neu starten</translation>
+    </message>
+    <message>
+        <source>Start daemon</source>
+        <translation>Daemon starten</translation>
+    </message>
+    <message>
+        <source>Daemon: running</source>
+        <translation>Daemon: läuft</translation>
+    </message>
+    <message>
+        <source>Daemon: stopped</source>
+        <translation>Daemon: gestoppt</translation>
+    </message>
+    <message>
+        <source>Stop daemon</source>
+        <translation>Daemon stoppen</translation>
+    </message>
+    <message>
+        <source>systemctl --user %1 gkeyd failed: %2</source>
+        <translation>systemctl --user %1 gkeyd fehlgeschlagen: %2</translation>
+    </message>
+    <message>
+        <source>Open configuration</source>
+        <translation>Konfiguration öffnen</translation>
+    </message>
+    <message>
+        <source>Quit tray icon</source>
+        <translation>Tray-Symbol beenden</translation>
+    </message>
+    <message>
+        <source>Still running in the system tray. The daemon keeps working without it.</source>
+        <translation>Läuft im Hintergrund weiter (Symbol in der Systemleiste). Der Daemon arbeitet auch ohne das Programm.</translation>
+    </message>
+</context>
+<context>
+    <name>main</name>
+    <message>
+        <source>Configuration of the gaming keys of Logitech G keyboards.</source>
+        <translation>Konfiguration der G-Tasten von Logitech-G-Tastaturen.</translation>
+    </message>
+    <message>
+        <source>Start in the system tray without a window.</source>
+        <translation>Ohne Fenster, nur mit Symbol in der Systemleiste starten.</translation>
+    </message>
+    <message>
+        <source>Save a picture of the window and exit.</source>
+        <translation>Ein Bild des Fensters speichern und beenden.</translation>
+    </message>
+    <message>
+        <source>With --screenshot: select this key.</source>
+        <translation>Mit --screenshot: diese Taste auswählen.</translation>
+    </message>
+    <message>
+        <source>With --screenshot: show this tab (0-2).</source>
+        <translation>Mit --screenshot: diesen Reiter zeigen (0-2).</translation>
+    </message>
+</context>
+</TS>

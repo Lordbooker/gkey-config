@@ -27,6 +27,9 @@ public:
     // Writes the macro atomically. A macro with the same name keeps its file.
     bool save(const Macro &macro, QString *error = nullptr);
 
+    // Deletes the macro's file.
+    bool remove(const QString &name, QString *error = nullptr);
+
     const QStringList &messages() const { return m_messages; }
     const QString &directory() const { return m_directory; }
 

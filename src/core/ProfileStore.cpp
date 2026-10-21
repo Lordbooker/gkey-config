@@ -90,6 +90,52 @@ bool ProfileStore::save(const Profile &profile, QString *error)
     return true;
 }
 
+bool ProfileStore::remove(const QString &name, QString *error)
+{
+    const QString path = m_files.value(name);
+    if (path.isEmpty()) {
+        if (error)
+            *error = QStringLiteral("profile \"%1\" does not exist").arg(name);
+        return false;
+    }
+    QFile file(path);
+    if (!file.remove()) {
+        if (error)
+            *error = QStringLiteral("%1: %2").arg(path, file.errorString());
+        return false;
+    }
+    m_files.remove(name);
+    m_profiles.remove(name);
+    return true;
+}
+
+bool ProfileStore::rename(const QString &oldName, const QString &newName, QString *error)
+{
+    const Profile *existing = profile(oldName);
+    if (!existing) {
+        if (error)
+            *error = QStringLiteral("profile \"%1\" does not exist").arg(oldName);
+        return false;
+    }
+    if (oldName == newName)
+        return true;
+    if (profile(newName)) {
+        if (error)
+            *error = QStringLiteral("a profile \"%1\" already exists").arg(newName);
+        return false;
+    }
+    Profile renamed = *existing;
+    renamed.setName(newName);
+    const QString oldPath = m_files.value(oldName);
+    // Write the new file first: if that fails, nothing is lost.
+    if (!save(renamed, error))
+        return false;
+    m_files.remove(oldName);
+    m_profiles.remove(oldName);
+    QFile::remove(oldPath);
+    return true;
+}
+
 void ProfileStore::ensureDefault()
 {
     if (!m_profiles.isEmpty())

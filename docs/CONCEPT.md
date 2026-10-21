@@ -1,6 +1,6 @@
 # gkey-config – Concept
 
-Status: **approved on 2026-10-21.** Milestones 1–3 done and tested on the G13 (2026-10-21).
+Status: **approved on 2026-10-21.** Milestones 1–3 done and tested on the G13 (2026-10-21); milestone 4 (GUI) implemented, test pending.
 
 gkey-config configures the gaming keys of Logitech G keyboards and keypads that are driven by the
 Linux kernel driver `hid-lg-g15`. It does **not** talk to the USB device itself and does not depend on
@@ -497,15 +497,30 @@ Planned for later milestones: `LcdText`, `LcdPage` (milestone 5), `ReportFocus`,
 
 ## 11. GUI
 
-* Device selector (one tab/entry per connected device; image per model).
-* Clickable device image: bound keys marked, pressed keys highlighted live.
-* Mode selector M1/M2/M3, profile list (create, duplicate, rename, delete, set default, link
-  applications, lock).
-* Binding editor per key (actions from 5.2), key capture by pressing the key.
-* Macro library with editor and recorder (reused from linux-g13-driver), repeat modes.
-* Backlight (RGB or level depending on model), stick settings (G13), LCD pages (G13).
-* Tray icon, single instance, translations; window state follows profile/mode changes made on the
-  device.
+Qt6 Widgets application `gkey-config` (implemented in milestone 4):
+
+* Device selector (all known models; untested ones are marked).
+* Schematic drawing of the device from the model file's `view` section – drawn with QPainter in
+  light and dark themes, no bitmap. Bound keys carry a dot in the profile's backlight colour, the
+  selected key is outlined, keys pressed on the device light up live (D-Bus `KeyEvent`); pressing
+  a key on the device also selects it while the window is active.
+* Profile selection (activates the profile on the device) and profile management (new, duplicate,
+  rename, delete); layer buttons M1–M3 (switch the device as well and choose the edited layer).
+* Binding editor for the selected key: not bound, key, key combination (captured by pressing the
+  keys together), mouse button, macro (with repeat mode), layer, profile, LCD page. Every change is
+  saved at once; the daemon reloads the file.
+* Backlight tab: colour per profile with live preview on the device while choosing.
+* Macro tab: library (new, delete), step list with in-place editing of times, insertion of
+  press/release/tap/wait steps, moving and removing steps, "set all waits", recording with timing
+  (also started/stopped with MR on the device), playback on the device.
+* Status bar and tray icon show whether the daemon runs; it can be started, stopped and
+  restarted (`systemctl --user`). Single instance; closing the window keeps the tray icon.
+* Translations via Qt Linguist: English (source) and German.
+* `gkey-config --screenshot file [--show-key G4 --show-tab 0]` renders the window to an image
+  (documentation).
+
+The stick keys (thumb buttons, stick directions) can already be bound in the GUI; the daemon uses
+these bindings once the stick is handled (milestone 5).
 
 ---
 

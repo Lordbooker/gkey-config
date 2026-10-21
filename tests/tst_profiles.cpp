@@ -25,6 +25,7 @@ private slots:
     void profileValidation();
     void storeLoadSaveAndReload();
     void storeDuplicateNames();
+    void storeRenameAndRemove();
     void state();
 
 private:
@@ -234,6 +235,36 @@ void TestProfiles::storeDuplicateNames()
     ProfileStore store(*g13(), path);
     QCOMPARE(store.names(), QStringList{QStringLiteral("Same")});
     QCOMPARE(store.messages().size(), 2);
+}
+
+void TestProfiles::storeRenameAndRemove()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    ProfileStore store(*g13(), dir.filePath(QStringLiteral("g13")));
+    Profile profile;
+    profile.setName(QStringLiteral("Old"));
+    profile.setBinding(2, QStringLiteral("G7"), Action::key(KEY_7));
+    QVERIFY(store.save(profile));
+    Profile other;
+    other.setName(QStringLiteral("Other"));
+    QVERIFY(store.save(other));
+
+    QString error;
+    QVERIFY(!store.rename(QStringLiteral("Old"), QStringLiteral("Other"), &error));   // name taken
+    QVERIFY(error.contains(QStringLiteral("already exists")));
+    QVERIFY(store.rename(QStringLiteral("Old"), QStringLiteral("New Name"), &error));
+    QVERIFY(!QFile::exists(dir.filePath(QStringLiteral("g13/old.json"))));
+    QVERIFY(QFile::exists(dir.filePath(QStringLiteral("g13/new-name.json"))));
+    QCOMPARE(store.profile(QStringLiteral("New Name"))->bindings(2).value(QStringLiteral("G7")).codes(), QList<int>{KEY_7});
+
+    QVERIFY(store.remove(QStringLiteral("Other"), &error));
+    QCOMPARE(store.names(), QStringList{QStringLiteral("New Name")});
+    QVERIFY(!store.remove(QStringLiteral("Other"), &error));
+
+    // The changes survive a reload from disk.
+    store.reload();
+    QCOMPARE(store.names(), QStringList{QStringLiteral("New Name")});
 }
 
 void TestProfiles::state()

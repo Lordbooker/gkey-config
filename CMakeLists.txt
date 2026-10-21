@@ -48,7 +48,7 @@ pkg_check_modules(LIBUDEV  REQUIRED IMPORTED_TARGET libudev)
 
 set(GKEY_QT_COMPONENTS Core DBus)
 if(BUILD_GUI)
-    list(APPEND GKEY_QT_COMPONENTS Gui Widgets)
+    list(APPEND GKEY_QT_COMPONENTS Gui Widgets Network LinguistTools)
 endif()
 if(BUILD_TESTS)
     list(APPEND GKEY_QT_COMPONENTS Test)
@@ -86,6 +86,18 @@ install(FILES data/sysusers/gkey-config.conf
 install(FILES data/systemd/gkeyd.service
     DESTINATION lib/systemd/user
 )
+if(BUILD_GUI)
+    install(FILES data/desktop/io.github.lordbooker.GKeyConfig.desktop
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
+    )
+    # Tray icon at login (XDG autostart; with prefix /usr -> /etc/xdg/autostart)
+    install(FILES data/desktop/gkey-config-tray.desktop
+        DESTINATION ${CMAKE_INSTALL_FULL_SYSCONFDIR}/xdg/autostart
+    )
+    install(FILES data/icons/gkey-config.svg
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
+    )
+endif()
 install(FILES README.md LICENSE
     DESTINATION ${CMAKE_INSTALL_DOCDIR}
 )

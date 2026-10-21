@@ -32,6 +32,12 @@ public:
     // Writes the profile atomically. A profile with the same name keeps its file.
     bool save(const Profile &profile, QString *error = nullptr);
 
+    // Deletes the profile's file.
+    bool remove(const QString &name, QString *error = nullptr);
+
+    // Renames a profile; its file gets a name derived from the new name.
+    bool rename(const QString &oldName, const QString &newName, QString *error = nullptr);
+
     // Creates an empty profile "Default" if there is no profile at all.
     void ensureDefault();
 

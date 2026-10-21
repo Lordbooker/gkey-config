@@ -9,7 +9,9 @@ edits profiles and macros. No libusb driver, no input-remapper or keyd.
 
 > **Status: early development.** The daemon handles the G13 keypad: key, key combination, mouse
 > button and macro bindings, M1–M3 modes with LEDs, profile backlight colour, profiles and macros
-> with live reload, D-Bus API. Stick, LCD and the GUI follow. See [docs/CONCEPT.md](docs/CONCEPT.md) for the design and the milestones.
+> with live reload, D-Bus API and the configuration tool. Stick and LCD follow.
+
+![gkey-config main window](docs/images/main-window.png) See [docs/CONCEPT.md](docs/CONCEPT.md) for the design and the milestones.
 
 ## Supported devices
 
@@ -28,6 +30,7 @@ Dependencies:
 |---|---|---|---|
 | Build tools | `base-devel cmake pkgconf` | `gcc-c++ cmake pkgconf-pkg-config` | `build-essential cmake pkg-config` |
 | Qt6 | `qt6-base` | `qt6-qtbase-devel` | `qt6-base-dev` |
+| Qt6 Linguist (GUI translations) | `qt6-tools` | `qt6-qttools-devel` | `qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools` |
 | libevdev | `libevdev` | `libevdev-devel` | `libevdev-dev` |
 | libudev | `systemd-libs` | `systemd-devel` | `libudev-dev` |
 
@@ -109,6 +112,14 @@ keeps working as a normal joystick.
 
 LED control needs membership in the group `gkey` (see [Permissions](#permissions)). For a manual
 installation create the group first: `sudo groupadd -r gkey`.
+
+## Configuration tool
+
+`build/src/gui/gkey-config` (installed: *G-Key Configuration* in the application menu). Click a
+key in the picture – or press it on the device – and choose what it does; every change is saved
+immediately and the daemon picks it up. The profile list and the layer buttons M1–M3 switch the
+device as well. Macros are created and recorded in the *Macros* tab; MR on the device starts and
+stops a recording. Closing the window keeps the tray icon running.
 
 ## Permissions
 

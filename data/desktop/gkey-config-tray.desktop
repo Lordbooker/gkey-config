@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=G-Key Configuration (tray icon)
+Name[de]=G-Tasten-Konfiguration (Tray-Symbol)
+Comment=Tray icon of the G-key configuration
+Comment[de]=Tray-Symbol der G-Tasten-Konfiguration
+Exec=gkey-config --tray
+Icon=gkey-config
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

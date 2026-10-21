@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=G-Key Configuration
+Name[de]=G-Tasten-Konfiguration
+GenericName=Gaming keyboard configuration
+GenericName[de]=Konfiguration für Gaming-Tastaturen
+Comment=Configure the gaming keys of Logitech G keyboards (G13, G15, G510, ...)
+Comment[de]=G-Tasten von Logitech-G-Tastaturen konfigurieren (G13, G15, G510, …)
+Exec=gkey-config
+Icon=gkey-config
+Terminal=false
+Categories=Settings;HardwareSettings;Qt;
+Keywords=Logitech;G13;G15;G510;G11;macro;keyboard;gaming;
+StartupNotify=true

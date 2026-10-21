@@ -164,6 +164,10 @@ void TestMacros::store()
     file.close();
     QVERIFY(spy.wait(3000));
     QCOMPARE(store.names(), (QStringList{QStringLiteral("Hello World"), QStringLiteral("Other")}));
+
+    QVERIFY(store.remove(QStringLiteral("Hello World")));
+    QVERIFY(!QFile::exists(dir.filePath(QStringLiteral("macros/hello-world.json"))));
+    QVERIFY(!store.remove(QStringLiteral("Hello World")));
 }
 
 void TestMacros::engineWhileHeld()
