@@ -1,6 +1,6 @@
 # gkey-config – Concept
 
-Status: **draft for review** (2026-10-21). Nothing in here is implemented yet.
+Status: **all decisions taken, awaiting approval** (2026-10-21). Nothing in here is implemented yet.
 
 gkey-config configures the gaming keys of Logitech G keyboards and keypads that are driven by the
 Linux kernel driver `hid-lg-g15`. It does **not** talk to the USB device itself and does not depend on
@@ -352,10 +352,28 @@ implemented *(verify)*.
 | input event nodes of supported devices | `TAG+="uaccess"` |
 | hidraw node of the G13 (LCD) | `TAG+="uaccess"` |
 | `/dev/uinput` | `TAG+="uaccess"` |
-| LED attributes (`brightness`, `multi_intensity`) | see open point 5 |
+| LED attributes (`brightness`, `multi_intensity`) of supported devices | group `gkey`, mode 0664 (see 9.1a) |
 
 `uaccess` gives access to the user of the active local session only (systemd-logind), the same
 approach as linux-g13-driver.
+
+### 9.1a LED permissions *(decided)*
+
+sysfs attributes cannot carry ACLs, so `uaccess` does not work for the LEDs. Instead:
+
+* The packages create a system group **`gkey`** via `sysusers.d`.
+* The udev rule sets group `gkey` and mode `0664` on `brightness` and `multi_intensity` of the LEDs
+  that belong to a supported device (matched below the device's HID node, not by name alone).
+* Users who want LED control are added once by the administrator:
+  `sudo usermod -aG gkey $USER`, then log out and back in. Packages never add users on their own.
+* Existing groups such as `input` are **not** used: membership there allows reading every keyboard.
+* Without group membership everything except the LEDs keeps working. The daemon detects the
+  missing permission and reports it (log, D-Bus `Status`, GUI hint with the command above).
+
+Rejected alternatives: world-writable attributes (any local user could change the LEDs; contradicts
+the "no world-writable nodes" rule from linux-g13-driver), a privileged helper service (root
+component and polkit policy only for LEDs), writing LEDs through hidraw (bypasses the kernel's LED
+state, G13 only).
 
 ### 9.2 Diagnostics and coexistence
 
@@ -438,9 +456,8 @@ Service `io.github.lordbooker.GKeyConfig`, object `/io/github/lordbooker/GKeyCon
 | 2 | Package targets | only distribution releases with kernel ≥ 6.19 |
 | 3 | Test hardware | G13 only; other models shipped as untested |
 | 4 | linux-g13-driver | package conflict |
+| 5 | LED permissions | dedicated group `gkey` (see 9.1a) |
 
 ## 15. Open points
 
-1. **LED permissions**: sysfs attributes cannot carry ACLs, so `uaccess` does not work for them.
-   Options: (a) world-writable `brightness`/`multi_intensity` of the matching LEDs only,
-   (b) group-writable for a dedicated group, (c) a small privileged helper. Under discussion.
+None. The concept is ready for approval.
