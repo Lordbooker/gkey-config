@@ -1,6 +1,6 @@
 # gkey-config – Concept
 
-Status: **approved on 2026-10-21.** Milestones 1–4 done and tested on the G13 (2026-10-21); milestone 5 (stick, LCD) implemented, hardware test pending.
+Status: **approved on 2026-10-21.** Milestones 1–5 done and tested on the G13 (2026-10-21).
 
 gkey-config configures the gaming keys of Logitech G keyboards and keypads that are driven by the
 Linux kernel driver `hid-lg-g15`. It does **not** talk to the USB device itself and does not depend on
@@ -56,7 +56,8 @@ until someone with the device confirms them.
   light button).
 * Stick: `BTN_THUMB`, `BTN_BASE`, `BTN_BASE2` confirmed; `ABS_X` and `ABS_Y` reach the full range
   0–255. The **rest position is not 128**: it was measured at X ≈ 137–139, Y ≈ 138–140 with a jitter
-  of about ±3 (see 7.1).
+  of about ±3 (see 7.1). The calibration in milestone 5 confirmed rest values of 136–140 on both
+  axes.
 * LEDs: names, types and ranges as in section 2.3; power-on backlight was `multi_intensity` 0 255 0.
 * Permissions without our udev rule: keypad and hidraw root/`input` only; the stick node already
   carries an ACL for the session user (set by the system's joystick rules); LEDs root-only.
