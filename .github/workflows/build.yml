@@ -1,0 +1,60 @@
+name: Build
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.distro }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro: Arch Linux
+            image: archlinux:latest
+            install: >-
+              pacman -Syu --noconfirm --needed
+              base-devel cmake git pkgconf qt6-base libevdev systemd
+          - distro: Fedora
+            image: fedora:latest
+            install: >-
+              dnf install -y
+              gcc-c++ cmake git pkgconf-pkg-config qt6-qtbase-devel libevdev-devel
+              systemd-devel systemd-udev
+          - distro: Debian testing
+            image: debian:testing
+            install: >-
+              apt-get update &&
+              DEBIAN_FRONTEND=noninteractive apt-get install -y
+              build-essential cmake git pkg-config qt6-base-dev libevdev-dev libudev-dev udev
+
+    steps:
+      - name: Install dependencies
+        run: ${{ matrix.install }}
+
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DCMAKE_INSTALL_PREFIX=/usr
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Verify udev rule
+        run: |
+          if udevadm verify --help >/dev/null 2>&1; then
+            udevadm verify --resolve-names=never data/udev/70-gkey-config.rules
+          else
+            echo "udevadm verify not available, skipped"
+          fi
+
+      - name: Install into staging directory
+        run: DESTDIR="$PWD/stage" cmake --install build

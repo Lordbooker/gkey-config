@@ -1,0 +1,159 @@
+#include "DeviceModel.h"
+#include "EventCodes.h"
+#include "ModelRegistry.h"
+
+#include <QDir>
+#include <QFile>
+#include <QTemporaryDir>
+#include <QTest>
+
+#include <linux/input-event-codes.h>
+
+class TestDeviceModel : public QObject {
+    Q_OBJECT
+
+private slots:
+    void eventCodes();
+    void allShippedModelsAreValid();
+    void g13Model();
+    void invalidModels_data();
+    void invalidModels();
+    void registryOverride();
+};
+
+namespace {
+
+QByteArray minimalModel(const QByteArray &keys = R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
+                        const QByteArray &extra = {})
+{
+    return R"({ "id": "test", "name": "Test", "usb": [{ "vendor": "046d", "product": "ffff" }],
+               "inputs": { "keys": "Test Keys" }, "keys": )" + keys + extra + "}";
+}
+
+}
+
+void TestDeviceModel::eventCodes()
+{
+    QCOMPARE(EventCodes::keyCode(QStringLiteral("KEY_MACRO1")), std::optional<int>(KEY_MACRO1));
+    QCOMPARE(EventCodes::keyCode(QStringLiteral("BTN_THUMB")), std::optional<int>(BTN_THUMB));
+    QCOMPARE(EventCodes::absCode(QStringLiteral("ABS_Y")), std::optional<int>(ABS_Y));
+    QVERIFY(!EventCodes::keyCode(QStringLiteral("KEY_DOES_NOT_EXIST")));
+    QCOMPARE(EventCodes::keyName(KEY_KBD_LCD_MENU5), QStringLiteral("KEY_KBD_LCD_MENU5"));
+}
+
+void TestDeviceModel::allShippedModelsAreValid()
+{
+    ModelRegistry registry;
+    registry.load({QStringLiteral(GKEY_SOURCE_MODEL_DIR)});
+    QVERIFY2(registry.errors().isEmpty(), qPrintable(registry.errors().join(u'\n')));
+    QVERIFY(!registry.models().isEmpty());
+}
+
+void TestDeviceModel::g13Model()
+{
+    ModelRegistry registry;
+    registry.load({QStringLiteral(GKEY_SOURCE_MODEL_DIR)});
+    const DeviceModel *model = registry.findByUsb(0x046d, 0xc21c);
+    QVERIFY(model);
+    QCOMPARE(model->id(), QStringLiteral("g13"));
+    QCOMPARE(model->inputs().value(QStringLiteral("keys")), QStringLiteral("Logitech G13 Gaming Keypad"));
+    QCOMPARE(model->inputs().value(QStringLiteral("stick")), QStringLiteral("Logitech G13 Thumbstick"));
+
+    // Values from drivers/hid/hid-lg-g15.c
+    QCOMPARE(model->keyForCode(QStringLiteral("keys"), KEY_MACRO22)->id, QStringLiteral("G22"));
+    QCOMPARE(model->keyForCode(QStringLiteral("keys"), KEY_KBD_LCD_MENU1)->id, QStringLiteral("L1"));
+    QCOMPARE(model->keyForCode(QStringLiteral("keys"), KEY_KBD_LCD_MENU5)->id, QStringLiteral("BD"));
+    QCOMPARE(model->keyForCode(QStringLiteral("stick"), BTN_THUMB)->id, QStringLiteral("STICK_PRESS"));
+    QVERIFY(!model->keyForCode(QStringLiteral("keys"), BTN_THUMB));
+
+    QCOMPARE(model->keyById(QStringLiteral("M1"))->role, DeviceModel::KeyRole::Mode1);
+    QCOMPARE(model->keyById(QStringLiteral("MR"))->role, DeviceModel::KeyRole::Record);
+    QCOMPARE(model->keyById(QStringLiteral("LIGHT"))->role, DeviceModel::KeyRole::Hardware);
+
+    // 22 G keys + L1-L4 + BD + 3 stick buttons + 4 stick directions
+    QCOMPARE(model->bindableKeyIds().size(), 34);
+    QVERIFY(!model->bindableKeyIds().contains(QStringLiteral("M1")));
+    QVERIFY(!model->bindableKeyIds().contains(QStringLiteral("LIGHT")));
+    QVERIFY(model->bindableKeyIds().contains(QStringLiteral("STICK_UP")));
+
+    QCOMPARE(model->ledByRole(QStringLiteral("backlight"))->type, DeviceModel::LedType::Rgb);
+    QCOMPARE(model->ledByRole(QStringLiteral("mode2"))->suffix, QStringLiteral("macro_preset_2"));
+    QVERIFY(model->stick());
+    QCOMPARE(model->stick()->axisX, ABS_X);
+    QVERIFY(model->lcd());
+    QCOMPARE(model->lcd()->width, 160);
+    QCOMPARE(model->lcd()->height, 43);
+}
+
+void TestDeviceModel::invalidModels_data()
+{
+    QTest::addColumn<QByteArray>("json");
+    QTest::addColumn<QString>("expectedError");
+
+    QTest::newRow("valid") << minimalModel() << QString();
+    QTest::newRow("broken json") << QByteArray("{") << QStringLiteral("invalid JSON");
+    QTest::newRow("unknown code")
+        << minimalModel(R"([{ "id": "G1", "code": "KEY_NOPE" }])") << QStringLiteral("unknown event code");
+    QTest::newRow("duplicate id")
+        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }, { "id": "G1", "code": "KEY_MACRO2" }])")
+        << QStringLiteral("duplicate key id");
+    QTest::newRow("duplicate code")
+        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }, { "id": "G2", "code": "KEY_MACRO1" }])")
+        << QStringLiteral("already mapped");
+    QTest::newRow("unknown input")
+        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1", "input": "stick" }])")
+        << QStringLiteral("unknown input");
+    QTest::newRow("reserved id")
+        << minimalModel(R"([{ "id": "STICK_UP", "code": "KEY_MACRO1" }])") << QStringLiteral("reserved");
+    QTest::newRow("unknown role")
+        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1", "role": "turbo" }])")
+        << QStringLiteral("unknown role");
+    QTest::newRow("unknown led role")
+        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
+                        R"(, "leds": { "disco": { "suffix": "x" } })")
+        << QStringLiteral("unknown LED role");
+    QTest::newRow("area for unknown key")
+        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
+                        R"(, "areas": [{ "key": "G9", "shape": "rect", "x": 1, "y": 1, "w": 5, "h": 5 }])")
+        << QStringLiteral("unknown key");
+    QTest::newRow("bad usb id")
+        << QByteArray(R"({ "id": "test", "name": "Test", "usb": [{ "vendor": "46d", "product": "ffff" }],
+                         "inputs": { "keys": "x" }, "keys": [{ "id": "G1", "code": "KEY_MACRO1" }] })")
+        << QStringLiteral("4-digit hex");
+}
+
+void TestDeviceModel::invalidModels()
+{
+    QFETCH(QByteArray, json);
+    QFETCH(QString, expectedError);
+
+    const auto model = DeviceModel::fromJson(json, QStringLiteral("test.json"));
+    if (expectedError.isEmpty()) {
+        QVERIFY2(model.has_value(), model ? "" : qPrintable(model.error()));
+    } else {
+        QVERIFY(!model.has_value());
+        QVERIFY2(model.error().contains(expectedError), qPrintable(model.error()));
+        QVERIFY(model.error().startsWith(QStringLiteral("test.json: ")));
+    }
+}
+
+void TestDeviceModel::registryOverride()
+{
+    // A model in an earlier search path overrides the shipped one with the same id.
+    QTemporaryDir userDir;
+    QVERIFY(userDir.isValid());
+    QFile file(userDir.filePath(QStringLiteral("my-g13.json")));
+    QVERIFY(file.open(QIODevice::WriteOnly));
+    file.write(R"({ "id": "g13", "name": "Overridden G13", "usb": [{ "vendor": "046d", "product": "c21c" }],
+                   "inputs": { "keys": "Logitech G13 Gaming Keypad" },
+                   "keys": [{ "id": "G1", "code": "KEY_MACRO1" }] })");
+    file.close();
+
+    ModelRegistry registry;
+    registry.load({userDir.path(), QStringLiteral(GKEY_SOURCE_MODEL_DIR)});
+    QVERIFY(registry.errors().isEmpty());
+    QCOMPARE(registry.findById(QStringLiteral("g13"))->name(), QStringLiteral("Overridden G13"));
+}
+
+QTEST_GUILESS_MAIN(TestDeviceModel)
+#include "tst_devicemodel.moc"

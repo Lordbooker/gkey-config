@@ -1,6 +1,6 @@
 # gkey-config – Concept
 
-Status: **all decisions taken, awaiting approval** (2026-10-21). Nothing in here is implemented yet.
+Status: **approved on 2026-10-21.** Milestone 1 (project skeleton) is done.
 
 gkey-config configures the gaming keys of Logitech G keyboards and keypads that are driven by the
 Linux kernel driver `hid-lg-g15`. It does **not** talk to the USB device itself and does not depend on
@@ -460,4 +460,4 @@ Service `io.github.lordbooker.GKeyConfig`, object `/io/github/lordbooker/GKeyCon
 
 ## 15. Open points
 
-None. The concept is ready for approval.
+None.

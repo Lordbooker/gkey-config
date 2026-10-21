@@ -1,0 +1,23 @@
+# gkey-config: access to Logitech G keyboards driven by the kernel driver hid-lg-g15.
+#
+# "uaccess" grants access via ACL only to the user of the active local session
+# (systemd-logind). The tag is evaluated by 73-seat-late.rules, so this file must
+# sort BEFORE 73.
+#
+# Supported models: G13 (046d:c21c). Further models are added in milestone 7.
+
+# Gaming-keys and thumbstick input devices.
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c21c", TAG+="uaccess"
+
+# hidraw node (G13 LCD).
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c21c", TAG+="uaccess"
+
+# Virtual input device for the key output.
+KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess"
+
+# LEDs: sysfs attributes cannot carry ACLs. Members of the group "gkey" (created
+# by sysusers.d/gkey-config.conf) may change brightness and colour of the LEDs
+# that belong to a supported device. Users are added by the administrator:
+#   sudo usermod -aG gkey $USER
+ACTION=="add", SUBSYSTEM=="leds", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c21c", \
+    RUN+="/bin/sh -c 'for f in /sys%p/brightness /sys%p/multi_intensity; do [ -e $$f ] && chgrp gkey $$f && chmod 0664 $$f; done; exit 0'"

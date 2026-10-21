@@ -1,0 +1,13 @@
+[Unit]
+Description=gkey-config daemon for Logitech G keyboards
+Documentation=https://github.com/Lordbooker/gkey-config
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/gkeyd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

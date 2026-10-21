@@ -1,0 +1,9 @@
+# The group "gkey" (sysusers.d) and the udev rule are applied by the pacman
+# hooks of the systemd package.
+
+post_install() {
+    echo "gkey-config: to allow LED control, add your user to the group 'gkey':"
+    echo "  sudo usermod -aG gkey \$USER   (then log out and back in)"
+    echo "gkey-config: enable the daemon as your normal user:"
+    echo "  systemctl --user enable --now gkeyd"
+}

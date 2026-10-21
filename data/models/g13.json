@@ -1,0 +1,82 @@
+{
+  "id": "g13",
+  "name": "Logitech G13",
+  "tested": false,
+  "minKernel": "6.19",
+  "usb": [
+    { "vendor": "046d", "product": "c21c" }
+  ],
+  "inputs": {
+    "keys": "Logitech G13 Gaming Keypad",
+    "stick": "Logitech G13 Thumbstick"
+  },
+  "keys": [
+    { "id": "G1", "code": "KEY_MACRO1" },
+    { "id": "G2", "code": "KEY_MACRO2" },
+    { "id": "G3", "code": "KEY_MACRO3" },
+    { "id": "G4", "code": "KEY_MACRO4" },
+    { "id": "G5", "code": "KEY_MACRO5" },
+    { "id": "G6", "code": "KEY_MACRO6" },
+    { "id": "G7", "code": "KEY_MACRO7" },
+    { "id": "G8", "code": "KEY_MACRO8" },
+    { "id": "G9", "code": "KEY_MACRO9" },
+    { "id": "G10", "code": "KEY_MACRO10" },
+    { "id": "G11", "code": "KEY_MACRO11" },
+    { "id": "G12", "code": "KEY_MACRO12" },
+    { "id": "G13", "code": "KEY_MACRO13" },
+    { "id": "G14", "code": "KEY_MACRO14" },
+    { "id": "G15", "code": "KEY_MACRO15" },
+    { "id": "G16", "code": "KEY_MACRO16" },
+    { "id": "G17", "code": "KEY_MACRO17" },
+    { "id": "G18", "code": "KEY_MACRO18" },
+    { "id": "G19", "code": "KEY_MACRO19" },
+    { "id": "G20", "code": "KEY_MACRO20" },
+    { "id": "G21", "code": "KEY_MACRO21" },
+    { "id": "G22", "code": "KEY_MACRO22" },
+    { "id": "L1", "code": "KEY_KBD_LCD_MENU1" },
+    { "id": "L2", "code": "KEY_KBD_LCD_MENU2" },
+    { "id": "L3", "code": "KEY_KBD_LCD_MENU3" },
+    { "id": "L4", "code": "KEY_KBD_LCD_MENU4" },
+    { "id": "BD", "code": "KEY_KBD_LCD_MENU5" },
+    { "id": "M1", "code": "KEY_MACRO_PRESET1", "role": "mode1" },
+    { "id": "M2", "code": "KEY_MACRO_PRESET2", "role": "mode2" },
+    { "id": "M3", "code": "KEY_MACRO_PRESET3", "role": "mode3" },
+    { "id": "MR", "code": "KEY_MACRO_RECORD_START", "role": "record" },
+    { "id": "LIGHT", "code": "KEY_LIGHTS_TOGGLE", "role": "hardware" },
+    { "id": "THUMB_LEFT", "code": "BTN_BASE", "input": "stick" },
+    { "id": "THUMB_DOWN", "code": "BTN_BASE2", "input": "stick" },
+    { "id": "STICK_PRESS", "code": "BTN_THUMB", "input": "stick" }
+  ],
+  "leds": {
+    "backlight": {
+      "suffix": "kbd_backlight",
+      "type": "rgb"
+    },
+    "mode1": {
+      "suffix": "macro_preset_1"
+    },
+    "mode2": {
+      "suffix": "macro_preset_2"
+    },
+    "mode3": {
+      "suffix": "macro_preset_3"
+    },
+    "record": {
+      "suffix": "macro_record"
+    }
+  },
+  "stick": {
+    "input": "stick",
+    "axisX": "ABS_X",
+    "axisY": "ABS_Y",
+    "min": 0,
+    "max": 255
+  },
+  "lcd": {
+    "type": "g13-hidraw",
+    "width": 160,
+    "height": 43
+  },
+  "image": "g13.png",
+  "areas": []
+}
