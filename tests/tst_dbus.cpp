@@ -72,7 +72,8 @@ void TestDBus::introspection()
                                QLatin1String(DBusService::ServiceName), QStringLiteral("--object-path"),
                                QLatin1String(DBusService::ObjectPath)});
     for (const char *member : {"Status", "SetProfile", "SetMode", "SetBacklight", "ResetBacklight", "Reload",
-                               "RunMacro", "StopMacros", "SetRecording", "DeviceAdded", "DeviceRemoved",
+                               "RunMacro", "StopMacros", "SetRecording", "LcdText", "LcdPage", "CalibrateStick",
+                               "DeviceAdded", "DeviceRemoved",
                                "ProfileChanged", "ModeChanged", "KeyEvent", "RecordingChanged", "Recording"}) {
         QVERIFY2(xml.contains(QLatin1String(member)), member);
     }
