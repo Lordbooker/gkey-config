@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
+[Unit]
+Description=gkey-config daemon for Logitech G keyboards
+Documentation=https://github.com/Lordbooker/gkey-config
+After=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=io.github.lordbooker.GKeyConfig
+ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/gkeyd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=Application
+Name=G-Key Configuration (tray icon)
+Name[de]=G-Tasten-Konfiguration (Tray-Symbol)
+Name[es]=Configuración de teclas G (icono de bandeja)
+Name[fr]=Configuration des touches G (icône de notification)
+Name[it]=Configurazione tasti G (icona di notifica)
+Name[pt]=Configuração das teclas G (ícone da bandeja)
+Comment=Tray icon of the G-key configuration
+Comment[de]=Tray-Symbol der G-Tasten-Konfiguration
+Comment[es]=Icono de bandeja de la configuración de teclas G
+Comment[fr]=Icône de notification de la configuration des touches G
+Comment[it]=Icona di notifica della configurazione dei tasti G
+Comment[pt]=Ícone da bandeja da configuração das teclas G
+Exec=gkey-config --tray
+Icon=gkey-config
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

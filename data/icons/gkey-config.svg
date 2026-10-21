@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- gkey-config application icon: a key cap with a "G" on a dark keypad -->
+  <rect x="8" y="8" width="112" height="112" rx="24" fill="#2b2d31"/>
+  <rect x="26" y="22" width="76" height="72" rx="14" fill="#1f6f99"/>
+  <rect x="26" y="20" width="76" height="66" rx="14" fill="#3daee9"/>
+  <text x="64" y="68" text-anchor="middle" font-family="sans-serif" font-weight="bold"
+        font-size="46" fill="#ffffff">G</text>
+  <rect x="34" y="100" width="18" height="8" rx="3" fill="#55585e"/>
+  <rect x="55" y="100" width="18" height="8" rx="3" fill="#55585e"/>
+  <rect x="76" y="100" width="18" height="8" rx="3" fill="#55585e"/>
+</svg>

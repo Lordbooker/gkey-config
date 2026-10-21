@@ -1,0 +1,27 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
+set -e
+
+if [ "$1" = "configure" ]; then
+    # Group "gkey" for LED access (sysusers.d/gkey-config.conf).
+    if command -v systemd-sysusers >/dev/null 2>&1; then
+        systemd-sysusers gkey-config.conf || true
+    fi
+    # Apply the udev rule to devices that are already connected.
+    if command -v udevadm >/dev/null 2>&1; then
+        udevadm control --reload-rules || true
+        udevadm trigger --subsystem-match=input --subsystem-match=hidraw --subsystem-match=misc || true
+        udevadm trigger --action=add --subsystem-match=leds || true
+    fi
+    if [ -z "${2:-}" ]; then
+        echo "gkey-config: start \"G-Key Configuration\" from the application menu; on its first"
+        echo "  start it offers to start the daemon at login and to allow LED control."
+    else
+        echo "gkey-config: restart a running daemon to use the new version:"
+        echo "  systemctl --user restart gkeyd"
+    fi
+fi
+
+exit 0

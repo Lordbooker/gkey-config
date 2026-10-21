@@ -1,0 +1,42 @@
+# Maintainer: Lordbooker <lordbooker@gmail.com>
+#
+# Development version (branch dev). The release version is the AUR package
+# gkey-config (packaging/arch/gkey-config).
+
+pkgname=gkey-config-git
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Configuration tool for the gaming keys of Logitech G keyboards (hid-lg-g15), development version"
+arch=('x86_64')
+url="https://github.com/Lordbooker/gkey-config"
+license=('GPL-2.0-only')
+depends=('qt6-base' 'libevdev' 'systemd-libs' 'systemd')
+makedepends=('cmake' 'git' 'qt6-tools')
+optdepends=('qt6-translations: translated standard buttons in the configuration tool')
+provides=("gkey-config=${pkgver%%.r*}")
+conflicts=('gkey-config' 'linux-g13-driver' 'linux-g13-driver-git')
+install=gkey-config.install
+source=("gkey-config::git+https://github.com/Lordbooker/gkey-config.git#branch=dev")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd gkey-config
+    # 1.0.0.r12.gabc1234 after the tag v1.0.0; r<count>.<hash> without tags
+    if git describe --tags --match 'v[0-9]*' >/dev/null 2>&1; then
+        git describe --long --tags --match 'v[0-9]*' --abbrev=7 | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+    else
+        printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+    fi
+}
+
+build() {
+    cmake -S gkey-config -B build \
+        -DCMAKE_BUILD_TYPE=None \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_TESTS=OFF
+    cmake --build build
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+}

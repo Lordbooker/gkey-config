@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
+# D-Bus activation: a call to the daemon's bus name (e.g. from a script that
+# writes to the LCD) starts gkeyd.service when it is not running. The
+# configuration tool never activates the daemon by itself.
+[D-BUS Service]
+Name=io.github.lordbooker.GKeyConfig
+Exec=@CMAKE_INSTALL_FULL_BINDIR@/gkeyd
+SystemdService=gkeyd.service

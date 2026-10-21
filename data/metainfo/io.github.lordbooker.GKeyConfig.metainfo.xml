@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: 2026 Lordbooker -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<component type="desktop-application">
+  <id>io.github.lordbooker.GKeyConfig</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0-only</project_license>
+
+  <name>G-Key Configuration</name>
+  <name xml:lang="de">G-Tasten-Konfiguration</name>
+  <name xml:lang="es">Configuración de teclas G</name>
+  <name xml:lang="fr">Configuration des touches G</name>
+  <name xml:lang="it">Configurazione tasti G</name>
+  <name xml:lang="pt">Configuração das teclas G</name>
+  <summary>Configure the gaming keys of Logitech G keyboards</summary>
+  <summary xml:lang="de">G-Tasten von Logitech-G-Tastaturen konfigurieren</summary>
+  <summary xml:lang="es">Configurar las teclas G de los teclados Logitech G</summary>
+  <summary xml:lang="fr">Configurer les touches G des claviers Logitech G</summary>
+  <summary xml:lang="it">Configura i tasti G delle tastiere Logitech G</summary>
+  <summary xml:lang="pt">Configurar as teclas G dos teclados Logitech G</summary>
+
+  <developer id="io.github.lordbooker">
+    <name>Lordbooker</name>
+  </developer>
+
+  <description>
+    <p>
+      With gkey-config you assign keys, key combinations, mouse buttons and macros to the gaming
+      keys of Logitech G keyboards and keypads driven by the Linux kernel driver hid-lg-g15. A small
+      user daemon applies the bindings; no extra kernel or USB driver is needed.
+    </p>
+    <ul>
+      <li>Three layers (M1–M3) per profile, with the layer LEDs</li>
+      <li>Macros with recording, repeat while held, toggle or a fixed count</li>
+      <li>Backlight colour per profile</li>
+      <li>G13 stick as keys, mouse pointer, scroll wheel or joystick</li>
+      <li>G13 LCD pages: status, clock and text from scripts</li>
+      <li>D-Bus API for scripts</li>
+    </ul>
+    <p>Supported: Logitech G13. Requires Linux 6.19 or newer.</p>
+  </description>
+
+  <launchable type="desktop-id">io.github.lordbooker.GKeyConfig.desktop</launchable>
+
+  <url type="homepage">https://github.com/Lordbooker/gkey-config</url>
+  <url type="bugtracker">https://github.com/Lordbooker/gkey-config/issues</url>
+  <url type="vcs-browser">https://github.com/Lordbooker/gkey-config</url>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Key bindings of the G13</caption>
+      <image>https://raw.githubusercontent.com/Lordbooker/gkey-config/main/docs/images/main-window.png</image>
+    </screenshot>
+  </screenshots>
+
+  <provides>
+    <binary>gkey-config</binary>
+    <binary>gkeyd</binary>
+    <modalias>usb:v046DpC21C*</modalias>
+  </provides>
+
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="1.0.0" date="2026-10-21">
+      <description>
+        <p>First release: G13 keys, layers, macros, backlight, stick and LCD; six languages.</p>
+      </description>
+    </release>
+  </releases>
+</component>

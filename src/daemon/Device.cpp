@@ -1,0 +1,168 @@
+// SPDX-FileCopyrightText: 2026 Lordbooker
+// SPDX-License-Identifier: GPL-2.0-only
+
+#include "Device.h"
+
+#include "BindingEngine.h"
+#include "InputDevice.h"
+#include "LcdController.h"
+#include "LedController.h"
+#include "StickProcessor.h"
+
+#include <QLoggingCategory>
+#include <QPoint>
+
+Q_LOGGING_CATEGORY(lcDevice, "gkey.device")
+
+namespace {
+
+// A rest position further away from the middle than this is not trusted
+// (the stick was probably held while the device was plugged in).
+constexpr int PlausibleCenterOffset = 24;
+
+}
+
+Device::Device(const DeviceModel &model, const QString &hidSyspath, KeyOutput &output, QObject *parent)
+    : QObject(parent), m_model(model), m_hidSyspath(hidSyspath)
+{
+    m_engine = new BindingEngine(m_model, output, this);
+    m_leds = std::make_unique<LedController>(m_model, m_hidSyspath);
+    if (m_model.lcd())
+        m_lcd = new LcdController(m_model, m_hidSyspath, this);
+    if (const auto &stick = m_model.stick())
+        m_stick = new StickProcessor(*m_engine, output, stick->minimum, stick->maximum, this);
+}
+
+Device::~Device()
+{
+    // Release held keys before the inputs (and their grabs) go away.
+    if (m_stick)
+        m_stick->reset();
+    m_engine->releaseAll();
+}
+
+InputDevice *Device::input(const QString &role) const
+{
+    for (InputDevice *input : m_inputs) {
+        if (input->role() == role)
+            return input;
+    }
+    return nullptr;
+}
+
+bool Device::addInput(const QString &role, const QString &devNode, QString *error)
+{
+    if (hasInput(devNode))
+        return true;
+    const bool isStick = m_stick && m_model.stick() && role == m_model.stick()->input;
+    auto *input = new InputDevice(devNode, role, this);
+    const bool grab = !isStick || m_stickSettings.mode != StickSettings::Mode::Passthrough;
+    if (!input->open(error, grab)) {
+        delete input;
+        return false;
+    }
+    if (isStick) {
+        connect(input, &InputDevice::keyEvent, this, &Device::onStickKey);
+        connect(input, &InputDevice::absEvent, this, &Device::onAbs);
+        // Rest position: calibrated value, else the position right now if plausible.
+        const auto &stick = *m_model.stick();
+        const int middle = (stick.minimum + stick.maximum + 1) / 2;
+        const int x = input->absValue(stick.axisX);
+        const int y = input->absValue(stick.axisY);
+        if (m_stickCenter) {
+            m_stick->setCenter(m_stickCenter->x(), m_stickCenter->y());
+        } else if (qAbs(x - middle) <= PlausibleCenterOffset && qAbs(y - middle) <= PlausibleCenterOffset) {
+            m_stick->setCenter(x, y);
+        } else {
+            m_stick->setCenter(middle, middle);
+            qCInfo(lcDevice).noquote() << m_model.name()
+                                       << ": stick not at rest while connecting, using the middle as rest position";
+        }
+        m_stick->setPosition(x, y);
+    } else {
+        connect(input, &InputDevice::keyEvent, m_engine, &BindingEngine::handleKey);
+    }
+    connect(input, &InputDevice::failed, this, [this](const QString &node) { removeInput(node); });
+    m_inputs.append(input);
+    return true;
+}
+
+bool Device::removeInput(const QString &devNode)
+{
+    for (int i = 0; i < m_inputs.size(); ++i) {
+        if (m_inputs.at(i)->devNode() != devNode)
+            continue;
+        if (m_stick)
+            m_stick->reset();
+        m_engine->releaseAll();
+        m_inputs.takeAt(i)->deleteLater();
+        if (m_inputs.isEmpty())
+            emit disconnected();
+        return true;
+    }
+    return false;
+}
+
+bool Device::hasInput(const QString &devNode) const
+{
+    for (const InputDevice *input : m_inputs) {
+        if (input->devNode() == devNode)
+            return true;
+    }
+    return false;
+}
+
+void Device::setStickSettings(const StickSettings &settings)
+{
+    m_stickSettings = settings;
+    if (!m_stick)
+        return;
+    m_stick->setSettings(settings);
+    applyStickGrab();
+}
+
+void Device::applyStickGrab()
+{
+    if (!m_model.stick())
+        return;
+    InputDevice *stickInput = input(m_model.stick()->input);
+    if (!stickInput)
+        return;
+    QString error;
+    if (!stickInput->setGrabbed(m_stickSettings.mode != StickSettings::Mode::Passthrough, &error))
+        qCWarning(lcDevice).noquote() << error;
+}
+
+void Device::setStickCenter(const std::optional<QPoint> &center)
+{
+    m_stickCenter = center;
+    if (m_stick && center)
+        m_stick->setCenter(center->x(), center->y());
+}
+
+std::optional<QPoint> Device::calibrateStick()
+{
+    if (!m_stick || !m_model.stick() || !input(m_model.stick()->input))
+        return std::nullopt;
+    const QPoint center(m_stick->x(), m_stick->y());
+    setStickCenter(center);
+    return center;
+}
+
+void Device::onAbs(const QString &, int code, int value)
+{
+    if (!m_stick)
+        return;
+    const auto &stick = *m_model.stick();
+    if (code == stick.axisX)
+        m_stick->setX(value);
+    else if (code == stick.axisY)
+        m_stick->setY(value);
+}
+
+void Device::onStickKey(const QString &role, int code, int value)
+{
+    // In passthrough mode the stick buttons belong to the system (games).
+    if (m_stickSettings.mode != StickSettings::Mode::Passthrough)
+        m_engine->handleKey(role, code, value);
+}
