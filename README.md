@@ -7,10 +7,10 @@ gaming-key input devices exclusively and sends the configured keys, key combinat
 through a virtual input device; LEDs are set through `/sys/class/leds`. The Qt6 tool `gkey-config`
 edits profiles and macros. No libusb driver, no input-remapper or keyd.
 
-> **Status: early development.** Supported on the G13: key, key combination, mouse button and macro
-> bindings, M1–M3 layers with LEDs, backlight colour per profile, stick as keys/mouse/scroll/joystick,
-> LCD pages (status, clock, text from scripts), profiles and macros with live reload, D-Bus API and
-> the configuration tool. Per-application profiles and the other models follow.
+> **Version 1.0.** Supported on the G13: key, key combination, mouse button and macro bindings,
+> M1–M3 layers with LEDs, backlight colour per profile, stick as keys/mouse/scroll/joystick, LCD
+> pages (status, clock, text from scripts), profiles and macros with live reload, D-Bus API and the
+> configuration tool in six languages. Per-application profiles and the other models follow.
 
 ![gkey-config main window](docs/images/main-window.png) See [docs/CONCEPT.md](docs/CONCEPT.md) for the design and the milestones.
 
@@ -22,6 +22,45 @@ edits profiles and macros. No libusb driver, no input-remapper or keyd.
 | G11, G15, G15 v2, G510 | planned, will be marked untested |
 
 Requires **Linux 6.19 or newer** (first kernel with G13 support in `hid-lg-g15`).
+
+## Installation
+
+Ready-made packages are attached to every [GitHub release](https://github.com/Lordbooker/gkey-config/releases)
+(Linux 6.19 or newer is required):
+
+| System | Package |
+|---|---|
+| Ubuntu 26.04 and derivatives (Linux Mint, Pop!_OS, … based on it) | `gkey-config_<version>-1.ubuntu26.04_amd64.deb` |
+| Fedora 44 | `gkey-config-<version>-1.fc44.x86_64.rpm` |
+| Arch Linux and derivatives | AUR: `gkey-config` (release) or `gkey-config-git` (development version) |
+
+```bash
+# Ubuntu
+sudo apt install ./gkey-config_<version>-1.ubuntu26.04_amd64.deb
+# Fedora
+sudo dnf install ./gkey-config-<version>-1.fc44.x86_64.rpm
+# Arch Linux (with an AUR helper, e.g. yay or paru)
+yay -S gkey-config
+```
+
+gkey-config and [linux-g13-driver](#relation-to-linux-g13-driver) conflict with each other; the
+package manager removes the old driver or asks you to.
+
+**First start:** open *G-Key Configuration* from the application menu. It offers, once, to
+
+* start the daemon `gkeyd` at every login (`systemctl --user enable --now gkeyd` for your user) and
+* allow LED control by adding your user to the group `gkey` (the system asks for the
+  administrator password; log out completely and back in afterwards).
+
+Both can be changed at any time in the *Settings* menu, together with *Show the tray icon at
+login*; all three settings apply to your user only. Scripts that call the daemon's D-Bus API (e.g.
+`LcdText`) start it on demand even without autostart; the configuration tool itself never starts
+it unasked.
+
+After an upgrade, restart a running daemon: `systemctl --user restart gkeyd`.
+
+**Uninstall:** remove the package (`sudo apt remove gkey-config`, `sudo dnf remove gkey-config`
+or `sudo pacman -R gkey-config`). Your profiles and macros stay in `~/.config/gkey-config/`.
 
 ## Build
 
@@ -147,11 +186,23 @@ untranslated. On Arch Linux, `lupdate` (used by both) also needs `qt6-declarativ
 
 The udev rule `70-gkey-config.rules` gives the user of the active local session access to the
 supported devices and to `/dev/uinput` (`uaccess`). LED attributes in sysfs cannot carry ACLs;
-members of the group `gkey` may change them. To allow LED control:
+members of the group `gkey` may change them. The configuration tool adds your user on request
+(*Settings → Allow LED control…*, via `pkexec`); by hand:
 
 ```bash
-sudo usermod -aG gkey $USER    # then log out and back in
+sudo usermod -aG gkey $USER    # then log out completely and back in
 ```
+
+## Releases (maintainers)
+
+1. Set the version in `project(gkey-config VERSION x.y.z)` in `CMakeLists.txt` on `dev`.
+2. Merge `dev` into `main` (pull request) and tag `main`: `git tag vx.y.z && git push origin vx.y.z`.
+3. The workflow *Release packages* builds the `.deb`/`.rpm`, creates the GitHub release and
+   publishes the AUR packages `gkey-config` and `gkey-config-git`. Publishing to the AUR needs the
+   repository secret `AUR_SSH_PRIVATE_KEY` (private SSH key of the AUR account); without it the
+   AUR files are only attached to the run as artifact `aur`.
+
+Pushes to `dev` build all packages as artifacts for testing.
 
 ## Relation to linux-g13-driver
 

@@ -19,6 +19,7 @@ struct StickSettings;
 class MacroEditor;
 class MacroStore;
 class ProfileStore;
+class SessionSetup;
 class QAction;
 class QButtonGroup;
 class QCheckBox;
@@ -77,6 +78,10 @@ private:
     void onChooseBacklight();
     void updateDaemonState();
     void runSystemctl(const QString &verb);
+    void updateLedHint();
+    void onLedAccessFinished(bool success, const QString &message);
+    void onDaemonAutostartChanged();
+    void askFirstRunSetup();
 
     ModelRegistry m_registry;
     DaemonClient *m_client = nullptr;
@@ -101,6 +106,12 @@ private:
     QCheckBox *m_backlightEnabled = nullptr;
     QPushButton *m_backlightButton = nullptr;
     QLabel *m_ledHint = nullptr;
+    QPushButton *m_ledButton = nullptr;
+    SessionSetup *m_session = nullptr;
+    QAction *m_daemonAutostartAction = nullptr;
+    QAction *m_trayAutostartAction = nullptr;
+    QAction *m_ledAccessAction = nullptr;
+    bool m_firstRunPending = false;
     QLabel *m_daemonLabel = nullptr;
     QPushButton *m_daemonButton = nullptr;
 

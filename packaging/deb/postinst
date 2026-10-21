@@ -12,10 +12,13 @@ if [ "$1" = "configure" ]; then
         udevadm trigger --subsystem-match=input --subsystem-match=hidraw --subsystem-match=misc || true
         udevadm trigger --action=add --subsystem-match=leds || true
     fi
-    echo "gkey-config: to allow LED control, add your user to the group 'gkey':"
-    echo "  sudo usermod -aG gkey \$USER   (then log out and back in)"
-    echo "gkey-config: enable the daemon as your normal user:"
-    echo "  systemctl --user enable --now gkeyd"
+    if [ -z "${2:-}" ]; then
+        echo "gkey-config: start \"G-Key Configuration\" from the application menu; on its first"
+        echo "  start it offers to start the daemon at login and to allow LED control."
+    else
+        echo "gkey-config: restart a running daemon to use the new version:"
+        echo "  systemctl --user restart gkeyd"
+    fi
 fi
 
 exit 0

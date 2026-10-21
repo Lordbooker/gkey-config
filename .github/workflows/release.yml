@@ -1,0 +1,246 @@
+# Builds the packages for all supported distributions.
+#
+# - Push of a tag "v*" (e.g. v1.0.0): build the .deb/.rpm packages, publish
+#   them as a GitHub release with a list of changes, and publish the AUR
+#   packages gkey-config and gkey-config-git (when the secret
+#   AUR_SSH_PRIVATE_KEY is set).
+# - Push to dev or manually ("Run workflow"): build only; the packages are
+#   available as artifacts of the run for testing.
+#
+# .deb/.rpm are built with packaging/build-package.sh inside a container of the
+# respective distribution (same script as for local builds). Only
+# distributions with kernel >= 6.19 (G13 support in hid-lg-g15) are built.
+
+name: Release packages
+
+on:
+  push:
+    branches: [dev]
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  packages:
+    name: Build ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: ubuntu26.04, image: "ubuntu:26.04" }
+          - { name: fedora44,    image: "fedora:44" }
+
+    steps:
+      # git before the checkout, so that the full history including tags
+      # (needed for the version number) is checked out.
+      - name: Install git
+        run: |
+          if command -v apt-get >/dev/null; then
+            apt-get update -q && apt-get install -y -q --no-install-recommends git ca-certificates
+          else
+            dnf install -y -q git
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check version
+        if: github.ref_type == 'tag'
+        run: |
+          # The project version in CMakeLists.txt must match the tag (tarball builds use it).
+          PROJECT=$(sed -n 's/^project(gkey-config VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+          if [ "v$PROJECT" != "$GITHUB_REF_NAME" ]; then
+            echo "CMakeLists.txt has version $PROJECT, the tag is $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+
+      - name: Build package
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            export GKEY_PACKAGE_VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          packaging/build-package.sh dist
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
+
+  arch:
+    name: Build Arch Linux (AUR)
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+
+    steps:
+      - name: Install build tools
+        run: pacman -Syu --noconfirm --needed base-devel git pacman-contrib
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare PKGBUILDs
+        run: |
+          mkdir -p aur
+          cp -r packaging/arch/gkey-config packaging/arch/gkey-config-git aur/
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            sed -i "s/^pkgver=.*/pkgver=$VERSION/;s/^pkgrel=.*/pkgrel=1/" aur/gkey-config/PKGBUILD
+            sed -i "s/^pkgver=.*/pkgver=$VERSION/" aur/gkey-config-git/PKGBUILD
+          fi
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/builder
+          chown -R builder: aur
+
+      # The release package needs the tag on GitHub, so it is built for tags only.
+      - name: Build gkey-config
+        if: github.ref_type == 'tag'
+        working-directory: aur/gkey-config
+        run: |
+          sudo -u builder updpkgsums
+          sudo -u builder makepkg -s --noconfirm
+          sudo -u builder makepkg --printsrcinfo > .SRCINFO
+
+      - name: Build gkey-config-git
+        working-directory: aur/gkey-config-git
+        run: |
+          sudo -u builder makepkg -s --noconfirm
+          sudo -u builder makepkg --printsrcinfo > .SRCINFO
+
+      - name: Upload AUR files
+        uses: actions/upload-artifact@v4
+        with:
+          name: aur
+          path: |
+            aur/*/PKGBUILD
+            aur/*/.SRCINFO
+            aur/*/gkey-config.install
+            aur/*/*.pkg.tar.zst
+          include-hidden-files: true
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: [packages, arch]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          path: dist
+          merge-multiple: true
+
+      - name: Write release notes
+        run: |
+          TAG="$GITHUB_REF_NAME"
+          PREV=$(git describe --tags --abbrev=0 --match 'v[0-9]*' "${TAG}^" 2>/dev/null || true)
+          {
+            echo "## Changes"
+            echo
+            if [ -n "$PREV" ]; then
+              git log --no-merges --pretty='- %s (%h)' "${PREV}..${TAG}"
+            else
+              echo "First release."
+            fi
+            echo
+            echo "## Installation"
+            echo
+            echo "Requires Linux 6.19 or newer."
+            echo
+            echo "| System | Package |"
+            echo "|---|---|"
+            # GitHub replaces "~" in file names of release assets with "."
+            echo "| Ubuntu 26.04 (and Linux Mint, Pop!_OS, ... based on it) | \`gkey-config_*.ubuntu26.04_amd64.deb\` |"
+            echo "| Fedora 44 | \`gkey-config-*.fc44.x86_64.rpm\` |"
+            echo "| Arch Linux | AUR: \`gkey-config\` (release) or \`gkey-config-git\` (development) |"
+            echo
+            echo '```bash'
+            echo '# Ubuntu'
+            echo 'sudo apt install ./gkey-config_<version>-1.ubuntu26.04_amd64.deb'
+            echo '# Fedora'
+            echo 'sudo dnf install ./gkey-config-<version>-1.fc44.x86_64.rpm'
+            echo '```'
+            echo
+            echo "Then start *G-Key Configuration* from the application menu: on its first start it"
+            echo "offers to start the daemon at login and to allow LED control."
+            echo
+            echo "gkey-config conflicts with linux-g13-driver; remove it first."
+          } > release-notes.md
+          cat release-notes.md
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file release-notes.md \
+            --verify-tag
+
+  aur:
+    name: Publish to the AUR
+    needs: release
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    env:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
+    steps:
+      - name: Check secret
+        id: secret
+        run: |
+          if [ -z "$AUR_SSH_PRIVATE_KEY" ]; then
+            echo "::notice::Secret AUR_SSH_PRIVATE_KEY not set: the AUR files are only available as artifact 'aur'."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download AUR files
+        if: steps.secret.outputs.present == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: aur
+          path: aur
+
+      - name: Push to the AUR
+        if: steps.secret.outputs.present == 'true'
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur
+          chmod 600 ~/.ssh/aur
+          ssh-keyscan -t ed25519,rsa aur.archlinux.org >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/aur -o IdentitiesOnly=yes"
+          git config --global user.name "Lordbooker"
+          git config --global user.email "lordbooker@gmail.com"
+          for pkg in gkey-config gkey-config-git; do
+            git clone "ssh://aur@aur.archlinux.org/$pkg.git" "repo-$pkg"
+            cp "aur/$pkg/PKGBUILD" "aur/$pkg/.SRCINFO" "aur/$pkg/gkey-config.install" "repo-$pkg/"
+            cd "repo-$pkg"
+            git add PKGBUILD .SRCINFO gkey-config.install
+            if git diff --cached --quiet; then
+              echo "$pkg: unchanged"
+            else
+              git commit -m "Update to $GITHUB_REF_NAME"
+              git push origin HEAD:master
+            fi
+            cd ..
+          done

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(gkey-config VERSION 0.1.0 LANGUAGES CXX)
+project(gkey-config VERSION 1.0.0 LANGUAGES CXX)
 
 # --- Version ------------------------------------------------------------------
 # GKEY_VERSION: displayed version. Default: "git describe" without the leading
@@ -83,8 +83,14 @@ install(FILES data/udev/70-gkey-config.rules
 install(FILES data/sysusers/gkey-config.conf
     DESTINATION lib/sysusers.d
 )
-install(FILES data/systemd/gkeyd.service
+configure_file(data/systemd/gkeyd.service.in ${CMAKE_CURRENT_BINARY_DIR}/gkeyd.service @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/gkeyd.service
     DESTINATION lib/systemd/user
+)
+configure_file(data/dbus/io.github.lordbooker.GKeyConfig.service.in
+    ${CMAKE_CURRENT_BINARY_DIR}/io.github.lordbooker.GKeyConfig.service @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/io.github.lordbooker.GKeyConfig.service
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/services
 )
 if(BUILD_GUI)
     install(FILES data/desktop/io.github.lordbooker.GKeyConfig.desktop

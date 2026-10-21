@@ -11,12 +11,15 @@
 #include "MacroEditor.h"
 #include "MacroStore.h"
 #include "ProfileStore.h"
+#include "SessionSetup.h"
 
 #include <QAction>
 #include <QApplication>
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QCloseEvent>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QColorDialog>
 #include <QComboBox>
 #include <QFormLayout>
@@ -30,6 +33,7 @@
 #include <QPainterPath>
 #include <QProcess>
 #include <QPushButton>
+#include <QSettings>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
@@ -100,6 +104,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     m_client = new DaemonClient(this);
     m_macros = new MacroStore(ConfigPaths::macroDir(), this);
     m_settings = new Settings(ConfigPaths::settingsFile(), this);
+    m_session = new SessionSetup(this);
+    m_firstRunPending = !QSettings().value(QStringLiteral("setup/done"), false).toBool();
 
     setWindowTitle(tr("G-Key Configuration"));
     setWindowIcon(appIcon());
@@ -134,6 +140,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
             updateDaemonState();
     });
     connect(m_macros, &MacroStore::changed, this, [this] { m_bindingEditor->setMacroNames(m_macros->names()); });
+    connect(m_session, &SessionSetup::daemonAutostartChanged, this, &MainWindow::onDaemonAutostartChanged);
+    connect(m_session, &SessionSetup::failed, this,
+            [this](const QString &message) { statusBar()->showMessage(message, 8000); });
+    connect(m_session, &SessionSetup::ledAccessFinished, this, &MainWindow::onLedAccessFinished);
+    m_session->refreshDaemonAutostart();
 
     // Start with a connected model, else the first one.
     const QStringList connected = m_client->connectedModels();
@@ -218,9 +229,13 @@ void MainWindow::setupUi()
     profileLayout->addLayout(backlightForm);
     m_ledHint = new QLabel(profileTab);
     m_ledHint->setWordWrap(true);
-    m_ledHint->setText(tr("The daemon may not change the LEDs. Add your user to the group \"gkey\" "
-                          "(sudo usermod -aG gkey $USER), log out and back in, and replug the device."));
     profileLayout->addWidget(m_ledHint);
+    m_ledButton = new QPushButton(tr("Allow LED control..."), profileTab);
+    connect(m_ledButton, &QPushButton::clicked, m_session, &SessionSetup::requestLedAccess);
+    auto *ledButtonRow = new QHBoxLayout;
+    ledButtonRow->addWidget(m_ledButton);
+    ledButtonRow->addStretch();
+    profileLayout->addLayout(ledButtonRow);
     profileLayout->addStretch();
     connect(m_backlightEnabled, &QCheckBox::toggled, this, &MainWindow::onBacklightToggled);
     connect(m_backlightButton, &QPushButton::clicked, this, &MainWindow::onChooseBacklight);
@@ -274,6 +289,23 @@ void MainWindow::setupUi()
         m_quitting = true;
         qApp->quit();
     });
+    QMenu *settingsMenu = menuBar()->addMenu(tr("&Settings"));
+    m_daemonAutostartAction = settingsMenu->addAction(tr("Start the daemon at login"));
+    m_daemonAutostartAction->setCheckable(true);
+    m_daemonAutostartAction->setEnabled(false);
+    connect(m_daemonAutostartAction, &QAction::triggered, m_session, &SessionSetup::setDaemonAutostart);
+    m_trayAutostartAction = settingsMenu->addAction(tr("Show the tray icon at login"));
+    m_trayAutostartAction->setCheckable(true);
+    m_trayAutostartAction->setChecked(m_session->trayAutostart());
+    connect(m_trayAutostartAction, &QAction::triggered, this, [this](bool enabled) {
+        QString error;
+        if (!m_session->setTrayAutostart(enabled, &error))
+            QMessageBox::warning(this, tr("Tray icon at login"), error);
+        m_trayAutostartAction->setChecked(m_session->trayAutostart());
+    });
+    settingsMenu->addSeparator();
+    m_ledAccessAction = settingsMenu->addAction(tr("Allow LED control..."), m_session, &SessionSetup::requestLedAccess);
+
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(tr("About"), this, [this] {
         QMessageBox::about(this, tr("About gkey-config"),
@@ -603,7 +635,7 @@ void MainWindow::updateDaemonState()
     }
     m_daemonLabel->setText(text);
     m_daemonButton->setText(available ? tr("Restart daemon") : tr("Start daemon"));
-    m_ledHint->setVisible(available && !m_client->ledPermission(m_model.id()));
+    updateLedHint();
     m_stickPage->setRestPosition(m_client->stickCenter(m_model.id()));
     m_stickPage->setDeviceAvailable(m_client->connectedModels().contains(m_model.id()));
     m_lcdPage->setStatus({m_model.name(), m_profileName, m_mode, m_client->recording()});
@@ -612,6 +644,95 @@ void MainWindow::updateDaemonState()
         m_trayStatus->setText(available ? tr("Daemon: running") : tr("Daemon: stopped"));
         m_trayStartStop->setText(available ? tr("Stop daemon") : tr("Start daemon"));
     }
+}
+
+void MainWindow::updateLedHint()
+{
+    const GroupAccess::State group = m_session->ledGroupState();
+    const bool canRequest = group == GroupAccess::State::NotMember || group == GroupAccess::State::Missing;
+    QString text;
+    if (canRequest) {
+        text = tr("LED control (backlight colour, M1-M3 lights) needs membership in the group \"gkey\". "
+                  "The button adds your user; the system asks for the administrator password.");
+    } else if (group == GroupAccess::State::NeedsRelogin) {
+        text = tr("Your user is in the group \"gkey\". This takes effect after you log out completely and "
+                  "back in (or restart the computer).");
+    } else if (m_client->available() && !m_client->ledPermission(m_model.id())) {
+        text = tr("The daemon may not change the LEDs although your user is in the group \"gkey\". "
+                  "Replug the device; if that does not help, log out completely and back in.");
+    }
+    m_ledHint->setText(text);
+    m_ledHint->setVisible(!text.isEmpty());
+    m_ledButton->setVisible(canRequest);
+    m_ledAccessAction->setEnabled(canRequest);
+}
+
+void MainWindow::onLedAccessFinished(bool success, const QString &message)
+{
+    updateLedHint();
+    if (success) {
+        QMessageBox::information(this, tr("LED control"),
+                                 tr("Your user was added to the group \"gkey\". Log out completely and back in "
+                                    "(or restart the computer) so that the change takes effect."));
+    } else {
+        QMessageBox::warning(this, tr("LED control"), message);
+    }
+}
+
+void MainWindow::onDaemonAutostartChanged()
+{
+    const SessionSetup::DaemonAutostart state = m_session->daemonAutostart();
+    const bool installed = state != SessionSetup::DaemonAutostart::NotInstalled
+                           && state != SessionSetup::DaemonAutostart::Unknown;
+    m_daemonAutostartAction->setEnabled(installed);
+    m_daemonAutostartAction->setChecked(state == SessionSetup::DaemonAutostart::Enabled);
+    m_daemonAutostartAction->setToolTip(installed ? QString() : tr("The systemd user unit gkeyd.service is not installed."));
+    if (m_firstRunPending && isVisible())
+        QTimer::singleShot(300, this, &MainWindow::askFirstRunSetup);
+}
+
+// First start of the window: offer the daemon autostart and LED access in one dialog.
+void MainWindow::askFirstRunSetup()
+{
+    if (!m_firstRunPending || m_session->daemonAutostart() == SessionSetup::DaemonAutostart::Unknown)
+        return;
+    m_firstRunPending = false;
+    QSettings().setValue(QStringLiteral("setup/done"), true);
+
+    const SessionSetup::DaemonAutostart daemon = m_session->daemonAutostart();
+    const bool offerDaemon =
+        daemon == SessionSetup::DaemonAutostart::Disabled || daemon == SessionSetup::DaemonAutostart::Masked;
+    const GroupAccess::State group = m_session->ledGroupState();
+    const bool offerLed = group == GroupAccess::State::NotMember || group == GroupAccess::State::Missing;
+    if (!offerDaemon && !offerLed)
+        return;
+
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Set up gkey-config"));
+    auto *layout = new QVBoxLayout(&dialog);
+    auto *intro = new QLabel(tr("Recommended for everyday use (can be changed later in the Settings menu):"), &dialog);
+    intro->setWordWrap(true);
+    layout->addWidget(intro);
+    auto *daemonBox = new QCheckBox(tr("Start the daemon gkeyd at every login"), &dialog);
+    daemonBox->setChecked(true);
+    daemonBox->setVisible(offerDaemon);
+    layout->addWidget(daemonBox);
+    auto *ledBox = new QCheckBox(tr("Allow LED control (group \"gkey\"; asks for the administrator password)"), &dialog);
+    ledBox->setChecked(true);
+    ledBox->setVisible(offerLed);
+    layout->addWidget(ledBox);
+    auto *buttons = new QDialogButtonBox(&dialog);
+    buttons->addButton(tr("Set up"), QDialogButtonBox::AcceptRole);
+    buttons->addButton(tr("Later"), QDialogButtonBox::RejectRole);
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    layout->addWidget(buttons);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+    if (offerDaemon && daemonBox->isChecked())
+        m_session->setDaemonAutostart(true);
+    if (offerLed && ledBox->isChecked())
+        m_session->requestLedAccess();
 }
 
 void MainWindow::runSystemctl(const QString &verb)
@@ -646,6 +767,7 @@ bool MainWindow::setupTray()
         runSystemctl(m_client->available() ? QStringLiteral("stop") : QStringLiteral("start"));
     });
     menu->addAction(tr("Restart daemon"), this, [this] { runSystemctl(QStringLiteral("restart")); });
+    menu->addAction(m_daemonAutostartAction);
     menu->addSeparator();
     menu->addAction(tr("Quit tray icon"), this, [this] {
         m_quitting = true;
@@ -673,6 +795,8 @@ void MainWindow::showWindow()
         show();
     raise();
     activateWindow();
+    if (m_firstRunPending)
+        QTimer::singleShot(300, this, &MainWindow::askFirstRunSetup);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

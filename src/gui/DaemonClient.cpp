@@ -2,7 +2,7 @@
 
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
-#include <QDBusInterface>
+#include <QDBusMessage>
 #include <QDBusReply>
 #include <QDBusServiceWatcher>
 #include <QJsonArray>
@@ -13,14 +13,13 @@ namespace {
 const QString Service = QStringLiteral("io.github.lordbooker.GKeyConfig");
 const QString Path = QStringLiteral("/io/github/lordbooker/GKeyConfig");
 const QString Interface = QStringLiteral("io.github.lordbooker.GKeyConfig1");
+constexpr int CallTimeoutMs = 3000;
 
 }
 
 DaemonClient::DaemonClient(QObject *parent) : QObject(parent)
 {
     QDBusConnection bus = QDBusConnection::sessionBus();
-    m_interface = new QDBusInterface(Service, Path, Interface, bus, this);
-    m_interface->setTimeout(3000);
 
     m_watcher = new QDBusServiceWatcher(Service, bus,
                                         QDBusServiceWatcher::WatchForRegistration
@@ -62,7 +61,7 @@ void DaemonClient::refreshStatus()
 {
     if (!m_available)
         return;
-    const QDBusReply<QString> reply = m_interface->call(QStringLiteral("Status"));
+    const QDBusReply<QString> reply = call(QStringLiteral("Status"));
     if (!reply.isValid())
         return;
     m_status = QJsonDocument::fromJson(reply.value().toUtf8()).object();
@@ -116,11 +115,30 @@ bool DaemonClient::recording() const
     return m_status.value(u"recording").toBool();
 }
 
+// Calls never start the daemon through D-Bus activation: the GUI only talks to
+// a daemon that is already running, so "Stop daemon" and a disabled autostart
+// are respected.
+QDBusMessage DaemonClient::call(const QString &method, const QList<QVariant> &arguments) const
+{
+    QDBusMessage message = QDBusMessage::createMethodCall(Service, Path, Interface, method);
+    message.setArguments(arguments);
+    message.setAutoStartService(false);
+    return QDBusConnection::sessionBus().call(message, QDBus::Block, CallTimeoutMs);
+}
+
+void DaemonClient::send(const QString &method, const QList<QVariant> &arguments) const
+{
+    QDBusMessage message = QDBusMessage::createMethodCall(Service, Path, Interface, method);
+    message.setArguments(arguments);
+    message.setAutoStartService(false);
+    QDBusConnection::sessionBus().send(message);
+}
+
 bool DaemonClient::callBool(const QString &method, const QList<QVariant> &arguments)
 {
     if (!m_available)
         return false;
-    const QDBusReply<bool> reply = m_interface->callWithArgumentList(QDBus::Block, method, arguments);
+    const QDBusReply<bool> reply = call(method, arguments);
     return reply.isValid() && reply.value();
 }
 
@@ -152,13 +170,13 @@ bool DaemonClient::runMacro(const QString &name)
 void DaemonClient::stopMacros()
 {
     if (m_available)
-        m_interface->call(QDBus::NoBlock, QStringLiteral("StopMacros"));
+        send(QStringLiteral("StopMacros"));
 }
 
 void DaemonClient::setRecording(bool recording)
 {
     if (m_available)
-        m_interface->call(QDBus::NoBlock, QStringLiteral("SetRecording"), recording);
+        send(QStringLiteral("SetRecording"), {recording});
 }
 
 bool DaemonClient::calibrateStick(const QString &modelId)
@@ -171,7 +189,7 @@ bool DaemonClient::calibrateStick(const QString &modelId)
 void DaemonClient::lcdPage(const QString &page)
 {
     if (m_available)
-        m_interface->call(QDBus::NoBlock, QStringLiteral("LcdPage"), page);
+        send(QStringLiteral("LcdPage"), {page});
 }
 
 void DaemonClient::onDeviceAdded(const QString &model, const QString &)

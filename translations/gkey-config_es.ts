@@ -446,10 +446,6 @@
         <translation>Color:</translation>
     </message>
     <message>
-        <source>The daemon may not change the LEDs. Add your user to the group &quot;gkey&quot; (sudo usermod -aG gkey $USER), log out and back in, and replug the device.</source>
-        <translation>El demonio no puede cambiar los LED. Añada su usuario al grupo «gkey» (sudo usermod -aG gkey $USER), cierre la sesión, vuelva a iniciarla y reconecte el dispositivo.</translation>
-    </message>
-    <message>
         <source>Backlight</source>
         <translation>Retroiluminación</translation>
     </message>
@@ -620,6 +616,97 @@
     <message>
         <source>Still running in the system tray. The daemon keeps working without it.</source>
         <translation>Sigue ejecutándose en la bandeja del sistema. El demonio funciona también sin el programa.</translation>
+    </message>
+    <message>
+        <source>Allow LED control...</source>
+        <translation>Permitir el control de los LED…</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Configuración</translation>
+    </message>
+    <message>
+        <source>Start the daemon at login</source>
+        <translation>Iniciar el demonio al iniciar sesión</translation>
+    </message>
+    <message>
+        <source>Show the tray icon at login</source>
+        <translation>Mostrar el icono de bandeja al iniciar sesión</translation>
+    </message>
+    <message>
+        <source>Tray icon at login</source>
+        <translation>Icono de bandeja al iniciar sesión</translation>
+    </message>
+    <message>
+        <source>LED control (backlight colour, M1-M3 lights) needs membership in the group &quot;gkey&quot;. The button adds your user; the system asks for the administrator password.</source>
+        <translation>El control de los LED (color de la retroiluminación, luces M1-M3) requiere pertenecer al grupo «gkey». El botón añade su usuario; el sistema pide la contraseña de administrador.</translation>
+    </message>
+    <message>
+        <source>Your user is in the group &quot;gkey&quot;. This takes effect after you log out completely and back in (or restart the computer).</source>
+        <translation>Su usuario está en el grupo «gkey». Esto surte efecto tras cerrar la sesión por completo y volver a iniciarla (o reiniciar el equipo).</translation>
+    </message>
+    <message>
+        <source>The daemon may not change the LEDs although your user is in the group &quot;gkey&quot;. Replug the device; if that does not help, log out completely and back in.</source>
+        <translation>El demonio no puede cambiar los LED aunque su usuario está en el grupo «gkey». Reconecte el dispositivo; si no basta, cierre la sesión por completo y vuelva a iniciarla.</translation>
+    </message>
+    <message>
+        <source>LED control</source>
+        <translation>Control de los LED</translation>
+    </message>
+    <message>
+        <source>Your user was added to the group &quot;gkey&quot;. Log out completely and back in (or restart the computer) so that the change takes effect.</source>
+        <translation>Su usuario se ha añadido al grupo «gkey». Cierre la sesión por completo y vuelva a iniciarla (o reinicie el equipo) para que el cambio surta efecto.</translation>
+    </message>
+    <message>
+        <source>The systemd user unit gkeyd.service is not installed.</source>
+        <translation>La unidad de usuario de systemd gkeyd.service no está instalada.</translation>
+    </message>
+    <message>
+        <source>Set up gkey-config</source>
+        <translation>Configurar gkey-config</translation>
+    </message>
+    <message>
+        <source>Recommended for everyday use (can be changed later in the Settings menu):</source>
+        <translation>Recomendado para el uso diario (se puede cambiar más tarde en el menú «Configuración»):</translation>
+    </message>
+    <message>
+        <source>Start the daemon gkeyd at every login</source>
+        <translation>Iniciar el demonio gkeyd en cada inicio de sesión</translation>
+    </message>
+    <message>
+        <source>Allow LED control (group &quot;gkey&quot;; asks for the administrator password)</source>
+        <translation>Permitir el control de los LED (grupo «gkey»; pide la contraseña de administrador)</translation>
+    </message>
+    <message>
+        <source>Set up</source>
+        <translation>Configurar</translation>
+    </message>
+    <message>
+        <source>Later</source>
+        <translation>Más tarde</translation>
+    </message>
+</context>
+<context>
+    <name>SessionSetup</name>
+    <message>
+        <source>G-Key Configuration (tray icon)</source>
+        <translation>Configuración de teclas G (icono de bandeja)</translation>
+    </message>
+    <message>
+        <source>pkexec (polkit) is not installed. Run in a terminal: %1</source>
+        <translation>pkexec (polkit) no está instalado. Ejecute en una terminal: %1</translation>
+    </message>
+    <message>
+        <source>Not authorized. You can also run in a terminal: %1</source>
+        <translation>No autorizado. También puede ejecutar en una terminal: %1</translation>
+    </message>
+    <message>
+        <source>Adding to the group failed: %1</source>
+        <translation>No se pudo añadir al grupo: %1</translation>
+    </message>
+    <message>
+        <source>pkexec could not be started. Run in a terminal: %1</source>
+        <translation>No se pudo iniciar pkexec. Ejecute en una terminal: %1</translation>
     </message>
 </context>
 <context>

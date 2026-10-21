@@ -2,6 +2,8 @@
 add_library(gkey-core STATIC
     Action.cpp
     Action.h
+    Autostart.cpp
+    Autostart.h
     BindingEngine.cpp
     BindingEngine.h
     ConfigPaths.cpp
@@ -14,6 +16,8 @@ add_library(gkey-core STATIC
     DirectoryWatcher.h
     EventCodes.cpp
     EventCodes.h
+    GroupAccess.cpp
+    GroupAccess.h
     KeyOutput.cpp
     KeyOutput.h
     LcdFont.cpp

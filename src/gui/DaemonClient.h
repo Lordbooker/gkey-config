@@ -6,7 +6,7 @@
 #include <QString>
 #include <QStringList>
 
-class QDBusInterface;
+class QDBusMessage;
 class QDBusServiceWatcher;
 
 // Talks to gkeyd over D-Bus (docs/CONCEPT.md section 10). Works without a
@@ -61,9 +61,10 @@ private slots:
 
 private:
     void setAvailable(bool available);
+    QDBusMessage call(const QString &method, const QList<QVariant> &arguments = {}) const;
+    void send(const QString &method, const QList<QVariant> &arguments = {}) const;
     bool callBool(const QString &method, const QList<QVariant> &arguments);
 
-    QDBusInterface *m_interface = nullptr;
     QDBusServiceWatcher *m_watcher = nullptr;
     QJsonObject m_status;
     bool m_available = false;

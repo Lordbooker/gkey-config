@@ -1,6 +1,8 @@
 # gkey-config – Concept
 
-Status: **approved on 2026-10-21.** Milestones 1–5 done and tested on the G13 (2026-10-21).
+Status: **approved on 2026-10-21.** Milestones 1–5 done and tested on the G13 (2026-10-21);
+translations and milestone 8 (packages, autostart, release workflow) done for version 1.0.0.
+Milestones 6 and 7 are postponed until after 1.0.
 
 gkey-config configures the gaming keys of Logitech G keyboards and keypads that are driven by the
 Linux kernel driver `hid-lg-g15`. It does **not** talk to the USB device itself and does not depend on
@@ -39,8 +41,9 @@ of failing silently (see 9.2).
 ### 1.3 Target platforms
 
 Arch Linux, Debian-based (Debian, Ubuntu and derivatives) and Fedora-based distributions, each only
-in releases with kernel ≥ 6.19 *(decided)*; the exact release list is fixed when packaging starts
-(milestone 8). KDE Plasma (Wayland) and GNOME (Wayland). X11 is not a target but is expected to
+in releases with kernel ≥ 6.19 *(decided)*. Packages for version 1.0: **Ubuntu 26.04** (`.deb`,
+kernel 7.0), **Fedora 44** (`.rpm`, kernel 6.19) and the AUR (`gkey-config`, `gkey-config-git`).
+Debian 13 ships kernel 6.12 and is not built; newer releases are added when they appear. KDE Plasma (Wayland) and GNOME (Wayland). X11 is not a target but is expected to
 work, because nothing below the GUI depends on the display server.
 
 ### 1.3a Test hardware
@@ -160,6 +163,8 @@ again on our own G13 before use.
 | GNOME Shell extension | `/usr/share/gnome-shell/extensions/…` | focus reporting on GNOME |
 | udev rule | `/usr/lib/udev/rules.d/70-gkey-config.rules` | permissions (section 9) |
 | systemd user unit | `/usr/lib/systemd/user/gkeyd.service` | daemon service |
+| D-Bus activation | `/usr/share/dbus-1/services/io.github.lordbooker.GKeyConfig.service` | starts `gkeyd.service` on a call to the bus name |
+| Tray autostart | `/etc/xdg/autostart/gkey-config-tray.desktop` | tray icon at login (per user switchable) |
 
 A command line tool (`gkeyctl`) is not part of version 1; the D-Bus API can be used with `busctl`
 or `qdbus` in the meantime.
@@ -458,8 +463,10 @@ sysfs attributes cannot carry ACLs, so `uaccess` does not work for the LEDs. Ins
 * The packages create a system group **`gkey`** via `sysusers.d`.
 * The udev rule sets group `gkey` and mode `0664` on `brightness` and `multi_intensity` of the LEDs
   that belong to a supported device (matched below the device's HID node, not by name alone).
-* Users who want LED control are added once by the administrator:
-  `sudo usermod -aG gkey $USER`, then log out and back in. Packages never add users on their own.
+* Users who want LED control are added once: the GUI offers it on its first start and in the
+  *Settings* menu and runs `pkexec usermod -aG gkey <user>` (polkit asks for the administrator
+  password); by hand `sudo usermod -aG gkey $USER`. Then log out completely and back in. Packages
+  never add users on their own.
 * Existing groups such as `input` are **not** used: membership there allows reading every keyboard.
 * Without group membership everything except the LEDs keeps working. The daemon detects the
   missing permission and reports it (log, D-Bus `Status`, GUI hint with the command above).
@@ -572,7 +579,7 @@ on the device).
 | 5 | G13 stick modes, G13 LCD | G13 |
 | 6 | Per-application profiles (KWin script, GNOME extension) | – |
 | 7 | G11/G15/G15 v2/G510 model files (untested) and image areas, diagnostics, import from linux-g13-driver | – (G13 only) |
-| 8 | Packages (Arch/AUR, Debian/Ubuntu, Fedora), release workflow, documentation | – |
+| 8 | Packages (Arch/AUR, Ubuntu, Fedora), autostart and LED setup in the GUI, release workflow, documentation | – |
 
 ---
 
@@ -585,6 +592,9 @@ on the device).
 | 3 | Test hardware | G13 only; other models shipped as untested |
 | 4 | linux-g13-driver | package conflict |
 | 5 | LED permissions | dedicated group `gkey` (see 9.1a) |
+| 6 | Daemon autostart | per user: the GUI enables `gkeyd.service` with `systemctl --user` (asked on its first start, switch in *Settings*); packages enable nothing. D-Bus activation starts the daemon for scripts; the GUI never activates it. |
+| 7 | Installation | GitHub releases with `.deb`/`.rpm` and the AUR; no install script |
+| 8 | Releases | tag `v*` on `main` runs the release workflow (packages, GitHub release, AUR with secret `AUR_SSH_PRIVATE_KEY`); `dev` pushes build test packages |
 
 ## 15. Open points
 

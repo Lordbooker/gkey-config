@@ -17,6 +17,8 @@ add_executable(gkey-config
     MacroEditor.h
     MainWindow.cpp
     MainWindow.h
+    SessionSetup.cpp
+    SessionSetup.h
     StickPage.cpp
     StickPage.h
 )

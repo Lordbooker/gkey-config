@@ -446,10 +446,6 @@
         <translation>Farbe:</translation>
     </message>
     <message>
-        <source>The daemon may not change the LEDs. Add your user to the group &quot;gkey&quot; (sudo usermod -aG gkey $USER), log out and back in, and replug the device.</source>
-        <translation>Der Daemon darf die LEDs nicht ändern. Füge deinen Benutzer der Gruppe „gkey“ hinzu (sudo usermod -aG gkey $USER), melde dich ab und wieder an und stecke das Gerät neu ein.</translation>
-    </message>
-    <message>
         <source>Backlight</source>
         <translation>Beleuchtung</translation>
     </message>
@@ -620,6 +616,97 @@
     <message>
         <source>The rest position could not be measured (device connected?)</source>
         <translation>Die Ruhelage konnte nicht gemessen werden (Gerät verbunden?)</translation>
+    </message>
+    <message>
+        <source>Allow LED control...</source>
+        <translation>LED-Steuerung erlauben …</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Einstellungen</translation>
+    </message>
+    <message>
+        <source>Start the daemon at login</source>
+        <translation>Daemon beim Anmelden starten</translation>
+    </message>
+    <message>
+        <source>Show the tray icon at login</source>
+        <translation>Tray-Symbol beim Anmelden anzeigen</translation>
+    </message>
+    <message>
+        <source>Tray icon at login</source>
+        <translation>Tray-Symbol beim Anmelden</translation>
+    </message>
+    <message>
+        <source>LED control (backlight colour, M1-M3 lights) needs membership in the group &quot;gkey&quot;. The button adds your user; the system asks for the administrator password.</source>
+        <translation>Die LED-Steuerung (Farbe der Beleuchtung, Lampen M1–M3) braucht die Mitgliedschaft in der Gruppe „gkey“. Der Knopf fügt deinen Benutzer hinzu; das System fragt dabei nach dem Administrator-Passwort.</translation>
+    </message>
+    <message>
+        <source>Your user is in the group &quot;gkey&quot;. This takes effect after you log out completely and back in (or restart the computer).</source>
+        <translation>Dein Benutzer ist in der Gruppe „gkey“. Das wirkt, sobald du dich vollständig ab- und wieder angemeldet hast (oder den Rechner neu startest).</translation>
+    </message>
+    <message>
+        <source>The daemon may not change the LEDs although your user is in the group &quot;gkey&quot;. Replug the device; if that does not help, log out completely and back in.</source>
+        <translation>Der Daemon darf die LEDs nicht ändern, obwohl dein Benutzer in der Gruppe „gkey“ ist. Stecke das Gerät neu ein; hilft das nicht, melde dich vollständig ab und wieder an.</translation>
+    </message>
+    <message>
+        <source>LED control</source>
+        <translation>LED-Steuerung</translation>
+    </message>
+    <message>
+        <source>Your user was added to the group &quot;gkey&quot;. Log out completely and back in (or restart the computer) so that the change takes effect.</source>
+        <translation>Dein Benutzer wurde der Gruppe „gkey“ hinzugefügt. Melde dich vollständig ab und wieder an (oder starte den Rechner neu), damit die Änderung wirkt.</translation>
+    </message>
+    <message>
+        <source>The systemd user unit gkeyd.service is not installed.</source>
+        <translation>Die systemd-Benutzereinheit gkeyd.service ist nicht installiert.</translation>
+    </message>
+    <message>
+        <source>Set up gkey-config</source>
+        <translation>gkey-config einrichten</translation>
+    </message>
+    <message>
+        <source>Recommended for everyday use (can be changed later in the Settings menu):</source>
+        <translation>Empfohlen für den Alltag (später im Menü „Einstellungen“ änderbar):</translation>
+    </message>
+    <message>
+        <source>Start the daemon gkeyd at every login</source>
+        <translation>Daemon gkeyd bei jeder Anmeldung starten</translation>
+    </message>
+    <message>
+        <source>Allow LED control (group &quot;gkey&quot;; asks for the administrator password)</source>
+        <translation>LED-Steuerung erlauben (Gruppe „gkey“; fragt nach dem Administrator-Passwort)</translation>
+    </message>
+    <message>
+        <source>Set up</source>
+        <translation>Einrichten</translation>
+    </message>
+    <message>
+        <source>Later</source>
+        <translation>Später</translation>
+    </message>
+</context>
+<context>
+    <name>SessionSetup</name>
+    <message>
+        <source>G-Key Configuration (tray icon)</source>
+        <translation>G-Tasten-Konfiguration (Tray-Symbol)</translation>
+    </message>
+    <message>
+        <source>pkexec (polkit) is not installed. Run in a terminal: %1</source>
+        <translation>pkexec (polkit) ist nicht installiert. Führe in einem Terminal aus: %1</translation>
+    </message>
+    <message>
+        <source>Not authorized. You can also run in a terminal: %1</source>
+        <translation>Nicht berechtigt. Du kannst auch in einem Terminal ausführen: %1</translation>
+    </message>
+    <message>
+        <source>Adding to the group failed: %1</source>
+        <translation>Hinzufügen zur Gruppe fehlgeschlagen: %1</translation>
+    </message>
+    <message>
+        <source>pkexec could not be started. Run in a terminal: %1</source>
+        <translation>pkexec konnte nicht gestartet werden. Führe in einem Terminal aus: %1</translation>
     </message>
 </context>
 <context>

@@ -6,7 +6,7 @@ After=graphical-session.target
 [Service]
 Type=dbus
 BusName=io.github.lordbooker.GKeyConfig
-ExecStart=/usr/bin/gkeyd
+ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/gkeyd
 Restart=on-failure
 RestartSec=5
 
