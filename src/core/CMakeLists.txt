@@ -10,10 +10,18 @@ add_library(gkey-core STATIC
     DaemonState.h
     DeviceModel.cpp
     DeviceModel.h
+    DirectoryWatcher.cpp
+    DirectoryWatcher.h
     EventCodes.cpp
     EventCodes.h
     KeyOutput.cpp
     KeyOutput.h
+    Macro.cpp
+    Macro.h
+    MacroRun.cpp
+    MacroRun.h
+    MacroStore.cpp
+    MacroStore.h
     ModelRegistry.cpp
     ModelRegistry.h
     OutputCodes.cpp

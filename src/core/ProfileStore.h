@@ -9,8 +9,7 @@
 #include <QString>
 #include <QStringList>
 
-class QFileSystemWatcher;
-class QTimer;
+class DirectoryWatcher;
 
 // The profiles of one device model: one JSON file per profile in
 // $XDG_CONFIG_HOME/gkey-config/profiles/<model>/. Changes made by other
@@ -46,14 +45,11 @@ signals:
     void changed();
 
 private:
-    void watch();
-    QString fileNameFor(const QString &profileName) const;
 
     DeviceModel m_model;   // copy: the store must not depend on the registry's lifetime
     QString m_directory;
     QMap<QString, Profile> m_profiles;     // name -> profile
     QMap<QString, QString> m_files;        // name -> file path
     QStringList m_messages;
-    QFileSystemWatcher *m_watcher = nullptr;
-    QTimer *m_debounce = nullptr;
+    DirectoryWatcher *m_watcher = nullptr;
 };

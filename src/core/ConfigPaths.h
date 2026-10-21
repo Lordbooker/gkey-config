@@ -11,6 +11,9 @@ QString configDir();
 // $XDG_CONFIG_HOME/gkey-config/profiles/<modelId>
 QString profileDir(const QString &modelId);
 
+// $XDG_CONFIG_HOME/gkey-config/macros (shared by all models)
+QString macroDir();
+
 // $XDG_STATE_HOME/gkey-config (state that is not configuration, e.g. the active profile)
 QString stateDir();
 

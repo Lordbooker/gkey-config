@@ -9,6 +9,8 @@
 #include <QString>
 
 class KeyOutput;
+class MacroRun;
+class MacroStore;
 
 // Turns the key events of one physical device into the actions of the active
 // profile and mode.
@@ -22,6 +24,9 @@ public:
     BindingEngine(const DeviceModel &model, KeyOutput &output, QObject *parent = nullptr);
     ~BindingEngine() override;
 
+    // Macro library used by macro actions (may be null: macros do nothing).
+    void setMacroStore(const MacroStore *store) { m_macros = store; }
+
     void setProfile(const Profile &profile);
     void setMode(int mode);   // 1..3
     int mode() const { return m_mode; }
@@ -30,8 +35,15 @@ public:
     // ("keys", "stick"). value: 1 press, 0 release, 2 autorepeat (ignored).
     void handleKey(const QString &inputRole, int code, int value);
 
-    // Releases all held keys (e.g. before the device goes away).
+    // Releases all held keys and stops running macros (e.g. before the device
+    // goes away).
     void releaseAll();
+
+    // Stops running macros only.
+    void stopMacros();
+
+    // Number of macros currently running.
+    int runningMacros() const { return static_cast<int>(m_runs.size()); }
 
 signals:
     // A mode key or a mode action asks for another mode.
@@ -40,14 +52,20 @@ signals:
     void profileRequested(const QString &target);
     // MR was pressed.
     void recordRequested();
+    // Any mapped key of the device went down or up (for the GUI).
+    void keyEvent(const QString &keyId, bool pressed);
 
 private:
     void press(const QString &keyId, const Action &action);
     void release(const Action &action);
+    void startMacro(const QString &keyId, const Action &action);
 
     DeviceModel m_model;
     KeyOutput &m_output;
     Profile m_profile;
     int m_mode = 1;
     QMap<QString, Action> m_held;   // key ID -> action started by its press
+    QMap<QString, MacroRun *> m_runs;   // key ID -> running macro
+    QMap<QString, Action::Repeat> m_runRepeat;
+    const MacroStore *m_macros = nullptr;
 };

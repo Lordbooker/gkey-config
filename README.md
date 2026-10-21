@@ -7,9 +7,9 @@ gaming-key input devices exclusively and sends the configured keys, key combinat
 through a virtual input device; LEDs are set through `/sys/class/leds`. The Qt6 tool `gkey-config`
 edits profiles and macros. No libusb driver, no input-remapper or keyd.
 
-> **Status: early development.** The daemon handles the G13 keypad: key, key combination and mouse
-> button bindings, M1–M3 modes, profiles with live reload. Stick, LEDs, macros, LCD and the GUI
-> follow. See [docs/CONCEPT.md](docs/CONCEPT.md) for the design and the milestones.
+> **Status: early development.** The daemon handles the G13 keypad: key, key combination, mouse
+> button and macro bindings, M1–M3 modes with LEDs, profile backlight colour, profiles and macros
+> with live reload, D-Bus API. Stick, LCD and the GUI follow. See [docs/CONCEPT.md](docs/CONCEPT.md) for the design and the milestones.
 
 ## Supported devices
 
@@ -84,8 +84,31 @@ GKEY_MODEL_DIR=$PWD/data/models build/src/daemon/gkeyd --list-models
    }
    ```
 
-M1–M3 switch between the three binding layers of the active profile. The stick is not handled yet
-and keeps working as a normal joystick.
+M1–M3 switch between the three binding layers of the active profile; their LEDs show the active
+layer. `"backlight": [r, g, b]` in a profile sets the G13 colour. The stick is not handled yet and
+keeps working as a normal joystick.
+
+5. Macros live in `~/.config/gkey-config/macros/` (format: [CONCEPT.md, section 6.1](docs/CONCEPT.md)),
+   e.g. `hello.json`:
+
+   ```json
+   { "name": "hello", "steps": [ { "tap": "KEY_H" }, { "tap": "KEY_I" } ] }
+   ```
+
+   and are bound with `{ "type": "macro", "macro": "hello", "repeat": "once" }`
+   (`once`, `while_held`, `toggle`, `count` with `"count": n`).
+
+6. The daemon can be controlled over D-Bus ([CONCEPT.md, section 10](docs/CONCEPT.md)), e.g.:
+
+   ```bash
+   busctl --user call io.github.lordbooker.GKeyConfig /io/github/lordbooker/GKeyConfig \
+       io.github.lordbooker.GKeyConfig1 Status
+   busctl --user call io.github.lordbooker.GKeyConfig /io/github/lordbooker/GKeyConfig \
+       io.github.lordbooker.GKeyConfig1 SetMode si g13 2
+   ```
+
+LED control needs membership in the group `gkey` (see [Permissions](#permissions)). For a manual
+installation create the group first: `sudo groupadd -r gkey`.
 
 ## Permissions
 

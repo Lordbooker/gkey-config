@@ -4,7 +4,8 @@ Documentation=https://github.com/Lordbooker/gkey-config
 After=graphical-session.target
 
 [Service]
-Type=simple
+Type=dbus
+BusName=io.github.lordbooker.GKeyConfig
 ExecStart=/usr/bin/gkeyd
 Restart=on-failure
 RestartSec=5

@@ -1,27 +1,20 @@
 #include "ProfileStore.h"
 
 #include "DeviceModel.h"
+#include "DirectoryWatcher.h"
 
 #include <QDir>
 #include <QFile>
-#include <QFileSystemWatcher>
-#include <QRegularExpression>
 #include <QSaveFile>
-#include <QTimer>
 
 #include <algorithm>
 
 ProfileStore::ProfileStore(const DeviceModel &model, const QString &directory, QObject *parent)
     : QObject(parent), m_model(model), m_directory(directory)
 {
-    m_watcher = new QFileSystemWatcher(this);
-    m_debounce = new QTimer(this);
-    m_debounce->setSingleShot(true);
-    m_debounce->setInterval(150);   // editors and QSaveFile write in several steps
-
-    connect(m_watcher, &QFileSystemWatcher::directoryChanged, m_debounce, qOverload<>(&QTimer::start));
-    connect(m_watcher, &QFileSystemWatcher::fileChanged, m_debounce, qOverload<>(&QTimer::start));
-    connect(m_debounce, &QTimer::timeout, this, [this] {
+    QDir().mkpath(m_directory);
+    m_watcher = new DirectoryWatcher(m_directory, this);
+    connect(m_watcher, &DirectoryWatcher::changed, this, [this] {
         reload();
         emit changed();
     });
@@ -63,7 +56,7 @@ void ProfileStore::reload()
         m_files.insert(profile->name(), path);
         m_profiles.insert(profile->name(), *profile);
     }
-    watch();
+    m_watcher->setFiles(m_files.values());
 }
 
 QStringList ProfileStore::names() const
@@ -85,7 +78,7 @@ bool ProfileStore::save(const Profile &profile, QString *error)
 {
     QDir().mkpath(m_directory);
     const QString path = m_files.contains(profile.name()) ? m_files.value(profile.name())
-                                                          : fileNameFor(profile.name());
+                                                          : DirectoryWatcher::uniqueFileName(m_directory, profile.name());
     QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly) || file.write(profile.toJson()) < 0 || !file.commit()) {
         if (error)
@@ -108,30 +101,3 @@ void ProfileStore::ensureDefault()
         m_messages.append(error);
 }
 
-void ProfileStore::watch()
-{
-    const QStringList watched = m_watcher->files() + m_watcher->directories();
-    if (!watched.isEmpty())
-        m_watcher->removePaths(watched);
-    if (QDir(m_directory).exists())
-        m_watcher->addPath(m_directory);
-    // Editors that write in place only trigger fileChanged.
-    const QStringList files = m_files.values();
-    if (!files.isEmpty())
-        m_watcher->addPaths(files);
-}
-
-QString ProfileStore::fileNameFor(const QString &profileName) const
-{
-    static const QRegularExpression invalid(QStringLiteral("[^a-z0-9]+"));
-    QString base = profileName.toLower().replace(invalid, QStringLiteral("-"));
-    base.remove(QRegularExpression(QStringLiteral("^-+|-+$")));
-    if (base.isEmpty())
-        base = QStringLiteral("profile");
-
-    const QDir dir(m_directory);
-    QString candidate = dir.filePath(base + QStringLiteral(".json"));
-    for (int n = 2; QFile::exists(candidate); ++n)
-        candidate = dir.filePath(QStringLiteral("%1-%2.json").arg(base).arg(n));
-    return candidate;
-}

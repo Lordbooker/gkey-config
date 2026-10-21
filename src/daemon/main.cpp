@@ -1,5 +1,6 @@
 // gkeyd - user session daemon for Logitech G keyboards driven by hid-lg-g15.
 
+#include "DBusService.h"
 #include "Daemon.h"
 #include "ModelRegistry.h"
 
@@ -87,6 +88,12 @@ int main(int argc, char *argv[])
 
     Daemon daemon;
     QString error;
+    // Claim the bus name first: a second daemon stops here, before it touches any device.
+    auto *dbus = new DBusService(&daemon);
+    if (!dbus->registerOnSessionBus(&error)) {
+        qCritical("%s", qPrintable(error));
+        return 1;
+    }
     if (!daemon.start(&error)) {
         qCritical("%s", qPrintable(error));
         return 1;

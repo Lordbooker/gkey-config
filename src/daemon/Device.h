@@ -6,9 +6,12 @@
 #include <QObject>
 #include <QString>
 
+#include <memory>
+
 class BindingEngine;
 class InputDevice;
 class KeyOutput;
+class LedController;
 
 // One connected physical device (one HID device) with its grabbed input
 // nodes and its binding engine.
@@ -21,6 +24,7 @@ public:
     const DeviceModel &model() const { return m_model; }
     const QString &hidSyspath() const { return m_hidSyspath; }
     BindingEngine *engine() const { return m_engine; }
+    LedController &leds() const { return *m_leds; }
 
     // Opens and grabs an input node. Returns false and sets an error text on failure.
     bool addInput(const QString &role, const QString &devNode, QString *error);
@@ -39,5 +43,6 @@ private:
     DeviceModel m_model;
     QString m_hidSyspath;
     BindingEngine *m_engine = nullptr;
+    std::unique_ptr<LedController> m_leds;
     QList<InputDevice *> m_inputs;
 };

@@ -19,19 +19,19 @@ jobs:
             image: archlinux:latest
             install: >-
               pacman -Syu --noconfirm --needed
-              base-devel cmake git pkgconf qt6-base libevdev systemd
+              base-devel cmake git pkgconf qt6-base libevdev systemd dbus glib2
           - distro: Fedora
             image: fedora:latest
             install: >-
               dnf install -y
               gcc-c++ cmake git pkgconf-pkg-config qt6-qtbase-devel libevdev-devel
-              systemd-devel systemd-udev
+              systemd-devel systemd-udev dbus-daemon dbus-tools glib2
           - distro: Debian testing
             image: debian:testing
             install: >-
               apt-get update &&
               DEBIAN_FRONTEND=noninteractive apt-get install -y
-              build-essential cmake git pkg-config qt6-base-dev libevdev-dev libudev-dev udev
+              build-essential cmake git pkg-config qt6-base-dev libevdev-dev libudev-dev udev dbus-daemon libglib2.0-bin
 
     steps:
       - name: Install dependencies

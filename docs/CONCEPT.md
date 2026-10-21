@@ -1,6 +1,6 @@
 # gkey-config – Concept
 
-Status: **approved on 2026-10-21.** Milestones 1 and 2 done (milestone 2 tested on the G13 on 2026-10-21).
+Status: **approved on 2026-10-21.** Milestones 1 and 2 done (tested on the G13); milestone 3 implemented, hardware test pending.
 
 gkey-config configures the gaming keys of Logitech G keyboards and keypads that are driven by the
 Linux kernel driver `hid-lg-g15`. It does **not** talk to the USB device itself and does not depend on
@@ -180,9 +180,10 @@ The daemon links Qt6 Core and DBus only, no GUI modules.
 
 ### 3.3 Threads
 
-One event loop thread (Qt) handles input, LEDs, D-Bus and file watching. Macros run in their own
-threads with cancellable waits (`std::condition_variable::wait_for`), so stopping a macro is
-immediate. All uinput writes go through one serialised writer.
+The daemon is single-threaded: one Qt event loop handles input, LEDs, D-Bus, file watching and
+macro playback. Macros are driven by timers instead of threads, so a wait can be cancelled at once
+and all uinput writes happen on one thread without locking. *(Changed during milestone 3; the
+draft planned one thread per macro.)*
 
 ---
 
@@ -332,20 +333,42 @@ linux-g13-driver README.
 
 ### 6.1 Format
 
-One file per macro in the shared library. Steps: `press`, `release`, `tap`, `delay` (ms), mouse
-buttons allowed. Repeat modes: `once`, `while_held` (the current pass completes), `toggle`,
-`count` (n times). A new press of the key stops a running macro.
+One file per macro in the shared library (`~/.config/gkey-config/macros/*.json`), referenced by
+its `name`:
+
+```json
+{
+  "name": "copy-line",
+  "description": "Select the current line and copy it",
+  "steps": [
+    { "tap": "KEY_HOME" },
+    { "press": "KEY_LEFTSHIFT" },
+    { "tap": "KEY_END", "hold": 20 },
+    { "release": "KEY_LEFTSHIFT" },
+    { "delay": 30 },
+    { "press": "KEY_LEFTCTRL" }, { "tap": "KEY_C" }, { "release": "KEY_LEFTCTRL" }
+  ]
+}
+```
+
+* Steps: `press`, `release`, `tap` (press, wait `hold` ms – default 10 –, release), `delay` (ms,
+  at most 60000). Keyboard keys and mouse buttons are allowed.
+* The repeat mode belongs to the binding, not to the macro, so one macro can be bound in different
+  ways: `once`, `while_held` (the current pass completes), `toggle`, `count` (n times).
+* A new press of the key stops a running macro.
 
 ### 6.2 Playback
 
-Each running macro has its own thread with cancellable waits. Keys still held when a macro ends or
-is stopped are released. Switching profile or mode stops running macros and releases all keys.
+Playback is timer-driven (see 3.3). Keys still held when a macro ends or is stopped are released.
+Switching profile or mode stops running macros and releases all keys. A repeating macro without any
+wait gets a 10 ms pause between passes, so it cannot flood the output or block the daemon.
 
 ### 6.3 Recording
 
 Recording happens in the GUI window (as in linux-g13-driver), because only the GUI sees the normal
 keyboard; the daemon only reads the gaming-keys devices. MR on the device starts/stops recording
-when the GUI is open (daemon emits a D-Bus signal) and toggles the MR LED.
+when the GUI is open (daemon emits a D-Bus signal) and toggles the MR LED. Until the GUI exists
+(milestone 4) MR only toggles the recording state and the LED.
 
 ---
 
@@ -447,17 +470,28 @@ offers all keyboard keys, mouse buttons, `REL_X`, `REL_Y`, `REL_WHEEL`, `REL_HWH
 
 ---
 
-## 10. D-Bus API (draft)
+## 10. D-Bus API
 
-Service `io.github.lordbooker.GKeyConfig`, object `/io/github/lordbooker/GKeyConfig`.
+Service `io.github.lordbooker.GKeyConfig`, object `/io/github/lordbooker/GKeyConfig`, interface
+`io.github.lordbooker.GKeyConfig1`. Owning the service name also guarantees a single daemon per
+session; the systemd unit is `Type=dbus`.
 
-| Kind | Name |
-|---|---|
-| Properties | `Devices`, `ActiveProfile`, `ActiveMode`, `Profiles`, `Recording`, `Status` |
-| Methods | `SetProfile`, `SetMode`, `Reload`, `SetBacklight`, `RunMacro`, `StopMacros`, `SetRecording`, `LcdText`, `LcdPage`, `ReportFocus`, `LockProfile` |
-| Signals | `DeviceAdded`, `DeviceRemoved`, `ProfileChanged`, `ModeChanged`, `KeyEvent`, `RecordingChanged` |
+| Kind | Signature | Notes |
+|---|---|---|
+| Method | `Status() → s` | JSON: `version`, `recording`, `devices[]` (`model`, `syspath`, `ledPermission`), `models{id: {name, tested, profile, mode, profiles[], profileDir}}`, `macros[]`, `macroDir` |
+| Method | `SetProfile(s model, s name) → b` | |
+| Method | `SetMode(s model, i mode) → b` | 1–3 |
+| Method | `SetBacklight(s model, i r, i g, i b) → b` | temporary, until the next profile change |
+| Method | `ResetBacklight(s model) → b` | back to the profile colour |
+| Method | `Reload()` | re-reads profiles and macros (normally automatic) |
+| Method | `RunMacro(s name) → b` / `StopMacros()` | |
+| Method | `SetRecording(b)` | MR LED and `RecordingChanged` |
+| Property | `Recording` (b) | |
+| Signals | `DeviceAdded(s model, s syspath)`, `DeviceRemoved(s, s)`, `ProfileChanged(s model, s name)`, `ModeChanged(s model, i mode)`, `KeyEvent(s model, s key, b pressed)`, `RecordingChanged(b)` | |
 
 `KeyEvent` lets the GUI highlight pressed keys and lets the user pick a key by pressing it.
+Planned for later milestones: `LcdText`, `LcdPage` (milestone 5), `ReportFocus`, `LockProfile`
+(milestone 6).
 
 ---
 

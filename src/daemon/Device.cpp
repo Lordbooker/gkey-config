@@ -2,11 +2,13 @@
 
 #include "BindingEngine.h"
 #include "InputDevice.h"
+#include "LedController.h"
 
 Device::Device(const DeviceModel &model, const QString &hidSyspath, KeyOutput &output, QObject *parent)
     : QObject(parent), m_model(model), m_hidSyspath(hidSyspath)
 {
     m_engine = new BindingEngine(m_model, output, this);
+    m_leds = std::make_unique<LedController>(m_model, m_hidSyspath);
 }
 
 Device::~Device()

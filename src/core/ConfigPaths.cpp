@@ -16,6 +16,11 @@ QString profileDir(const QString &modelId)
     return configDir() + QStringLiteral("/profiles/") + modelId;
 }
 
+QString macroDir()
+{
+    return configDir() + QStringLiteral("/macros");
+}
+
 QString stateDir()
 {
     // QStandardPaths::GenericStateLocation needs Qt 6.7; resolve it by hand.

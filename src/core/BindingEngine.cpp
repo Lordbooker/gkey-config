@@ -1,6 +1,8 @@
 #include "BindingEngine.h"
 
 #include "KeyOutput.h"
+#include "MacroRun.h"
+#include "MacroStore.h"
 
 #include <QLoggingCategory>
 
@@ -40,6 +42,7 @@ void BindingEngine::handleKey(const QString &inputRole, int code, int value)
         return;
     }
     const bool pressed = value == 1;
+    emit keyEvent(key->id, pressed);
 
     switch (key->role) {
     case DeviceModel::KeyRole::Mode1:
@@ -61,12 +64,21 @@ void BindingEngine::handleKey(const QString &inputRole, int code, int value)
     if (pressed) {
         if (m_held.contains(key->id))
             return;   // duplicate press without release
+        if (MacroRun *run = m_runs.value(key->id)) {
+            run->stop();   // a new press stops a running macro
+            return;
+        }
         const auto &bindings = m_profile.bindings(m_mode);
         const auto it = bindings.constFind(key->id);
         if (it == bindings.constEnd())
             return;   // unbound in this mode
         press(key->id, it.value());
     } else {
+        if (MacroRun *run = m_runs.value(key->id)) {
+            if (m_runRepeat.value(key->id) == Action::Repeat::WhileHeld)
+                run->keyReleased();
+            return;
+        }
         const auto it = m_held.find(key->id);
         if (it == m_held.end())
             return;
@@ -77,8 +89,16 @@ void BindingEngine::handleKey(const QString &inputRole, int code, int value)
     m_output.sync();
 }
 
+void BindingEngine::stopMacros()
+{
+    const auto runs = m_runs;
+    for (MacroRun *run : runs)
+        run->stop();
+}
+
 void BindingEngine::releaseAll()
 {
+    stopMacros();
     if (m_held.isEmpty())
         return;
     const auto held = m_held;
@@ -105,8 +125,10 @@ void BindingEngine::press(const QString &keyId, const Action &action)
         emit profileRequested(action.target());
         break;
     case Action::Type::Macro:
+        startMacro(keyId, action);
+        break;
     case Action::Type::Lcd:
-        qCInfo(lcEngine) << "action type not implemented yet, key" << keyId;
+        qCInfo(lcEngine) << "LCD actions are not implemented yet, key" << keyId;
         break;
     }
 }
@@ -116,4 +138,24 @@ void BindingEngine::release(const Action &action)
     const QList<int> &codes = action.codes();
     for (auto it = codes.crbegin(); it != codes.crend(); ++it)
         m_output.release(*it);
+}
+
+void BindingEngine::startMacro(const QString &keyId, const Action &action)
+{
+    const Macro *macro = m_macros ? m_macros->macro(action.macro()) : nullptr;
+    if (!macro) {
+        qCWarning(lcEngine).noquote() << QStringLiteral("key %1: macro \"%2\" does not exist").arg(keyId, action.macro());
+        return;
+    }
+    auto *run = new MacroRun(*macro, action.repeat(), action.count(), m_output, this);
+    m_runs.insert(keyId, run);
+    m_runRepeat.insert(keyId, action.repeat());
+    connect(run, &MacroRun::finished, this, [this, keyId, run] {
+        if (m_runs.value(keyId) == run) {
+            m_runs.remove(keyId);
+            m_runRepeat.remove(keyId);
+        }
+        run->deleteLater();
+    });
+    run->start();
 }

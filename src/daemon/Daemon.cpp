@@ -3,8 +3,14 @@
 #include "BindingEngine.h"
 #include "ConfigPaths.h"
 #include "Device.h"
+#include "LedController.h"
+#include "MacroRun.h"
+#include "MacroStore.h"
 #include "ProfileStore.h"
 
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(lcDaemon, "gkey.daemon")
@@ -27,7 +33,8 @@ Daemon::Daemon(QObject *parent)
 
 Daemon::~Daemon()
 {
-    // Devices release their held keys while the virtual device still exists.
+    // Release held keys while the virtual device still exists.
+    stopMacros();
     qDeleteAll(m_devices);
     m_devices.clear();
 }
@@ -48,15 +55,27 @@ bool Daemon::start(QString *error)
     m_output = std::make_unique<KeyOutput>(m_virtualInput);
     m_state.load();
 
+    m_macros = new MacroStore(ConfigPaths::macroDir(), this);
+    for (const QString &message : m_macros->messages())
+        qCWarning(lcDaemon).noquote() << message;
+    connect(m_macros, &MacroStore::changed, this, [this] {
+        for (const QString &message : m_macros->messages())
+            qCWarning(lcDaemon).noquote() << message;
+        qCInfo(lcDaemon) << "macros reloaded:" << m_macros->names().size();
+    });
+
     m_monitor = new DeviceMonitor(this);
     connect(m_monitor, &DeviceMonitor::inputAdded, this, &Daemon::onInputAdded);
     connect(m_monitor, &DeviceMonitor::inputRemoved, this, &Daemon::onInputRemoved);
     if (!m_monitor->start(error))
         return false;
 
-    qCInfo(lcDaemon) << "running," << m_registry.models().size() << "model(s) known";
+    qCInfo(lcDaemon) << "running," << m_registry.models().size() << "model(s) known,"
+                     << m_macros->names().size() << "macro(s)";
     return true;
 }
+
+// --- Devices -------------------------------------------------------------------
 
 void Daemon::onInputAdded(const DeviceMonitor::InputInfo &info)
 {
@@ -87,26 +106,10 @@ void Daemon::onInputAdded(const DeviceMonitor::InputInfo &info)
         return;
     }
 
-    ModelContext &ctx = context(*model);
     Device *device = m_devices.value(info.hidSyspath);
     const bool newDevice = !device;
-    if (newDevice) {
-        device = new Device(*model, info.hidSyspath, *m_output, this);
-        const QString modelId = model->id();
-        connect(device->engine(), &BindingEngine::modeRequested, this,
-                [this, modelId](int mode) { onModeRequested(modelId, mode); });
-        connect(device->engine(), &BindingEngine::profileRequested, this,
-                [this, modelId](const QString &target) { onProfileRequested(modelId, target); });
-        connect(device->engine(), &BindingEngine::recordRequested, this,
-                [] { qCInfo(lcDaemon) << "macro recording is not implemented yet"; });
-        connect(device, &Device::disconnected, this, [this, device] {
-            qCInfo(lcDaemon).noquote() << device->model().name() << "disconnected";
-            m_devices.remove(device->hidSyspath());
-            device->deleteLater();
-        });
-        device->engine()->setProfile(ctx.profile);
-        device->engine()->setMode(ctx.mode);
-    }
+    if (newDevice)
+        device = createDevice(*model, info.hidSyspath);
 
     QString error;
     if (!device->addInput(role, info.devNode, &error)) {
@@ -117,10 +120,42 @@ void Daemon::onInputAdded(const DeviceMonitor::InputInfo &info)
     }
     if (newDevice) {
         m_devices.insert(info.hidSyspath, device);
+        const ModelContext *ctx = context(model->id());
         qCInfo(lcDaemon).noquote() << QStringLiteral("%1 connected (%2), profile \"%3\", mode M%4")
-                                          .arg(model->name(), info.devNode, ctx.profile.name())
-                                          .arg(ctx.mode);
+                                          .arg(model->name(), info.devNode, ctx->profile.name())
+                                          .arg(ctx->mode);
+        emit deviceAdded(model->id(), info.hidSyspath);
     }
+}
+
+Device *Daemon::createDevice(const DeviceModel &model, const QString &hidSyspath)
+{
+    ModelContext *ctx = context(model.id());
+    auto *device = new Device(model, hidSyspath, *m_output, this);
+    const QString modelId = model.id();
+    BindingEngine *engine = device->engine();
+    engine->setMacroStore(m_macros);
+    engine->setProfile(ctx->profile);
+    engine->setMode(ctx->mode);
+
+    connect(engine, &BindingEngine::modeRequested, this, [this, modelId](int mode) { setMode(modelId, mode); });
+    connect(engine, &BindingEngine::profileRequested, this,
+            [this, modelId](const QString &target) { onProfileRequested(modelId, target); });
+    connect(engine, &BindingEngine::recordRequested, this, [this] { setRecording(!m_recording); });
+    connect(engine, &BindingEngine::keyEvent, this,
+            [this, modelId](const QString &keyId, bool pressed) { emit keyEvent(modelId, keyId, pressed); });
+    connect(device, &Device::disconnected, this, [this, device] {
+        qCInfo(lcDaemon).noquote() << device->model().name() << "disconnected";
+        m_devices.remove(device->hidSyspath());
+        emit deviceRemoved(device->model().id(), device->hidSyspath());
+        device->deleteLater();
+    });
+
+    // The G13 forgets its LED state at power loss: always apply on connect.
+    device->leds().setBacklight(ctx->profile.backlight());
+    device->leds().setMode(ctx->mode);
+    device->leds().setRecording(m_recording);
+    return device;
 }
 
 void Daemon::onInputRemoved(const QString &devNode)
@@ -131,24 +166,38 @@ void Daemon::onInputRemoved(const QString &devNode)
     }
 }
 
-Daemon::ModelContext &Daemon::context(const DeviceModel &model)
+QList<Device *> Daemon::devicesOf(const QString &modelId) const
 {
-    auto it = m_contexts.find(model.id());
+    QList<Device *> list;
+    for (Device *device : m_devices) {
+        if (device->model().id() == modelId)
+            list.append(device);
+    }
+    return list;
+}
+
+// --- Profiles and modes ----------------------------------------------------------
+
+Daemon::ModelContext *Daemon::context(const QString &modelId)
+{
+    auto it = m_contexts.find(modelId);
     if (it != m_contexts.end())
-        return it.value();
+        return &it.value();
+    const DeviceModel *model = m_registry.findById(modelId);
+    if (!model)
+        return nullptr;
 
     ModelContext ctx;
-    ctx.model = model;
-    ctx.store = new ProfileStore(model, ConfigPaths::profileDir(model.id()), this);
+    ctx.model = *model;
+    ctx.store = new ProfileStore(*model, ConfigPaths::profileDir(modelId), this);
     ctx.store->ensureDefault();
-    ctx.mode = m_state.mode(model.id());
-    const QString modelId = model.id();
+    ctx.mode = m_state.mode(modelId);
     connect(ctx.store, &ProfileStore::changed, this, [this, modelId] { onProfilesChanged(modelId); });
 
-    it = m_contexts.insert(model.id(), ctx);
+    it = m_contexts.insert(modelId, ctx);
     logStoreMessages(it.value());
-    selectProfile(it.value(), m_state.profile(model.id()));
-    return it.value();
+    selectProfile(it.value(), m_state.profile(modelId));
+    return &it.value();
 }
 
 void Daemon::selectProfile(ModelContext &ctx, const QString &requested)
@@ -167,64 +216,80 @@ void Daemon::selectProfile(ModelContext &ctx, const QString &requested)
 
 void Daemon::applyProfile(ModelContext &ctx)
 {
-    for (Device *device : std::as_const(m_devices)) {
-        if (device->model().id() == ctx.model.id())
-            device->engine()->setProfile(ctx.profile);
+    for (Device *device : devicesOf(ctx.model.id())) {
+        device->engine()->setProfile(ctx.profile);
+        device->leds().setBacklight(ctx.profile.backlight());
     }
+    emit profileChanged(ctx.model.id(), ctx.profile.name());
 }
 
 void Daemon::applyMode(ModelContext &ctx)
 {
-    for (Device *device : std::as_const(m_devices)) {
-        if (device->model().id() == ctx.model.id())
-            device->engine()->setMode(ctx.mode);
+    for (Device *device : devicesOf(ctx.model.id())) {
+        device->engine()->setMode(ctx.mode);
+        device->leds().setMode(ctx.mode);
     }
+    emit modeChanged(ctx.model.id(), ctx.mode);
 }
 
 void Daemon::onProfilesChanged(const QString &modelId)
 {
-    auto it = m_contexts.find(modelId);
-    if (it == m_contexts.end())
+    ModelContext *ctx = context(modelId);
+    if (!ctx)
         return;
-    ModelContext &ctx = it.value();
-    logStoreMessages(ctx);
-    const QString previous = ctx.profile.name();
-    const QByteArray previousContent = ctx.profile.toJson();
-    selectProfile(ctx, previous);
-    if (ctx.profile.name() == previous && ctx.profile.toJson() == previousContent)
+    logStoreMessages(*ctx);
+    const QString previous = ctx->profile.name();
+    const QByteArray previousContent = ctx->profile.toJson();
+    selectProfile(*ctx, previous);
+    if (ctx->profile.name() == previous && ctx->profile.toJson() == previousContent)
         return;   // e.g. our own write of the default profile, or another profile changed
-    applyProfile(ctx);
-    if (ctx.profile.name() == previous)
-        qCInfo(lcDaemon).noquote() << QStringLiteral("%1: profile \"%2\" reloaded").arg(ctx.model.name(), previous);
+    applyProfile(*ctx);
+    if (ctx->profile.name() == previous)
+        qCInfo(lcDaemon).noquote() << QStringLiteral("%1: profile \"%2\" reloaded").arg(ctx->model.name(), previous);
     else
         qCInfo(lcDaemon).noquote() << QStringLiteral("%1: profile \"%2\" is gone, switched to \"%3\"")
-                                          .arg(ctx.model.name(), previous, ctx.profile.name());
+                                          .arg(ctx->model.name(), previous, ctx->profile.name());
 }
 
-void Daemon::onModeRequested(const QString &modelId, int mode)
+bool Daemon::setMode(const QString &modelId, int mode)
 {
-    auto it = m_contexts.find(modelId);
-    if (it == m_contexts.end() || it->mode == mode)
-        return;
-    it->mode = mode;
-    applyMode(it.value());
+    ModelContext *ctx = context(modelId);
+    if (!ctx || mode < 1 || mode > Profile::ModeCount)
+        return false;
+    if (ctx->mode == mode)
+        return true;
+    ctx->mode = mode;
+    applyMode(*ctx);
     m_state.setMode(modelId, mode);
     saveState();
-    qCInfo(lcDaemon).noquote() << QStringLiteral("%1: mode M%2").arg(it->model.name()).arg(mode);
+    qCInfo(lcDaemon).noquote() << QStringLiteral("%1: mode M%2").arg(ctx->model.name()).arg(mode);
+    return true;
+}
+
+bool Daemon::setProfile(const QString &modelId, const QString &name)
+{
+    ModelContext *ctx = context(modelId);
+    if (!ctx || !ctx->store->profile(name))
+        return false;
+    if (name != ctx->profile.name()) {
+        selectProfile(*ctx, name);
+        applyProfile(*ctx);
+        qCInfo(lcDaemon).noquote() << QStringLiteral("%1: profile \"%2\"").arg(ctx->model.name(), ctx->profile.name());
+    }
+    return true;
 }
 
 void Daemon::onProfileRequested(const QString &modelId, const QString &target)
 {
-    auto it = m_contexts.find(modelId);
-    if (it == m_contexts.end())
+    ModelContext *ctx = context(modelId);
+    if (!ctx)
         return;
-    ModelContext &ctx = it.value();
-    const QStringList names = ctx.store->names();
+    const QStringList names = ctx->store->names();
     if (names.isEmpty())
         return;
 
     QString name;
-    const qsizetype current = names.indexOf(ctx.profile.name());
+    const qsizetype current = names.indexOf(ctx->profile.name());
     if (target == u"next") {
         name = names.at((current + 1) % names.size());
     } else if (target == u"previous") {
@@ -234,17 +299,109 @@ void Daemon::onProfileRequested(const QString &modelId, const QString &target)
             if (candidate.compare(target, Qt::CaseInsensitive) == 0)
                 name = candidate;
         }
-        if (name.isEmpty()) {
-            qCWarning(lcDaemon).noquote() << QStringLiteral("%1: profile \"%2\" does not exist")
-                                                 .arg(ctx.model.name(), target);
-            return;
-        }
     }
-    if (name == ctx.profile.name())
+    if (name.isEmpty()) {
+        qCWarning(lcDaemon).noquote() << QStringLiteral("%1: profile \"%2\" does not exist")
+                                             .arg(ctx->model.name(), target);
         return;
-    selectProfile(ctx, name);
-    applyProfile(ctx);
-    qCInfo(lcDaemon).noquote() << QStringLiteral("%1: profile \"%2\"").arg(ctx.model.name(), ctx.profile.name());
+    }
+    setProfile(modelId, name);
+}
+
+bool Daemon::setBacklight(const QString &modelId, const std::optional<Profile::Rgb> &rgb)
+{
+    ModelContext *ctx = context(modelId);
+    if (!ctx)
+        return false;
+    for (Device *device : devicesOf(modelId))
+        device->leds().setBacklight(rgb ? rgb : ctx->profile.backlight());
+    return true;
+}
+
+void Daemon::reload()
+{
+    if (m_macros)
+        m_macros->reload();
+    for (auto it = m_contexts.begin(); it != m_contexts.end(); ++it) {
+        it->store->reload();
+        onProfilesChanged(it.key());
+    }
+}
+
+// --- Macros and recording ---------------------------------------------------------
+
+bool Daemon::runMacro(const QString &name)
+{
+    const Macro *macro = m_macros ? m_macros->macro(name) : nullptr;
+    if (!macro)
+        return false;
+    auto *run = new MacroRun(*macro, Action::Repeat::Once, 1, *m_output, this);
+    m_freeRuns.append(run);
+    connect(run, &MacroRun::finished, this, [this, run] {
+        m_freeRuns.removeOne(run);
+        run->deleteLater();
+    });
+    run->start();
+    return true;
+}
+
+void Daemon::stopMacros()
+{
+    const auto runs = m_freeRuns;
+    for (MacroRun *run : runs)
+        run->stop();
+    for (Device *device : std::as_const(m_devices))
+        device->engine()->stopMacros();
+}
+
+void Daemon::setRecording(bool recording)
+{
+    if (m_recording == recording)
+        return;
+    m_recording = recording;
+    for (Device *device : std::as_const(m_devices))
+        device->leds().setRecording(recording);
+    qCInfo(lcDaemon) << (recording ? "macro recording started" : "macro recording stopped");
+    emit recordingChanged(recording);
+}
+
+// --- Status ---------------------------------------------------------------------------
+
+QByteArray Daemon::statusJson()
+{
+    QJsonObject root;
+    root.insert(QStringLiteral("version"), QStringLiteral(GKEY_VERSION));
+    root.insert(QStringLiteral("recording"), m_recording);
+
+    QJsonArray devices;
+    for (Device *device : std::as_const(m_devices)) {
+        QJsonObject object;
+        object.insert(QStringLiteral("model"), device->model().id());
+        object.insert(QStringLiteral("syspath"), device->hidSyspath());
+        object.insert(QStringLiteral("ledPermission"), !device->leds().permissionDenied());
+        devices.append(object);
+    }
+    root.insert(QStringLiteral("devices"), devices);
+
+    QJsonObject models;
+    for (const DeviceModel &model : m_registry.models()) {
+        QJsonObject object;
+        object.insert(QStringLiteral("name"), model.name());
+        object.insert(QStringLiteral("tested"), model.tested());
+        if (const auto it = m_contexts.constFind(model.id()); it != m_contexts.constEnd()) {
+            object.insert(QStringLiteral("profile"), it->profile.name());
+            object.insert(QStringLiteral("mode"), it->mode);
+            object.insert(QStringLiteral("profiles"), QJsonArray::fromStringList(it->store->names()));
+            object.insert(QStringLiteral("profileDir"), it->store->directory());
+        }
+        models.insert(model.id(), object);
+    }
+    root.insert(QStringLiteral("models"), models);
+    if (m_macros) {
+        root.insert(QStringLiteral("macros"), QJsonArray::fromStringList(m_macros->names()));
+        root.insert(QStringLiteral("macroDir"), m_macros->directory());
+    }
+    return QJsonDocument(root).toJson(QJsonDocument::Compact);
 }
 
 void Daemon::logStoreMessages(const ModelContext &ctx)

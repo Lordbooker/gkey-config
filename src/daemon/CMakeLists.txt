@@ -1,5 +1,7 @@
 # gkeyd: user session daemon (Qt6 Core + DBus only, no GUI modules).
 add_library(gkeyd-lib STATIC
+    DBusService.cpp
+    DBusService.h
     Daemon.cpp
     Daemon.h
     Device.cpp
@@ -8,6 +10,8 @@ add_library(gkeyd-lib STATIC
     DeviceMonitor.h
     InputDevice.cpp
     InputDevice.h
+    LedController.cpp
+    LedController.h
     VirtualInput.cpp
     VirtualInput.h
 )
