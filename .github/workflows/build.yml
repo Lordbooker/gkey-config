@@ -19,7 +19,7 @@ jobs:
             image: archlinux:latest
             install: >-
               pacman -Syu --noconfirm --needed
-              base-devel cmake git pkgconf qt6-base qt6-tools libevdev systemd dbus glib2
+              base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
           - distro: Fedora
             image: fedora:latest
             install: >-

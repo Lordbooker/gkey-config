@@ -141,7 +141,7 @@ To add a language, append its code to `GKEY_GUI_LANGUAGES` in `src/gui/CMakeList
 `cmake --build build --target update_translations` to create `translations/gkey-config_<code>.ts`,
 translate it with Qt Linguist (`linguist6` or `linguist`) and rebuild. The same target updates all
 `.ts` files after text changes in the code; the test `tst_translations` fails while a text is
-untranslated.
+untranslated. On Arch Linux, `lupdate` (used by both) also needs `qt6-declarative`.
 
 ## Permissions
 

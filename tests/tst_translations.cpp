@@ -111,7 +111,13 @@ void TestTranslations::initTestCase()
                   {QStringLiteral("-silent"), QStringLiteral("-no-obsolete"), QStringLiteral("-locations"),
                    QStringLiteral("none"), QStringLiteral(GKEY_GUI_SOURCE_DIR), QStringLiteral("-ts"), reference});
     QVERIFY2(lupdate.waitForFinished(60000), "lupdate did not finish");
-    QVERIFY2(lupdate.exitCode() == 0, lupdate.readAll().constData());
+    const QByteArray output = lupdate.readAll();
+    // lupdate itself cannot start (e.g. on Arch without qt6-declarative):
+    // that is a missing tool, not a translation problem.
+    if (lupdate.exitStatus() != QProcess::NormalExit || lupdate.exitCode() == 127
+        || output.contains("error while loading shared libraries"))
+        QSKIP(qPrintable(QStringLiteral("lupdate cannot run: ") + QString::fromLocal8Bit(output).trimmed()));
+    QVERIFY2(lupdate.exitCode() == 0, output.constData());
     QString error;
     m_reference = readTs(reference, &error);
     QVERIFY2(error.isEmpty(), qPrintable(error));
