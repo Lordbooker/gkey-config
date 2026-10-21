@@ -56,7 +56,7 @@ set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
 set(CPACK_RPM_PACKAGE_RELEASE "${GKEY_PACKAGE_RELEASE}")
 set(CPACK_RPM_PACKAGE_RELEASE_DIST ON)   # appends %{?dist}, e.g. .fc44
 # Not relocatable: the systemd unit and the D-Bus service contain absolute paths.
-set(CPACK_RPM_PACKAGE_RELOCATABLE OFF)
+set(CPACK_PACKAGE_RELOCATABLE OFF)
 set(CPACK_RPM_PACKAGE_LICENSE "GPL-2.0-only")
 set(CPACK_RPM_PACKAGE_GROUP "Applications/System")
 set(CPACK_RPM_PACKAGE_REQUIRES "systemd, systemd-udev")
