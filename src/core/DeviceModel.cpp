@@ -167,6 +167,12 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
             return error(QStringLiteral("key \"%1\": unknown role \"%2\"")
                              .arg(key.id, object.value(u"role").toString()));
         key.role = *role;
+        if (object.contains(u"default")) {
+            const auto action = Action::fromJson(object.value(u"default").toObject());
+            if (!action)
+                return error(QStringLiteral("key \"%1\": invalid default action: %2").arg(key.id, action.error()));
+            key.defaultAction = *action;
+        }
 
         keyIds.insert(key.id);
         inputCodes.insert(inputCode);

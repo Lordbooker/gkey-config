@@ -5,6 +5,9 @@
 #include "ConfigPaths.h"
 #include "DaemonClient.h"
 #include "DeviceView.h"
+#include "LcdPage.h"
+#include "Settings.h"
+#include "StickPage.h"
 #include "MacroEditor.h"
 #include "MacroStore.h"
 #include "ProfileStore.h"
@@ -34,6 +37,8 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QVBoxLayout>
+
+#include <linux/input-event-codes.h>
 
 namespace {
 
@@ -94,6 +99,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     m_registry.load();
     m_client = new DaemonClient(this);
     m_macros = new MacroStore(ConfigPaths::macroDir(), this);
+    m_settings = new Settings(ConfigPaths::settingsFile(), this);
 
     setWindowTitle(tr("G-Key Configuration"));
     setWindowIcon(appIcon());
@@ -196,6 +202,7 @@ void MainWindow::setupUi()
     splitter->addWidget(m_view);
 
     auto *tabs = new QTabWidget(splitter);
+    m_tabs = tabs;
     m_bindingEditor = new BindingEditor(tabs);
     m_bindingEditor->setMacroNames(m_macros->names());
     connect(m_bindingEditor, &BindingEditor::bindingChanged, this, &MainWindow::onBindingChanged);
@@ -218,6 +225,24 @@ void MainWindow::setupUi()
     connect(m_backlightEnabled, &QCheckBox::toggled, this, &MainWindow::onBacklightToggled);
     connect(m_backlightButton, &QPushButton::clicked, this, &MainWindow::onChooseBacklight);
     tabs->addTab(profileTab, tr("Backlight"));
+
+    m_stickPage = new StickPage(tabs);
+    connect(m_stickPage, &StickPage::settingsChanged, this, &MainWindow::onStickSettingsChanged);
+    connect(m_stickPage, &StickPage::wasdRequested, this, &MainWindow::onStickWasd);
+    connect(m_stickPage, &StickPage::calibrateRequested, this, &MainWindow::onStickCalibrate);
+    tabs->addTab(m_stickPage, tr("Stick"));
+
+    m_lcdPage = new LcdPage(tabs);
+    m_lcdPage->setPages(m_settings->lcdPages());
+    connect(m_lcdPage, &LcdPage::pagesChanged, this, [this](const QStringList &pages) {
+        m_settings->setLcdPages(pages);
+        QString error;
+        if (!m_settings->save(&error))
+            QMessageBox::warning(this, tr("LCD"), error);
+    });
+    connect(m_lcdPage, &LcdPage::showOnDevice, m_client, &DaemonClient::lcdPage);
+    connect(m_settings, &Settings::changed, this, [this] { m_lcdPage->setPages(m_settings->lcdPages()); });
+    tabs->addTab(m_lcdPage, tr("LCD"));
 
     m_macroEditor = new MacroEditor(m_macros, m_client, tabs);
     tabs->addTab(m_macroEditor, tr("Macros"));
@@ -327,6 +352,14 @@ void MainWindow::reloadView()
     m_backlightButton->setEnabled(profile && profile->backlight());
     m_backlightButton->setIcon(colorIcon(accent));
     m_backlightEnabled->setEnabled(profile && m_model.ledByRole(QStringLiteral("backlight")));
+
+    // Stick and LCD tabs exist only for models that have them.
+    m_tabs->setTabEnabled(m_tabs->indexOf(m_stickPage), m_model.stick().has_value());
+    m_tabs->setTabEnabled(m_tabs->indexOf(m_lcdPage), m_model.lcd().has_value());
+    m_stickPage->setSettings(profile ? profile->stickSettings() : StickSettings());
+    m_stickPage->setRestPosition(m_client->stickCenter(m_model.id()));
+    m_stickPage->setDeviceAvailable(m_client->connectedModels().contains(m_model.id()));
+    m_lcdPage->setStatus({m_model.name(), m_profileName, m_mode, m_client->recording()});
 
     selectKey(m_selectedKey);
 }
@@ -480,6 +513,44 @@ void MainWindow::onDeleteProfile()
         m_client->setProfile(m_model.id(), m_profileName);
 }
 
+// --- Stick ------------------------------------------------------------------------------------
+
+void MainWindow::onStickSettingsChanged(const StickSettings &settings)
+{
+    const Profile *current = currentProfile();
+    if (!current || current->stickSettings() == settings)
+        return;
+    Profile profile = *current;
+    profile.setStickSettings(settings);
+    if (saveProfile(profile))
+        statusBar()->showMessage(tr("Saved"), 2000);
+}
+
+void MainWindow::onStickWasd()
+{
+    const Profile *current = currentProfile();
+    if (!current)
+        return;
+    Profile profile = *current;
+    profile.setBinding(m_mode, QStringLiteral("STICK_UP"), Action::key(KEY_W));
+    profile.setBinding(m_mode, QStringLiteral("STICK_LEFT"), Action::key(KEY_A));
+    profile.setBinding(m_mode, QStringLiteral("STICK_DOWN"), Action::key(KEY_S));
+    profile.setBinding(m_mode, QStringLiteral("STICK_RIGHT"), Action::key(KEY_D));
+    if (saveProfile(profile)) {
+        statusBar()->showMessage(tr("Stick directions of layer M%1 bound to W, A, S, D").arg(m_mode), 4000);
+        reloadView();
+    }
+}
+
+void MainWindow::onStickCalibrate()
+{
+    if (m_client->calibrateStick(m_model.id()))
+        statusBar()->showMessage(tr("Rest position measured: %1").arg(m_client->stickCenter(m_model.id())), 4000);
+    else
+        statusBar()->showMessage(tr("The rest position could not be measured (device connected?)"), 4000);
+    m_stickPage->setRestPosition(m_client->stickCenter(m_model.id()));
+}
+
 // --- Backlight --------------------------------------------------------------------------------
 
 void MainWindow::onBacklightToggled(bool enabled)
@@ -533,6 +604,9 @@ void MainWindow::updateDaemonState()
     m_daemonLabel->setText(text);
     m_daemonButton->setText(available ? tr("Restart daemon") : tr("Start daemon"));
     m_ledHint->setVisible(available && !m_client->ledPermission(m_model.id()));
+    m_stickPage->setRestPosition(m_client->stickCenter(m_model.id()));
+    m_stickPage->setDeviceAvailable(m_client->connectedModels().contains(m_model.id()));
+    m_lcdPage->setStatus({m_model.name(), m_profileName, m_mode, m_client->recording()});
 
     if (m_trayStatus) {
         m_trayStatus->setText(available ? tr("Daemon: running") : tr("Daemon: stopped"));
@@ -623,8 +697,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::showKey(const QString &keyId, int tab)
 {
     selectKey(keyId);
-    if (auto *tabs = findChild<QTabWidget *>())
-        tabs->setCurrentIndex(tab);
+    m_tabs->setCurrentIndex(tab);
 }
 
 bool MainWindow::saveScreenshot(const QString &path)

@@ -28,7 +28,7 @@ bool VirtualInput::create(QString *error)
     for (int code : OutputCodes::allKeys())
         libevdev_enable_event_code(m_device, EV_KEY, static_cast<unsigned int>(code), nullptr);
 
-    // Relative axes for pointer and scroll actions (stick modes, milestone 5).
+    // Relative axes for the stick's pointer and scroll modes.
     libevdev_enable_event_type(m_device, EV_REL);
     for (unsigned int code : {REL_X, REL_Y, REL_WHEEL, REL_HWHEEL})
         libevdev_enable_event_code(m_device, EV_REL, code, nullptr);
@@ -51,6 +51,12 @@ void VirtualInput::writeKey(int code, bool pressed)
 {
     if (m_uinput)
         libevdev_uinput_write_event(m_uinput, EV_KEY, static_cast<unsigned int>(code), pressed ? 1 : 0);
+}
+
+void VirtualInput::writeRel(int code, int value)
+{
+    if (m_uinput)
+        libevdev_uinput_write_event(m_uinput, EV_REL, static_cast<unsigned int>(code), value);
 }
 
 void VirtualInput::sync()

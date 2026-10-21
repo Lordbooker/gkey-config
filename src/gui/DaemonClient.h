@@ -27,6 +27,8 @@ public:
     int activeMode(const QString &modelId) const;
     bool ledPermission(const QString &modelId) const;
     bool recording() const;
+    // Rest position of the stick of a connected device, e.g. "138 / 139"; empty if unknown.
+    QString stickCenter(const QString &modelId) const;
 
     bool setProfile(const QString &modelId, const QString &name);
     bool setMode(const QString &modelId, int mode);
@@ -35,6 +37,8 @@ public:
     bool runMacro(const QString &name);
     void stopMacros();
     void setRecording(bool recording);
+    bool calibrateStick(const QString &modelId);
+    void lcdPage(const QString &page);
 
 signals:
     void availableChanged(bool available);

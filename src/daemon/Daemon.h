@@ -20,6 +20,7 @@ class Device;
 class MacroRun;
 class MacroStore;
 class ProfileStore;
+class Settings;
 
 // Ties everything together: device discovery, one profile store per model,
 // the macro library, the active profile and mode, LEDs, macro recording state
@@ -46,6 +47,9 @@ public:
     void stopMacros();
     void setRecording(bool recording);
     bool recording() const { return m_recording; }
+    void lcdText(const QString &text, int seconds);
+    void lcdPage(const QString &page);
+    bool calibrateStick(const QString &modelId);
 
 signals:
     void deviceAdded(const QString &modelId, const QString &syspath);
@@ -77,6 +81,7 @@ private:
     void logStoreMessages(const ModelContext &ctx);
     void saveState();
     QList<Device *> devicesOf(const QString &modelId) const;
+    void updateLcdStatus(Device *device);
 
     ModelRegistry m_registry;
     VirtualInput m_virtualInput;
@@ -84,6 +89,7 @@ private:
     DaemonState m_state;
     DeviceMonitor *m_monitor = nullptr;
     MacroStore *m_macros = nullptr;
+    Settings *m_settings = nullptr;
     QHash<QString, ModelContext> m_contexts;   // model id -> context
     QHash<QString, Device *> m_devices;        // HID syspath -> device
     QList<MacroRun *> m_freeRuns;              // macros started via D-Bus

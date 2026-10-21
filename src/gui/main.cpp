@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
                                        QApplication::translate("main", "With --screenshot: select this key."),
                                        QStringLiteral("key"));
     const QCommandLineOption tabOption(QStringLiteral("show-tab"),
-                                       QApplication::translate("main", "With --screenshot: show this tab (0-2)."),
+                                       QApplication::translate("main", "With --screenshot: show this tab (0-4)."),
                                        QStringLiteral("tab"));
     parser.addOption(trayOption);
     parser.addOption(screenshotOption);

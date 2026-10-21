@@ -198,6 +198,41 @@
     </message>
 </context>
 <context>
+    <name>LcdPage</name>
+    <message>
+        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page (unless it is bound to something else).</source>
+        <translation>Seiten, die das LCD in dieser Reihenfolge zeigt. Die runde Taste neben den LCD-Tasten blättert zur nächsten Seite (sofern sie nicht anders belegt ist).</translation>
+    </message>
+    <message>
+        <source>Show this page on the device</source>
+        <translation>Diese Seite am Gerät anzeigen</translation>
+    </message>
+    <message>
+        <source>Scripts can write to the text page, e.g.:&lt;br&gt;&lt;tt&gt;busctl --user call io.github.lordbooker.GKeyConfig /io/github/lordbooker/GKeyConfig io.github.lordbooker.GKeyConfig1 LcdText si "Hello" 5&lt;/tt&gt;</source>
+        <translation>Skripte können auf die Textseite schreiben, z. B.:&lt;br&gt;&lt;tt&gt;busctl --user call io.github.lordbooker.GKeyConfig /io/github/lordbooker/GKeyConfig io.github.lordbooker.GKeyConfig1 LcdText si "Hallo" 5&lt;/tt&gt;</translation>
+    </message>
+    <message>
+        <source>Status (profile and layer)</source>
+        <translation>Status (Profil und Ebene)</translation>
+    </message>
+    <message>
+        <source>Clock</source>
+        <translation>Uhr</translation>
+    </message>
+    <message>
+        <source>Text (from scripts)</source>
+        <translation>Text (von Skripten)</translation>
+    </message>
+    <message>
+        <source>Text from scripts</source>
+        <translation>Text von Skripten</translation>
+    </message>
+    <message>
+        <source>appears here.</source>
+        <translation>erscheint hier.</translation>
+    </message>
+</context>
+<context>
     <name>MacroEditor</name>
     <message>
         <source>Press</source>
@@ -566,6 +601,105 @@
         <source>Still running in the system tray. The daemon keeps working without it.</source>
         <translation>Läuft im Hintergrund weiter (Symbol in der Systemleiste). Der Daemon arbeitet auch ohne das Programm.</translation>
     </message>
+    <message>
+        <source>Stick</source>
+        <translation>Stick</translation>
+    </message>
+    <message>
+        <source>LCD</source>
+        <translation>LCD</translation>
+    </message>
+    <message>
+        <source>Stick directions of layer M%1 bound to W, A, S, D</source>
+        <translation>Stick-Richtungen der Ebene M%1 mit W, A, S, D belegt</translation>
+    </message>
+    <message>
+        <source>Rest position measured: %1</source>
+        <translation>Ruhelage gemessen: %1</translation>
+    </message>
+    <message>
+        <source>The rest position could not be measured (device connected?)</source>
+        <translation>Die Ruhelage konnte nicht gemessen werden (Gerät verbunden?)</translation>
+    </message>
+</context>
+<context>
+    <name>StickPage</name>
+    <message>
+        <source>Joystick (left to the system and games)</source>
+        <translation>Joystick (bleibt bei System und Spielen)</translation>
+    </message>
+    <message>
+        <source>Keys (four directions)</source>
+        <translation>Tasten (vier Richtungen)</translation>
+    </message>
+    <message>
+        <source>Mouse pointer</source>
+        <translation>Mauszeiger</translation>
+    </message>
+    <message>
+        <source>Scroll wheel</source>
+        <translation>Mausrad</translation>
+    </message>
+    <message>
+        <source>Stick:</source>
+        <translation>Stick:</translation>
+    </message>
+    <message>
+        <source>Dead zone:</source>
+        <translation>Totzone:</translation>
+    </message>
+    <message>
+        <source>Pointer speed:</source>
+        <translation>Zeigertempo:</translation>
+    </message>
+    <message>
+        <source>Scroll speed:</source>
+        <translation>Scrolltempo:</translation>
+    </message>
+    <message>
+        <source>Bind W, A, S, D to the stick directions</source>
+        <translation>Stick-Richtungen mit W, A, S, D belegen</translation>
+    </message>
+    <message>
+        <source>Sets the four stick directions of the current layer to W, A, S and D.</source>
+        <translation>Belegt die vier Stick-Richtungen der aktuellen Ebene mit W, A, S und D.</translation>
+    </message>
+    <message>
+        <source>Rest position</source>
+        <translation>Ruhelage</translation>
+    </message>
+    <message>
+        <source>The dead zone is centred on the position the stick rests in. Let go of the stick and click the button to measure it.</source>
+        <translation>Die Totzone liegt um die Position, in der der Stick ruht. Stick loslassen und den Knopf drücken, um sie zu messen.</translation>
+    </message>
+    <message>
+        <source>Measure rest position</source>
+        <translation>Ruhelage messen</translation>
+    </message>
+    <message>
+        <source>Current rest position: unknown (device not connected)</source>
+        <translation>Aktuelle Ruhelage: unbekannt (Gerät nicht verbunden)</translation>
+    </message>
+    <message>
+        <source>Current rest position: %1 (middle: 128 / 128)</source>
+        <translation>Aktuelle Ruhelage: %1 (Mitte: 128 / 128)</translation>
+    </message>
+    <message>
+        <source>Games see the stick as a joystick; the stick buttons are not bound.</source>
+        <translation>Spiele sehen den Stick als Joystick; die Stick-Tasten sind nicht belegt.</translation>
+    </message>
+    <message>
+        <source>The four directions work like keys and are bound in the picture (arrows around the stick); diagonals press two of them.</source>
+        <translation>Die vier Richtungen wirken wie Tasten und werden im Bild belegt (Pfeile um den Stick); eine Diagonale drückt zwei davon.</translation>
+    </message>
+    <message>
+        <source>The stick moves the mouse pointer.</source>
+        <translation>Der Stick bewegt den Mauszeiger.</translation>
+    </message>
+    <message>
+        <source>The stick scrolls vertically and horizontally.</source>
+        <translation>Der Stick scrollt senkrecht und waagerecht.</translation>
+    </message>
 </context>
 <context>
     <name>main</name>
@@ -586,8 +720,8 @@
         <translation>Mit --screenshot: diese Taste auswählen.</translation>
     </message>
     <message>
-        <source>With --screenshot: show this tab (0-2).</source>
-        <translation>Mit --screenshot: diesen Reiter zeigen (0-2).</translation>
+        <source>With --screenshot: show this tab (0-4).</source>
+        <translation>Mit --screenshot: diesen Reiter zeigen (0-4).</translation>
     </message>
 </context>
 </TS>

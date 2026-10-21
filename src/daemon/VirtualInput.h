@@ -23,6 +23,7 @@ public:
     bool create(QString *error);
 
     void writeKey(int code, bool pressed) override;
+    void writeRel(int code, int value) override;
     void sync() override;
 
 private:

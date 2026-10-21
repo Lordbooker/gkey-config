@@ -16,6 +16,12 @@ add_library(gkey-core STATIC
     EventCodes.h
     KeyOutput.cpp
     KeyOutput.h
+    LcdFont.cpp
+    LcdFont.h
+    LcdFrame.cpp
+    LcdFrame.h
+    LcdPages.cpp
+    LcdPages.h
     Macro.cpp
     Macro.h
     MacroRun.cpp
@@ -30,6 +36,12 @@ add_library(gkey-core STATIC
     Profile.h
     ProfileStore.cpp
     ProfileStore.h
+    Settings.cpp
+    Settings.h
+    StickProcessor.cpp
+    StickProcessor.h
+    StickSettings.cpp
+    StickSettings.h
 )
 
 target_include_directories(gkey-core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

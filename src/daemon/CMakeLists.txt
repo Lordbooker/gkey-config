@@ -10,6 +10,8 @@ add_library(gkeyd-lib STATIC
     DeviceMonitor.h
     InputDevice.cpp
     InputDevice.h
+    LcdController.cpp
+    LcdController.h
     LedController.cpp
     LedController.h
     VirtualInput.cpp

@@ -11,10 +11,14 @@ add_executable(gkey-config
     KeyCaptureEdit.h
     KeyNames.cpp
     KeyNames.h
+    LcdPage.cpp
+    LcdPage.h
     MacroEditor.cpp
     MacroEditor.h
     MainWindow.cpp
     MainWindow.h
+    StickPage.cpp
+    StickPage.h
 )
 
 target_link_libraries(gkey-config PRIVATE

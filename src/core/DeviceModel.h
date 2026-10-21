@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Action.h"
+
 #include <QByteArray>
 #include <QList>
 #include <QMap>
@@ -37,6 +39,8 @@ public:
         int     code = 0;   // numeric evdev code
         QString input;      // input role the key comes from ("keys" or "stick")
         KeyRole role = KeyRole::Bindable;
+        // Used when the key is not bound in the active layer, e.g. BD -> next LCD page.
+        std::optional<Action> defaultAction;
     };
 
     enum class LedType {

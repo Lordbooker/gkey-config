@@ -71,6 +71,7 @@ std::expected<Profile, QString> Profile::fromJson(const QByteArray &json)
     }
 
     profile.m_stick = root.take(QStringLiteral("stick")).toObject();
+    StickSettings::fromJson(profile.m_stick, &profile.m_warnings);   // report invalid values
     profile.m_unknown = root;
     return profile;
 }

@@ -16,6 +16,11 @@ QString profileDir(const QString &modelId)
     return configDir() + QStringLiteral("/profiles/") + modelId;
 }
 
+QString settingsFile()
+{
+    return configDir() + QStringLiteral("/settings.json");
+}
+
 QString macroDir()
 {
     return configDir() + QStringLiteral("/macros");

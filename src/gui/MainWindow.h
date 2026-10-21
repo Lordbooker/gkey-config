@@ -12,6 +12,10 @@ class Action;
 class BindingEditor;
 class DaemonClient;
 class DeviceView;
+class LcdPage;
+class Settings;
+class StickPage;
+struct StickSettings;
 class MacroEditor;
 class MacroStore;
 class ProfileStore;
@@ -39,7 +43,7 @@ public:
 
     void showWindow();
 
-    // Selects a key and a tab (0 key, 1 backlight, 2 macros), e.g. for screenshots.
+    // Selects a key and a tab (0 key, 1 backlight, 2 stick, 3 LCD, 4 macros), e.g. for screenshots.
     void showKey(const QString &keyId, int tab);
 
     // Renders the window to an image file (documentation, tests).
@@ -66,6 +70,9 @@ private:
     void onDuplicateProfile();
     void onRenameProfile();
     void onDeleteProfile();
+    void onStickSettingsChanged(const StickSettings &settings);
+    void onStickWasd();
+    void onStickCalibrate();
     void onBacklightToggled(bool enabled);
     void onChooseBacklight();
     void updateDaemonState();
@@ -87,6 +94,10 @@ private:
     DeviceView *m_view = nullptr;
     BindingEditor *m_bindingEditor = nullptr;
     MacroEditor *m_macroEditor = nullptr;
+    StickPage *m_stickPage = nullptr;
+    LcdPage *m_lcdPage = nullptr;
+    class QTabWidget *m_tabs = nullptr;
+    Settings *m_settings = nullptr;
     QCheckBox *m_backlightEnabled = nullptr;
     QPushButton *m_backlightButton = nullptr;
     QLabel *m_ledHint = nullptr;

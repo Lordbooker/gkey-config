@@ -93,3 +93,18 @@ void DBusService::SetRecording(bool recording)
 {
     m_daemon->setRecording(recording);
 }
+
+void DBusService::LcdText(const QString &text, int seconds)
+{
+    m_daemon->lcdText(text, qMax(0, seconds));
+}
+
+void DBusService::LcdPage(const QString &page)
+{
+    m_daemon->lcdPage(page);
+}
+
+bool DBusService::CalibrateStick(const QString &model)
+{
+    return m_daemon->calibrateStick(model);
+}

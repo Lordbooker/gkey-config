@@ -3,10 +3,13 @@
 #include "BindingEngine.h"
 #include "ConfigPaths.h"
 #include "Device.h"
+#include "LcdController.h"
 #include "LedController.h"
 #include "MacroRun.h"
 #include "MacroStore.h"
 #include "ProfileStore.h"
+#include "Settings.h"
+#include "StickProcessor.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -17,11 +20,10 @@ Q_LOGGING_CATEGORY(lcDaemon, "gkey.daemon")
 
 namespace {
 
-// Input roles handled in this version. The stick ("stick") stays with the
-// system until the stick modes exist (milestone 5), so games keep seeing it.
+// Input roles handled by the daemon.
 bool roleHandled(const QString &role)
 {
-    return role == u"keys";
+    return role == u"keys" || role == u"stick";
 }
 
 }
@@ -62,6 +64,15 @@ bool Daemon::start(QString *error)
         for (const QString &message : m_macros->messages())
             qCWarning(lcDaemon).noquote() << message;
         qCInfo(lcDaemon) << "macros reloaded:" << m_macros->names().size();
+    });
+
+    m_settings = new Settings(ConfigPaths::settingsFile(), this);
+    connect(m_settings, &Settings::changed, this, [this] {
+        qCInfo(lcDaemon) << "settings reloaded, LCD pages:" << m_settings->lcdPages();
+        for (Device *device : std::as_const(m_devices)) {
+            if (device->lcd())
+                device->lcd()->setPages(m_settings->lcdPages());
+        }
     });
 
     m_monitor = new DeviceMonitor(this);
@@ -142,6 +153,10 @@ Device *Daemon::createDevice(const DeviceModel &model, const QString &hidSyspath
     connect(engine, &BindingEngine::profileRequested, this,
             [this, modelId](const QString &target) { onProfileRequested(modelId, target); });
     connect(engine, &BindingEngine::recordRequested, this, [this] { setRecording(!m_recording); });
+    connect(engine, &BindingEngine::lcdPageRequested, this, [device](const QString &page) {
+        if (device->lcd())
+            device->lcd()->showPage(page);
+    });
     connect(engine, &BindingEngine::keyEvent, this,
             [this, modelId](const QString &keyId, bool pressed) { emit keyEvent(modelId, keyId, pressed); });
     connect(device, &Device::disconnected, this, [this, device] {
@@ -151,10 +166,16 @@ Device *Daemon::createDevice(const DeviceModel &model, const QString &hidSyspath
         device->deleteLater();
     });
 
+    device->setStickCenter(m_state.stickCenter(modelId));
+    device->setStickSettings(ctx->profile.stickSettings());
+
     // The G13 forgets its LED state at power loss: always apply on connect.
     device->leds().setBacklight(ctx->profile.backlight());
     device->leds().setMode(ctx->mode);
     device->leds().setRecording(m_recording);
+    if (device->lcd())
+        device->lcd()->setPages(m_settings ? m_settings->lcdPages() : QStringList());
+    updateLcdStatus(device);
     return device;
 }
 
@@ -218,7 +239,9 @@ void Daemon::applyProfile(ModelContext &ctx)
 {
     for (Device *device : devicesOf(ctx.model.id())) {
         device->engine()->setProfile(ctx.profile);
+        device->setStickSettings(ctx.profile.stickSettings());
         device->leds().setBacklight(ctx.profile.backlight());
+        updateLcdStatus(device);
     }
     emit profileChanged(ctx.model.id(), ctx.profile.name());
 }
@@ -227,7 +250,10 @@ void Daemon::applyMode(ModelContext &ctx)
 {
     for (Device *device : devicesOf(ctx.model.id())) {
         device->engine()->setMode(ctx.mode);
+        if (device->stick())
+            device->stick()->reset();
         device->leds().setMode(ctx.mode);
+        updateLcdStatus(device);
     }
     emit modeChanged(ctx.model.id(), ctx.mode);
 }
@@ -359,10 +385,63 @@ void Daemon::setRecording(bool recording)
     if (m_recording == recording)
         return;
     m_recording = recording;
-    for (Device *device : std::as_const(m_devices))
+    for (Device *device : std::as_const(m_devices)) {
         device->leds().setRecording(recording);
+        updateLcdStatus(device);
+    }
     qCInfo(lcDaemon) << (recording ? "macro recording started" : "macro recording stopped");
     emit recordingChanged(recording);
+}
+
+// --- LCD and stick --------------------------------------------------------------------------
+
+void Daemon::updateLcdStatus(Device *device)
+{
+    if (!device->lcd())
+        return;
+    const auto it = m_contexts.constFind(device->model().id());
+    LcdPages::Status status;
+    status.deviceName = device->model().name();
+    if (it != m_contexts.constEnd()) {
+        status.profile = it->profile.name();
+        status.mode = it->mode;
+    }
+    status.recording = m_recording;
+    device->lcd()->setStatus(status);
+}
+
+void Daemon::lcdText(const QString &text, int seconds)
+{
+    for (Device *device : std::as_const(m_devices)) {
+        if (device->lcd())
+            device->lcd()->setText(text, seconds);
+    }
+}
+
+void Daemon::lcdPage(const QString &page)
+{
+    for (Device *device : std::as_const(m_devices)) {
+        if (device->lcd())
+            device->lcd()->showPage(page);
+    }
+}
+
+bool Daemon::calibrateStick(const QString &modelId)
+{
+    bool done = false;
+    for (Device *device : devicesOf(modelId)) {
+        if (const auto center = device->calibrateStick()) {
+            m_state.setStickCenter(modelId, *center);
+            qCInfo(lcDaemon).noquote() << QStringLiteral("%1: stick rest position set to %2/%3")
+                                              .arg(device->model().name())
+                                              .arg(center->x())
+                                              .arg(center->y());
+            done = true;
+        }
+    }
+    if (done)
+        saveState();
+    return done;
 }
 
 // --- Status ---------------------------------------------------------------------------
@@ -379,6 +458,10 @@ QByteArray Daemon::statusJson()
         object.insert(QStringLiteral("model"), device->model().id());
         object.insert(QStringLiteral("syspath"), device->hidSyspath());
         object.insert(QStringLiteral("ledPermission"), !device->leds().permissionDenied());
+        if (device->lcd())
+            object.insert(QStringLiteral("lcdPage"), device->lcd()->currentPage());
+        if (StickProcessor *stick = device->stick())
+            object.insert(QStringLiteral("stickCenter"), QJsonArray{stick->centerX(), stick->centerY()});
         devices.append(object);
     }
     root.insert(QStringLiteral("devices"), devices);

@@ -100,6 +100,17 @@ bool DaemonClient::ledPermission(const QString &modelId) const
     return true;
 }
 
+QString DaemonClient::stickCenter(const QString &modelId) const
+{
+    for (const QJsonValue &device : m_status.value(u"devices").toArray()) {
+        const QJsonObject object = device.toObject();
+        const QJsonArray center = object.value(u"stickCenter").toArray();
+        if (object.value(u"model").toString() == modelId && center.size() == 2)
+            return QStringLiteral("%1 / %2").arg(center.at(0).toInt()).arg(center.at(1).toInt());
+    }
+    return {};
+}
+
 bool DaemonClient::recording() const
 {
     return m_status.value(u"recording").toBool();
@@ -148,6 +159,19 @@ void DaemonClient::setRecording(bool recording)
 {
     if (m_available)
         m_interface->call(QDBus::NoBlock, QStringLiteral("SetRecording"), recording);
+}
+
+bool DaemonClient::calibrateStick(const QString &modelId)
+{
+    const bool done = callBool(QStringLiteral("CalibrateStick"), {modelId});
+    refreshStatus();
+    return done;
+}
+
+void DaemonClient::lcdPage(const QString &page)
+{
+    if (m_available)
+        m_interface->call(QDBus::NoBlock, QStringLiteral("LcdPage"), page);
 }
 
 void DaemonClient::onDeviceAdded(const QString &model, const QString &)

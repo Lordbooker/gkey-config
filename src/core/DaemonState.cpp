@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
@@ -23,6 +24,9 @@ void DaemonState::load()
         entry.mode = object.value(u"mode").toInt(1);
         if (entry.mode < 1 || entry.mode > 3)
             entry.mode = 1;
+        const QJsonArray center = object.value(u"stickCenter").toArray();
+        if (center.size() == 2)
+            entry.stickCenter = QPoint(center.at(0).toInt(), center.at(1).toInt());
         m_entries.insert(it.key(), entry);
     }
 }
@@ -34,6 +38,9 @@ bool DaemonState::save() const
         QJsonObject object;
         object.insert(QStringLiteral("profile"), it.value().profile);
         object.insert(QStringLiteral("mode"), it.value().mode);
+        if (it.value().stickCenter)
+            object.insert(QStringLiteral("stickCenter"),
+                          QJsonArray{it.value().stickCenter->x(), it.value().stickCenter->y()});
         models.insert(it.key(), object);
     }
     QJsonObject root;
@@ -65,4 +72,14 @@ int DaemonState::mode(const QString &modelId) const
 void DaemonState::setMode(const QString &modelId, int mode)
 {
     m_entries[modelId].mode = mode;
+}
+
+std::optional<QPoint> DaemonState::stickCenter(const QString &modelId) const
+{
+    return m_entries.value(modelId).stickCenter;
+}
+
+void DaemonState::setStickCenter(const QString &modelId, const QPoint &center)
+{
+    m_entries[modelId].stickCenter = center;
 }

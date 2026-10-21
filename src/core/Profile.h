@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Action.h"
+#include "StickSettings.h"
 
 #include <QByteArray>
 #include <QJsonObject>
@@ -63,6 +64,8 @@ public:
     void removeBinding(int mode, const QString &keyId);
 
     const QJsonObject &stick() const { return m_stick; }
+    StickSettings stickSettings() const { return StickSettings::fromJson(m_stick); }
+    void setStickSettings(const StickSettings &settings) { settings.writeTo(m_stick); }
 
     const QStringList &warnings() const { return m_warnings; }
 

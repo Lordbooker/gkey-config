@@ -7,9 +7,10 @@ gaming-key input devices exclusively and sends the configured keys, key combinat
 through a virtual input device; LEDs are set through `/sys/class/leds`. The Qt6 tool `gkey-config`
 edits profiles and macros. No libusb driver, no input-remapper or keyd.
 
-> **Status: early development.** The daemon handles the G13 keypad: key, key combination, mouse
-> button and macro bindings, M1–M3 modes with LEDs, profile backlight colour, profiles and macros
-> with live reload, D-Bus API and the configuration tool. Stick and LCD follow.
+> **Status: early development.** Supported on the G13: key, key combination, mouse button and macro
+> bindings, M1–M3 layers with LEDs, backlight colour per profile, stick as keys/mouse/scroll/joystick,
+> LCD pages (status, clock, text from scripts), profiles and macros with live reload, D-Bus API and
+> the configuration tool. Per-application profiles and the other models follow.
 
 ![gkey-config main window](docs/images/main-window.png) See [docs/CONCEPT.md](docs/CONCEPT.md) for the design and the milestones.
 
@@ -88,8 +89,10 @@ GKEY_MODEL_DIR=$PWD/data/models build/src/daemon/gkeyd --list-models
    ```
 
 M1–M3 switch between the three binding layers of the active profile; their LEDs show the active
-layer. `"backlight": [r, g, b]` in a profile sets the G13 colour. The stick is not handled yet and
-keeps working as a normal joystick.
+layer. `"backlight": [r, g, b]` in a profile sets the G13 colour. The stick is set per profile with
+`"stick": { "mode": "keys" }` (`keys`, `mouse`, `scroll`, `passthrough`; without it the stick stays a
+normal joystick) and the directions are bound as `STICK_UP`, `STICK_DOWN`, `STICK_LEFT`,
+`STICK_RIGHT`.
 
 5. Macros live in `~/.config/gkey-config/macros/` (format: [CONCEPT.md, section 6.1](docs/CONCEPT.md)),
    e.g. `hello.json`:

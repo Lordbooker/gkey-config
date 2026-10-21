@@ -41,15 +41,27 @@ void BindingEngine::handleKey(const QString &inputRole, int code, int value)
         qCDebug(lcEngine) << "unmapped event" << inputRole << code;
         return;
     }
-    const bool pressed = value == 1;
-    emit keyEvent(key->id, pressed);
+    handle(key->id, key->role, value == 1);
+}
 
-    switch (key->role) {
+void BindingEngine::handleKeyId(const QString &keyId, bool pressed)
+{
+    if (const DeviceModel::Key *key = m_model.keyById(keyId))
+        handle(key->id, key->role, pressed);
+    else if (DeviceModel::stickDirectionKeys().contains(keyId))
+        handle(keyId, DeviceModel::KeyRole::Bindable, pressed);
+}
+
+void BindingEngine::handle(const QString &keyId, DeviceModel::KeyRole role, bool pressed)
+{
+    emit keyEvent(keyId, pressed);
+
+    switch (role) {
     case DeviceModel::KeyRole::Mode1:
     case DeviceModel::KeyRole::Mode2:
     case DeviceModel::KeyRole::Mode3:
         if (pressed)
-            emit modeRequested(static_cast<int>(key->role) - static_cast<int>(DeviceModel::KeyRole::Mode1) + 1);
+            emit modeRequested(static_cast<int>(role) - static_cast<int>(DeviceModel::KeyRole::Mode1) + 1);
         return;
     case DeviceModel::KeyRole::Record:
         if (pressed)
@@ -62,24 +74,28 @@ void BindingEngine::handleKey(const QString &inputRole, int code, int value)
     }
 
     if (pressed) {
-        if (m_held.contains(key->id))
+        if (m_held.contains(keyId))
             return;   // duplicate press without release
-        if (MacroRun *run = m_runs.value(key->id)) {
+        if (MacroRun *run = m_runs.value(keyId)) {
             run->stop();   // a new press stops a running macro
             return;
         }
         const auto &bindings = m_profile.bindings(m_mode);
-        const auto it = bindings.constFind(key->id);
-        if (it == bindings.constEnd())
+        const auto it = bindings.constFind(keyId);
+        if (it != bindings.constEnd()) {
+            press(keyId, it.value());
+        } else if (const DeviceModel::Key *key = m_model.keyById(keyId); key && key->defaultAction) {
+            press(keyId, *key->defaultAction);
+        } else {
             return;   // unbound in this mode
-        press(key->id, it.value());
+        }
     } else {
-        if (MacroRun *run = m_runs.value(key->id)) {
-            if (m_runRepeat.value(key->id) == Action::Repeat::WhileHeld)
+        if (MacroRun *run = m_runs.value(keyId)) {
+            if (m_runRepeat.value(keyId) == Action::Repeat::WhileHeld)
                 run->keyReleased();
             return;
         }
-        const auto it = m_held.find(key->id);
+        const auto it = m_held.find(keyId);
         if (it == m_held.end())
             return;
         const Action action = it.value();
@@ -128,7 +144,7 @@ void BindingEngine::press(const QString &keyId, const Action &action)
         startMacro(keyId, action);
         break;
     case Action::Type::Lcd:
-        qCInfo(lcEngine) << "LCD actions are not implemented yet, key" << keyId;
+        emit lcdPageRequested(action.page());
         break;
     }
 }

@@ -17,6 +17,8 @@ gkey_add_test(tst_profiles)
 gkey_add_test(tst_engine)
 gkey_add_test(tst_macros)
 gkey_add_test(tst_leds LIBS gkeyd-lib)
+gkey_add_test(tst_stick)
+gkey_add_test(tst_lcd)
 
 # The D-Bus test needs a private session bus.
 find_program(DBUS_RUN_SESSION dbus-run-session)

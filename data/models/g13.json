@@ -34,7 +34,7 @@
     { "id": "L2", "code": "KEY_KBD_LCD_MENU2" },
     { "id": "L3", "code": "KEY_KBD_LCD_MENU3" },
     { "id": "L4", "code": "KEY_KBD_LCD_MENU4" },
-    { "id": "BD", "code": "KEY_KBD_LCD_MENU5" },
+    { "id": "BD", "code": "KEY_KBD_LCD_MENU5", "default": { "type": "lcd", "page": "next" } },
     { "id": "M1", "code": "KEY_MACRO_PRESET1", "role": "mode1" },
     { "id": "M2", "code": "KEY_MACRO_PRESET2", "role": "mode2" },
     { "id": "M3", "code": "KEY_MACRO_PRESET3", "role": "mode3" },

@@ -22,7 +22,7 @@ InputDevice::~InputDevice()
     close();
 }
 
-bool InputDevice::open(QString *error)
+bool InputDevice::open(QString *error, bool grab)
 {
     m_fd = ::open(m_devNode.toLocal8Bit().constData(), O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     if (m_fd < 0) {
@@ -40,10 +40,7 @@ bool InputDevice::open(QString *error)
         return false;
     }
 
-    rc = libevdev_grab(m_device, LIBEVDEV_GRAB);
-    if (rc < 0) {
-        *error = QStringLiteral("%1: exclusive access failed (%2) - another program grabs the device")
-                     .arg(m_devNode, QString::fromLocal8Bit(std::strerror(-rc)));
+    if (grab && !setGrabbed(true, error)) {
         close();
         return false;
     }
@@ -51,6 +48,26 @@ bool InputDevice::open(QString *error)
     m_notifier = new QSocketNotifier(m_fd, QSocketNotifier::Read, this);
     connect(m_notifier, &QSocketNotifier::activated, this, &InputDevice::onReadable);
     return true;
+}
+
+bool InputDevice::setGrabbed(bool grabbed, QString *error)
+{
+    if (!m_device || grabbed == m_grabbed)
+        return m_device != nullptr;
+    const int rc = libevdev_grab(m_device, grabbed ? LIBEVDEV_GRAB : LIBEVDEV_UNGRAB);
+    if (rc < 0) {
+        if (error)
+            *error = QStringLiteral("%1: exclusive access failed (%2) - another program grabs the device")
+                         .arg(m_devNode, QString::fromLocal8Bit(std::strerror(-rc)));
+        return false;
+    }
+    m_grabbed = grabbed;
+    return true;
+}
+
+int InputDevice::absValue(int code) const
+{
+    return m_device ? libevdev_get_event_value(m_device, EV_ABS, static_cast<unsigned int>(code)) : 0;
 }
 
 void InputDevice::onReadable()
@@ -92,7 +109,9 @@ void InputDevice::close()
         m_notifier = nullptr;
     }
     if (m_device) {
-        libevdev_grab(m_device, LIBEVDEV_UNGRAB);
+        if (m_grabbed)
+            libevdev_grab(m_device, LIBEVDEV_UNGRAB);
+        m_grabbed = false;
         libevdev_free(m_device);
         m_device = nullptr;
     }

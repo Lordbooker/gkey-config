@@ -29,8 +29,9 @@ public:
     bool recording() const;
 
 public slots:
-    // JSON: version, recording, devices[], models{id: {name, tested, profile, mode,
-    // profiles[], profileDir}}, macros[], macroDir
+    // JSON: version, recording, devices[] (model, syspath, ledPermission, lcdPage,
+    // stickCenter), models{id: {name, tested, profile, mode, profiles[], profileDir}},
+    // macros[], macroDir
     QString Status();
     bool SetProfile(const QString &model, const QString &name);
     bool SetMode(const QString &model, int mode);
@@ -42,6 +43,13 @@ public slots:
     bool RunMacro(const QString &name);
     void StopMacros();
     void SetRecording(bool recording);
+    // Shows text on the LCD text page ("\n" separates lines); seconds > 0
+    // returns to the previous page afterwards.
+    void LcdText(const QString &text, int seconds);
+    // "next", "previous", "status", "clock" or "text".
+    void LcdPage(const QString &page);
+    // Takes the current stick position as its rest position.
+    bool CalibrateStick(const QString &model);
 
 signals:
     void DeviceAdded(const QString &model, const QString &syspath);

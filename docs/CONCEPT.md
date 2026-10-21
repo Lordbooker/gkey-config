@@ -1,6 +1,6 @@
 # gkey-config – Concept
 
-Status: **approved on 2026-10-21.** Milestones 1–4 done and tested on the G13 (2026-10-21).
+Status: **approved on 2026-10-21.** Milestones 1–4 done and tested on the G13 (2026-10-21); milestone 5 (stick, LCD) implemented, hardware test pending.
 
 gkey-config configures the gaming keys of Logitech G keyboards and keypads that are driven by the
 Linux kernel driver `hid-lg-g15`. It does **not** talk to the USB device itself and does not depend on
@@ -381,18 +381,36 @@ when the GUI is open (daemon emits a D-Bus signal) and toggles the MR LED. Until
 | `keys` | four directions as bindable keys `STICK_UP/DOWN/LEFT/RIGHT`, adjustable dead zone (default WASD, same zone logic as linux-g13-driver) |
 | `mouse` | relative pointer movement, speed and dead zone |
 | `scroll` | wheel |
-| `passthrough` | stick device is not grabbed; games see the joystick |
+| `passthrough` | stick device is not grabbed; games see the joystick (default for profiles without a `stick` section, so older profiles behave as before) |
 
 The stick buttons (`BTN_BASE`, `BTN_BASE2`, `BTN_THUMB`) are always bindable keys.
 
 The dead zone is centred on the stick's **rest position**, not on 128 (the measured rest position of
 the test G13 is about 138/139). Default: the position read when the device is connected, if it is
-plausible (within ±24 of 128), otherwise 128; a calibration in the GUI follows with milestone 5.
+plausible (within ±24 of 128), otherwise 128. "Measure rest position" in the GUI (D-Bus
+`CalibrateStick`) stores the current position per model in the state file.
+
+Implementation (milestone 5): profile member `"stick": { "mode": "keys", "deadzone": 0.25,
+"speed": 10, "scrollSpeed": 10 }`. Keys mode presses a direction above the dead zone and releases it
+5 % below (hysteresis against jitter); diagonals press two directions. Mouse and scroll modes run
+at 100 Hz with a quadratic curve outside the dead zone (`speed` = pixels per 10 ms, `scrollSpeed` =
+wheel steps per second at full deflection; stick up = wheel up). In passthrough mode the stick
+buttons are left to the system as well.
 
 ### 7.2 LCD (version 1)
 
-* Pages: profile/mode status, clock, free text (set via D-Bus).
-* The round button (BD) and/or the LCD keys can be bound to `lcd` actions.
+* Pages: status (device, profile, layer M1–M3, "REC" while recording), clock (time, seconds, day
+  and date in the user's locale), text (set via D-Bus `LcdText`, up to five lines).
+* Enabled pages and their order are global settings in `~/.config/gkey-config/settings.json`
+  (`{ "lcd": { "pages": ["status", "clock", "text"] } }`), edited in the GUI's LCD tab.
+* The round button (BD) shows the next page by default: model files can give a key a `default`
+  action that applies while the key is unbound in the active layer. Any key can be bound to `lcd`
+  actions (`next`, `previous`, page name).
+* `LcdText` with a duration shows the text page temporarily and returns to the previous page.
+* Output: output report 3 on the G13's hidraw node (report ID, 31 zero bytes, 160 × 48 pixels in
+  bands of 8 rows). Rendering uses an own 1-bit frame and the 5×7 font from linux-g13-driver, so the
+  daemon needs no Qt GUI modules; the GUI uses the same code for its preview. The LCD is cleared
+  when the daemon stops.
 * Further pages (system load, media) are later additions.
 * G15/G510 LCD: after the protocol has been analysed on hardware.
 
@@ -486,12 +504,15 @@ session; the systemd unit is `Type=dbus`.
 | Method | `Reload()` | re-reads profiles and macros (normally automatic) |
 | Method | `RunMacro(s name) → b` / `StopMacros()` | |
 | Method | `SetRecording(b)` | MR LED and `RecordingChanged` |
+| Method | `LcdText(s text, i seconds)` | text page; `\n` separates lines; seconds 0 = until the page is changed |
+| Method | `LcdPage(s page)` | `next`, `previous`, `status`, `clock`, `text` |
+| Method | `CalibrateStick(s model) → b` | current stick position becomes the rest position |
 | Property | `Recording` (b) | |
 | Signals | `DeviceAdded(s model, s syspath)`, `DeviceRemoved(s, s)`, `ProfileChanged(s model, s name)`, `ModeChanged(s model, i mode)`, `KeyEvent(s model, s key, b pressed)`, `RecordingChanged(b)` | |
 
 `KeyEvent` lets the GUI highlight pressed keys and lets the user pick a key by pressing it.
-Planned for later milestones: `LcdText`, `LcdPage` (milestone 5), `ReportFocus`, `LockProfile`
-(milestone 6).
+`Status` also lists `lcdPage` and `stickCenter` per device. Planned for milestone 6: `ReportFocus`,
+`LockProfile`.
 
 ---
 
@@ -519,8 +540,9 @@ Qt6 Widgets application `gkey-config` (implemented in milestone 4):
 * `gkey-config --screenshot file [--show-key G4 --show-tab 0]` renders the window to an image
   (documentation).
 
-The stick keys (thumb buttons, stick directions) can already be bound in the GUI; the daemon uses
-these bindings once the stick is handled (milestone 5).
+Milestone 5 added the *Stick* tab (mode, dead zone, pointer and scroll speed, "bind W, A, S, D",
+measuring the rest position) and the *LCD* tab (enabled pages and their order, preview, show a page
+on the device).
 
 ---
 

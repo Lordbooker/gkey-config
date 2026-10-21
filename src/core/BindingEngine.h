@@ -35,6 +35,10 @@ public:
     // ("keys", "stick"). value: 1 press, 0 release, 2 autorepeat (ignored).
     void handleKey(const QString &inputRole, int code, int value);
 
+    // A key given by its ID, e.g. the stick directions "STICK_UP" produced by
+    // the stick processing.
+    void handleKeyId(const QString &keyId, bool pressed);
+
     // Releases all held keys and stops running macros (e.g. before the device
     // goes away).
     void releaseAll();
@@ -50,12 +54,15 @@ signals:
     void modeRequested(int mode);
     // A profile action asks for another profile ("next", "previous" or a name).
     void profileRequested(const QString &target);
+    // An LCD action asks for another page ("next", "previous" or a page name).
+    void lcdPageRequested(const QString &page);
     // MR was pressed.
     void recordRequested();
     // Any mapped key of the device went down or up (for the GUI).
     void keyEvent(const QString &keyId, bool pressed);
 
 private:
+    void handle(const QString &keyId, DeviceModel::KeyRole role, bool pressed);
     void press(const QString &keyId, const Action &action);
     void release(const Action &action);
     void startMacro(const QString &keyId, const Action &action);
