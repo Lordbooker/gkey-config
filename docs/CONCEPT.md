@@ -1,6 +1,6 @@
 # gkey-config – Concept
 
-Status: **approved on 2026-10-21.** Milestones 1–3 done and tested on the G13 (2026-10-21); milestone 4 (GUI) implemented, test pending.
+Status: **approved on 2026-10-21.** Milestones 1–4 done and tested on the G13 (2026-10-21).
 
 gkey-config configures the gaming keys of Logitech G keyboards and keypads that are driven by the
 Linux kernel driver `hid-lg-g15`. It does **not** talk to the USB device itself and does not depend on
