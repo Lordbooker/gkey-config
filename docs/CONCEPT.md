@@ -1,6 +1,6 @@
 # gkey-config – Concept
 
-Status: **approved on 2026-10-21.** Milestone 1 (project skeleton) is done.
+Status: **approved on 2026-10-21.** Milestone 1 done; milestone 2 implemented, hardware test pending.
 
 gkey-config configures the gaming keys of Logitech G keyboards and keypads that are driven by the
 Linux kernel driver `hid-lg-g15`. It does **not** talk to the USB device itself and does not depend on
@@ -282,6 +282,42 @@ label of the user's own layout.
 
 The daemon watches the directory (inotify via `QFileSystemWatcher`) and reloads changed profiles
 and macros immediately; files are written atomically (write to temp file, rename).
+
+Runtime state that is not configuration (active profile and mode per model) lives in
+`$XDG_STATE_HOME/gkey-config/state.json` (default `~/.local/state/gkey-config/state.json`).
+
+### 5.3a Profile file format
+
+```json
+{
+  "name": "Default",
+  "backlight": [51, 153, 255],
+  "modes": {
+    "M1": {
+      "G1":  { "type": "key",   "key": "KEY_1" },
+      "G2":  { "type": "combo", "keys": ["KEY_LEFTCTRL", "KEY_C"] },
+      "G3":  { "type": "mouse", "button": "BTN_LEFT" },
+      "G4":  { "type": "macro", "macro": "hello", "repeat": "once" },
+      "L1":  { "type": "mode",  "mode": 2 },
+      "L2":  { "type": "profile", "profile": "next" },
+      "BD":  { "type": "lcd",   "page": "next" }
+    },
+    "M2": {},
+    "M3": {}
+  },
+  "stick": {}
+}
+```
+
+* `name` identifies the profile; the file name is only derived from it when the profile is created.
+* Key IDs are those of the model file; bindings for keys the model cannot bind are ignored with a
+  warning in the log.
+* `key` and `combo` accept keyboard keys only, `mouse` only `BTN_LEFT` … `BTN_TASK`. Key names are
+  evdev names and mean physical key positions; the keyboard layout is applied by the compositor.
+* `repeat` (macros): `once`, `while_held`, `toggle`, `count` (with `"count": n`).
+* `profile`: a profile name, `next` or `previous`.
+* An invalid binding only disables that binding, not the profile; an invalid file is skipped.
+* Members the daemon does not know are kept when the file is written again.
 
 ### 5.4 Import from linux-g13-driver
 

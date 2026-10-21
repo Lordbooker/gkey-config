@@ -7,8 +7,9 @@ gaming-key input devices exclusively and sends the configured keys, key combinat
 through a virtual input device; LEDs are set through `/sys/class/leds`. The Qt6 tool `gkey-config`
 edits profiles and macros. No libusb driver, no input-remapper or keyd.
 
-> **Status: early development.** Milestone 1 (project skeleton) is done; the daemon only loads the
-> model files so far. See [docs/CONCEPT.md](docs/CONCEPT.md) for the design and the milestones.
+> **Status: early development.** The daemon handles the G13 keypad: key, key combination and mouse
+> button bindings, M1–M3 modes, profiles with live reload. Stick, LEDs, macros, LCD and the GUI
+> follow. See [docs/CONCEPT.md](docs/CONCEPT.md) for the design and the milestones.
 
 ## Supported devices
 
@@ -48,6 +49,43 @@ To run the daemon from the build directory without installing the model files:
 ```bash
 GKEY_MODEL_DIR=$PWD/data/models build/src/daemon/gkeyd --list-models
 ```
+
+## Trying the development version
+
+1. Stop other G13 drivers (e.g. `systemctl --user stop g13` for linux-g13-driver) and replug the G13.
+2. Install the udev rule once and replug the G13 again:
+
+   ```bash
+   sudo cp data/udev/70-gkey-config.rules /etc/udev/rules.d/
+   sudo udevadm control --reload-rules
+   ```
+
+3. Build (see above) and start the daemon in a terminal:
+
+   ```bash
+   GKEY_MODEL_DIR=$PWD/data/models build/src/daemon/gkeyd
+   ```
+
+4. Edit `~/.config/gkey-config/profiles/g13/default.json` (format: [CONCEPT.md, section 5.3a](docs/CONCEPT.md));
+   the daemon reloads it on save. Example:
+
+   ```json
+   {
+     "name": "Default",
+     "modes": {
+       "M1": {
+         "G1": { "type": "key", "key": "KEY_1" },
+         "G2": { "type": "combo", "keys": ["KEY_LEFTCTRL", "KEY_C"] },
+         "L1": { "type": "profile", "profile": "next" }
+       },
+       "M2": { "G1": { "type": "key", "key": "KEY_2" } },
+       "M3": {}
+     }
+   }
+   ```
+
+M1–M3 switch between the three binding layers of the active profile. The stick is not handled yet
+and keeps working as a normal joystick.
 
 ## Permissions
 

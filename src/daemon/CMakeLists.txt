@@ -1,14 +1,26 @@
 # gkeyd: user session daemon (Qt6 Core + DBus only, no GUI modules).
-add_executable(gkeyd
-    main.cpp
+add_library(gkeyd-lib STATIC
+    Daemon.cpp
+    Daemon.h
+    Device.cpp
+    Device.h
+    DeviceMonitor.cpp
+    DeviceMonitor.h
+    InputDevice.cpp
+    InputDevice.h
+    VirtualInput.cpp
+    VirtualInput.h
 )
-
-target_link_libraries(gkeyd PRIVATE
+target_include_directories(gkeyd-lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(gkeyd-lib PUBLIC
     gkey-core
     Qt6::Core
     Qt6::DBus
     PkgConfig::LIBEVDEV
     PkgConfig::LIBUDEV
 )
+
+add_executable(gkeyd main.cpp)
+target_link_libraries(gkeyd PRIVATE gkeyd-lib)
 
 install(TARGETS gkeyd RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

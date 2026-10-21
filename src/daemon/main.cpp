@@ -1,18 +1,51 @@
 // gkeyd - user session daemon for Logitech G keyboards driven by hid-lg-g15.
-//
-// Milestone 1: only loads and validates the model files. Device handling
-// follows in milestone 2 (see docs/CONCEPT.md section 13).
 
+#include "Daemon.h"
 #include "ModelRegistry.h"
 
 #include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QSocketNotifier>
 #include <QTextStream>
+
+#include <csignal>
+#include <sys/socket.h>
+#include <unistd.h>
 
 namespace {
 
-int listModels(const ModelRegistry &registry)
+int signalPipe[2] = {-1, -1};
+
+void onSignal(int)
 {
+    const char byte = 1;
+    [[maybe_unused]] const ssize_t written = ::write(signalPipe[1], &byte, 1);
+}
+
+// SIGTERM/SIGINT end the event loop normally, so all grabs are released and
+// held keys are let go before the process exits.
+void installSignalHandlers(QCoreApplication &app)
+{
+    if (::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, signalPipe) != 0)
+        return;
+    auto *notifier = new QSocketNotifier(signalPipe[0], QSocketNotifier::Read, &app);
+    QObject::connect(notifier, &QSocketNotifier::activated, &app, [&app] {
+        char byte;
+        [[maybe_unused]] const ssize_t got = ::read(signalPipe[0], &byte, 1);
+        app.quit();
+    });
+    struct sigaction action = {};
+    action.sa_handler = onSignal;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    sigaction(SIGTERM, &action, nullptr);
+    sigaction(SIGINT, &action, nullptr);
+}
+
+int listModels()
+{
+    ModelRegistry registry;
+    registry.load();
     QTextStream out(stdout);
     for (const DeviceModel &model : registry.models()) {
         QStringList ids;
@@ -22,6 +55,8 @@ int listModels(const ModelRegistry &registry)
         out << model.id() << '\t' << model.name() << '\t' << ids.join(u',')
             << (model.tested() ? "" : "\t(untested)") << '\n';
     }
+    for (const QString &error : registry.errors())
+        out << "invalid model file: " << error << '\n';
     return registry.errors().isEmpty() ? 0 : 1;
 }
 
@@ -29,6 +64,8 @@ int listModels(const ModelRegistry &registry)
 
 int main(int argc, char *argv[])
 {
+    qSetMessagePattern(QStringLiteral("%{if-category}%{category}: %{endif}%{message}"));
+
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("gkeyd"));
     QCoreApplication::setApplicationVersion(QStringLiteral(GKEY_VERSION));
@@ -43,21 +80,16 @@ int main(int argc, char *argv[])
     parser.addOption(listOption);
     parser.process(app);
 
-    ModelRegistry registry;
-    registry.load();
-    for (const QString &error : registry.errors())
-        qWarning("Invalid model file: %s", qPrintable(error));
-
     if (parser.isSet(listOption))
-        return listModels(registry);
+        return listModels();
 
-    if (registry.models().isEmpty()) {
-        qCritical("No model files found in: %s",
-                  qPrintable(ModelRegistry::defaultSearchPaths().join(QStringLiteral(", "))));
+    installSignalHandlers(app);
+
+    Daemon daemon;
+    QString error;
+    if (!daemon.start(&error)) {
+        qCritical("%s", qPrintable(error));
         return 1;
     }
-
-    qInfo("gkeyd %s: %lld model(s) loaded. Device handling is not implemented yet.",
-          GKEY_VERSION, static_cast<long long>(registry.models().size()));
-    return 0;
+    return app.exec();
 }

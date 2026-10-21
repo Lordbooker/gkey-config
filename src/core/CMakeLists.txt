@@ -1,11 +1,27 @@
 # Shared code of the daemon, the GUI and the tests (no GUI modules).
 add_library(gkey-core STATIC
+    Action.cpp
+    Action.h
+    BindingEngine.cpp
+    BindingEngine.h
+    ConfigPaths.cpp
+    ConfigPaths.h
+    DaemonState.cpp
+    DaemonState.h
     DeviceModel.cpp
     DeviceModel.h
-    ModelRegistry.cpp
-    ModelRegistry.h
     EventCodes.cpp
     EventCodes.h
+    KeyOutput.cpp
+    KeyOutput.h
+    ModelRegistry.cpp
+    ModelRegistry.h
+    OutputCodes.cpp
+    OutputCodes.h
+    Profile.cpp
+    Profile.h
+    ProfileStore.cpp
+    ProfileStore.h
 )
 
 target_include_directories(gkey-core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
