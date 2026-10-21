@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Packages (.deb / .rpm) via CPack. The release workflow builds them in
 # containers of the target distributions with packaging/build-package.sh.
 #
@@ -68,6 +71,7 @@ set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
     /usr/share/dbus-1
     /usr/share/dbus-1/services
     /usr/share/applications
+    /usr/share/metainfo
     /usr/share/icons
     /usr/share/icons/hicolor
     /usr/share/icons/hicolor/scalable

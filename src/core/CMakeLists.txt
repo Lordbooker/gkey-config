@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Shared code of the daemon, the GUI and the tests (no GUI modules).
 add_library(gkey-core STATIC
     Action.cpp

@@ -116,10 +116,6 @@
         <translation>Página:</translation>
     </message>
     <message>
-        <source>The LCD is supported in a later version.</source>
-        <translation>La pantalla LCD será compatible en una versión posterior.</translation>
-    </message>
-    <message>
         <source>Next profile</source>
         <translation>Perfil siguiente</translation>
     </message>
@@ -130,6 +126,18 @@
     <message>
         <source>No key selected</source>
         <translation>Ninguna tecla seleccionada</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Estado</translation>
+    </message>
+    <message>
+        <source>Clock</source>
+        <translation>Reloj</translation>
+    </message>
+    <message>
+        <source>Text</source>
+        <translation>Texto</translation>
     </message>
 </context>
 <context>

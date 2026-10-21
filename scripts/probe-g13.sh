@@ -1,4 +1,7 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Collects what the kernel exposes for a Logitech G13 (hid-lg-g15), to verify
 # the model file data/models/g13.json on real hardware.
 #

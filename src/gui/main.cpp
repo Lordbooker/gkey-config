@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Lordbooker
+// SPDX-License-Identifier: GPL-2.0-only
+
 // gkey-config - configuration tool for the gaming keys of Logitech G keyboards.
 
 #include "MainWindow.h"

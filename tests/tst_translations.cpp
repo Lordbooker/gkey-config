@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Lordbooker
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Checks that every GUI language is complete: lupdate extracts the current
 // texts from the sources, and each translations/gkey-config_<lang>.ts must
 // translate all of them (finished, same placeholders and accelerators) and

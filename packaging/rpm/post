@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Group "gkey" for LED access (sysusers.d/gkey-config.conf).
 if command -v systemd-sysusers >/dev/null 2>&1; then
     systemd-sysusers gkey-config.conf || :

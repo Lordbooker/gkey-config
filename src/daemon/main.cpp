@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Lordbooker
+// SPDX-License-Identifier: GPL-2.0-only
+
 // gkeyd - user session daemon for Logitech G keyboards driven by hid-lg-g15.
 
 #include "DBusService.h"

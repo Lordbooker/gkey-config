@@ -1,10 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
 # gkey-config: access to Logitech G keyboards driven by the kernel driver hid-lg-g15.
 #
 # "uaccess" grants access via ACL only to the user of the active local session
 # (systemd-logind). The tag is evaluated by 73-seat-late.rules, so this file must
 # sort BEFORE 73.
 #
-# Supported models: G13 (046d:c21c). Further models are added in milestone 7.
+# Supported models: G13 (046d:c21c).
 
 # Gaming-keys and thumbstick input devices.
 SUBSYSTEM=="input", KERNEL=="event*", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c21c", TAG+="uaccess"

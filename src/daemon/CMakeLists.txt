@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
 # gkeyd: user session daemon (Qt6 Core + DBus only, no GUI modules).
 add_library(gkeyd-lib STATIC
     DBusService.cpp

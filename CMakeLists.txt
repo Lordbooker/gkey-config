@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
 cmake_minimum_required(VERSION 3.20)
 
 project(gkey-config VERSION 1.0.0 LANGUAGES CXX)
@@ -99,6 +102,9 @@ if(BUILD_GUI)
     # Tray icon at login (XDG autostart; with prefix /usr -> /etc/xdg/autostart)
     install(FILES data/desktop/gkey-config-tray.desktop
         DESTINATION ${CMAKE_INSTALL_FULL_SYSCONFDIR}/xdg/autostart
+    )
+    install(FILES data/metainfo/io.github.lordbooker.GKeyConfig.metainfo.xml
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/metainfo
     )
     install(FILES data/icons/gkey-config.svg
         DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Builds the packages for all supported distributions.
 #
 # - Push of a tag "v*" (e.g. v1.0.0): build the .deb/.rpm packages, publish
@@ -47,7 +50,7 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -69,7 +72,7 @@ jobs:
           packaging/build-package.sh dist
 
       - name: Upload package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: package-${{ matrix.name }}
           path: dist/*
@@ -85,7 +88,7 @@ jobs:
         run: pacman -Syu --noconfirm --needed base-devel git pacman-contrib
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Prepare PKGBUILDs
         run: |
@@ -116,7 +119,7 @@ jobs:
           sudo -u builder makepkg --printsrcinfo > .SRCINFO
 
       - name: Upload AUR files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: aur
           path: |
@@ -127,22 +130,23 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
 
+  # Runs on every push so that the release notes and the download are tested;
+  # the GitHub release itself is only created for tags.
   release:
     name: Publish release
     needs: [packages, arch]
-    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Download packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: package-*
           path: dist
@@ -150,7 +154,7 @@ jobs:
 
       - name: Write release notes
         run: |
-          TAG="$GITHUB_REF_NAME"
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then TAG="$GITHUB_REF_NAME"; else TAG=HEAD; fi
           PREV=$(git describe --tags --abbrev=0 --match 'v[0-9]*' "${TAG}^" 2>/dev/null || true)
           {
             echo "## Changes"
@@ -185,8 +189,10 @@ jobs:
             echo "gkey-config conflicts with linux-g13-driver; remove it first."
           } > release-notes.md
           cat release-notes.md
+          ls -l dist
 
       - name: Create GitHub release
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -216,7 +222,7 @@ jobs:
 
       - name: Download AUR files
         if: steps.secret.outputs.present == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: aur
           path: aur

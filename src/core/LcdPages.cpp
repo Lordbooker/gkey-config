@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Lordbooker
+// SPDX-License-Identifier: GPL-2.0-only
+
 #include "LcdPages.h"
 
 #include "LcdFont.h"

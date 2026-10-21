@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Lordbooker
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Per-user autostart switch (XDG autostart) and group membership check.
 
 #include "Autostart.h"

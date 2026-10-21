@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Lordbooker
+// SPDX-License-Identifier: GPL-2.0-only
+
 #include "LcdFont.h"
 
 // Classic 5x7 font for ASCII 32..126: five columns per character, bit 0 is

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
 [Unit]
 Description=gkey-config daemon for Logitech G keyboards
 Documentation=https://github.com/Lordbooker/gkey-config

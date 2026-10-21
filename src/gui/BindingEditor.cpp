@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Lordbooker
+// SPDX-License-Identifier: GPL-2.0-only
+
 #include "BindingEditor.h"
 
 #include "KeyCaptureEdit.h"
@@ -121,11 +124,10 @@ BindingEditor::BindingEditor(QWidget *parent) : QWidget(parent)
     m_lcd = new QComboBox(m_pages);
     m_lcd->addItem(tr("Next page"), QStringLiteral("next"));
     m_lcd->addItem(tr("Previous page"), QStringLiteral("previous"));
-    QFormLayout *lcdForm = addPage(nullptr);
-    lcdForm->addRow(tr("Page:"), m_lcd);
-    auto *lcdHint = new QLabel(tr("The LCD is supported in a later version."), m_pages);
-    lcdHint->setWordWrap(true);
-    lcdForm->addRow(lcdHint);
+    m_lcd->addItem(tr("Status"), QStringLiteral("status"));
+    m_lcd->addItem(tr("Clock"), QStringLiteral("clock"));
+    m_lcd->addItem(tr("Text"), QStringLiteral("text"));
+    addPage(nullptr)->addRow(tr("Page:"), m_lcd);
     connect(m_lcd, &QComboBox::currentIndexChanged, this, &BindingEditor::emitCurrent);
 
     editorLayout->addWidget(m_pages);

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
 name: Build
 
 on:
@@ -32,12 +35,13 @@ jobs:
               apt-get update &&
               DEBIAN_FRONTEND=noninteractive apt-get install -y
               build-essential cmake git pkg-config qt6-base-dev qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools libevdev-dev libudev-dev udev dbus-daemon libglib2.0-bin
+              appstream desktop-file-utils
 
     steps:
       - name: Install dependencies
         run: ${{ matrix.install }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DCMAKE_INSTALL_PREFIX=/usr
@@ -54,6 +58,15 @@ jobs:
             udevadm verify --resolve-names=never data/udev/70-gkey-config.rules
           else
             echo "udevadm verify not available, skipped"
+          fi
+
+      - name: Validate desktop and AppStream files
+        run: |
+          if command -v desktop-file-validate >/dev/null; then
+            desktop-file-validate data/desktop/*.desktop
+          fi
+          if command -v appstreamcli >/dev/null; then
+            appstreamcli validate --no-net data/metainfo/*.metainfo.xml
           fi
 
       - name: Install into staging directory

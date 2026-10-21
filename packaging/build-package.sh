@@ -1,4 +1,7 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # Builds a .deb (Ubuntu) or .rpm (Fedora) for the running system. Intended for
 # a fresh container of the target distribution (as root):
