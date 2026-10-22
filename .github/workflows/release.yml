@@ -5,8 +5,7 @@
 #
 # - Push of a tag "v*" (e.g. v1.0.0): build the .deb/.rpm packages, publish
 #   them as a GitHub release with a list of changes, and publish the AUR
-#   packages gkey-config and gkey-config-git (when the secret
-#   AUR_SSH_PRIVATE_KEY is set).
+#   package gkey-config (when the secret AUR_SSH_PRIVATE_KEY is set).
 # - Push to dev or manually ("Run workflow"): build only; the packages are
 #   available as artifacts of the run for testing.
 #
@@ -90,31 +89,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Prepare PKGBUILDs
+      - name: Prepare PKGBUILD
         run: |
           mkdir -p aur
-          cp -r packaging/arch/gkey-config packaging/arch/gkey-config-git aur/
+          cp packaging/arch/PKGBUILD packaging/arch/gkey-config.install aur/
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
             VERSION="${GITHUB_REF_NAME#v}"
-            sed -i "s/^pkgver=.*/pkgver=$VERSION/;s/^pkgrel=.*/pkgrel=1/" aur/gkey-config/PKGBUILD
-            sed -i "s/^pkgver=.*/pkgver=$VERSION/" aur/gkey-config-git/PKGBUILD
+            sed -i "s/^pkgver=.*/pkgver=$VERSION/;s/^pkgrel=.*/pkgrel=1/" aur/PKGBUILD
+          else
+            # No tag on GitHub yet: build this commit from a local tarball with
+            # the name the PKGBUILD expects (makepkg does not download it then).
+            VERSION=$(sed -n 's/^pkgver=//p' aur/PKGBUILD)
+            git config --global --add safe.directory "$GITHUB_WORKSPACE"
+            git archive --prefix="gkey-config-$VERSION/" -o "aur/gkey-config-$VERSION.tar.gz" HEAD
           fi
           useradd -m builder
           echo "builder ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/builder
           chown -R builder: aur
 
-      # The release package needs the tag on GitHub, so it is built for tags only.
       - name: Build gkey-config
-        if: github.ref_type == 'tag'
-        working-directory: aur/gkey-config
+        working-directory: aur
         run: |
           sudo -u builder updpkgsums
-          sudo -u builder makepkg -s --noconfirm
-          sudo -u builder makepkg --printsrcinfo > .SRCINFO
-
-      - name: Build gkey-config-git
-        working-directory: aur/gkey-config-git
-        run: |
           sudo -u builder makepkg -s --noconfirm
           sudo -u builder makepkg --printsrcinfo > .SRCINFO
 
@@ -123,10 +119,10 @@ jobs:
         with:
           name: aur
           path: |
-            aur/*/PKGBUILD
-            aur/*/.SRCINFO
-            aur/*/gkey-config.install
-            aur/*/*.pkg.tar.zst
+            aur/PKGBUILD
+            aur/.SRCINFO
+            aur/gkey-config.install
+            aur/*.pkg.tar.zst
           include-hidden-files: true
           if-no-files-found: error
 
@@ -174,7 +170,7 @@ jobs:
             # GitHub replaces "~" in file names of release assets with "."
             echo "| Ubuntu 26.04 (and Linux Mint, Pop!_OS, ... based on it) | \`gkey-config_*.ubuntu26.04_amd64.deb\` |"
             echo "| Fedora 44 | \`gkey-config-*.fc44.x86_64.rpm\` |"
-            echo "| Arch Linux | AUR: \`gkey-config\` (release) or \`gkey-config-git\` (development) |"
+            echo "| Arch Linux | AUR: \`gkey-config\` |"
             echo
             echo '```bash'
             echo '# Ubuntu'
@@ -242,16 +238,13 @@ jobs:
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/aur -o IdentitiesOnly=yes"
           git config --global user.name "Lordbooker"
           git config --global user.email "lordbooker@gmail.com"
-          for pkg in gkey-config gkey-config-git; do
-            git clone "ssh://aur@aur.archlinux.org/$pkg.git" "repo-$pkg"
-            cp "aur/$pkg/PKGBUILD" "aur/$pkg/.SRCINFO" "aur/$pkg/gkey-config.install" "repo-$pkg/"
-            cd "repo-$pkg"
-            git add PKGBUILD .SRCINFO gkey-config.install
-            if git diff --cached --quiet; then
-              echo "$pkg: unchanged"
-            else
-              git commit -m "Update to $GITHUB_REF_NAME"
-              git push origin HEAD:master
-            fi
-            cd ..
-          done
+          git clone ssh://aur@aur.archlinux.org/gkey-config.git repo
+          cp aur/PKGBUILD aur/.SRCINFO aur/gkey-config.install repo/
+          cd repo
+          git add PKGBUILD .SRCINFO gkey-config.install
+          if git diff --cached --quiet; then
+            echo "gkey-config: unchanged"
+          else
+            git commit -m "Update to $GITHUB_REF_NAME"
+            git push origin HEAD:master
+          fi

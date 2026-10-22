@@ -1,8 +1,7 @@
 # Maintainer: Lordbooker <lordbooker@gmail.com>
 #
-# Release version. The release workflow sets pkgver and sha256sums from the
-# tag and publishes this file to the AUR; the development version is
-# gkey-config-git (packaging/arch/gkey-config-git).
+# The release workflow sets pkgver and sha256sums from the tag and publishes
+# this file to the AUR (package gkey-config).
 
 pkgname=gkey-config
 pkgver=1.0.0
@@ -17,7 +16,7 @@ optdepends=('polkit: allow LED control from the configuration tool'
             'qt6-wayland: native Wayland support'
             'xdg-utils: open the profile and macro folders'
             'qt6-translations: translated standard buttons in the configuration tool')
-conflicts=('gkey-config-git' 'linux-g13-driver' 'linux-g13-driver-git')
+conflicts=('linux-g13-driver' 'linux-g13-driver-git')
 install=gkey-config.install
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('SKIP')

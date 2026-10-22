@@ -26,6 +26,6 @@ First release.
 - Diagnosis in the status bar when a plugged-in device is not usable (kernel too old, kernel driver
   not active, device used by another program).
 - Translations: English, German, French, Italian, Spanish, Portuguese.
-- Packages for Ubuntu 26.04 and Fedora 44, AUR packages `gkey-config` and `gkey-config-git`.
+- Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
 [1.0.0]: https://github.com/Lordbooker/gkey-config/releases/tag/v1.0.0

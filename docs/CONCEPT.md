@@ -42,7 +42,7 @@ of failing silently (see 9.2).
 
 Arch Linux, Debian-based (Debian, Ubuntu and derivatives) and Fedora-based distributions, each only
 in releases with kernel ≥ 6.19 *(decided)*. Packages for version 1.0: **Ubuntu 26.04** (`.deb`,
-kernel 7.0), **Fedora 44** (`.rpm`, kernel 6.19) and the AUR (`gkey-config`, `gkey-config-git`).
+kernel 7.0), **Fedora 44** (`.rpm`, kernel 6.19) and the AUR (`gkey-config`, releases only).
 Debian 13 ships kernel 6.12 and is not built; newer releases are added when they appear. KDE Plasma (Wayland) and GNOME (Wayland). X11 is not a target but is expected to
 work, because nothing below the GUI depends on the display server.
 
@@ -597,7 +597,7 @@ on the device).
 | 4 | linux-g13-driver | package conflict |
 | 5 | LED permissions | dedicated group `gkey` (see 9.1a) |
 | 6 | Daemon autostart | per user: the GUI enables `gkeyd.service` with `systemctl --user` (asked on its first start, switch in *Settings*); packages enable nothing. D-Bus activation starts the daemon for scripts; the GUI never activates it. |
-| 7 | Installation | GitHub releases with `.deb`/`.rpm` and the AUR; no install script |
+| 7 | Installation | GitHub releases with `.deb`/`.rpm` and the AUR package `gkey-config` (releases only, no `-git` package for `dev`, 2026-10-22); no install script |
 | 8 | Releases | tag `v*` on `main` runs the release workflow (packages, GitHub release, AUR with secret `AUR_SSH_PRIVATE_KEY`); `dev` pushes build test packages |
 
 ## 15. Open points

@@ -46,7 +46,7 @@ Packages are attached to every [GitHub release](https://github.com/Lordbooker/gk
 |---|---|
 | Ubuntu 26.04 and derivatives based on it (Linux Mint, Pop!_OS, …) | `gkey-config_<version>-1.ubuntu26.04_amd64.deb` |
 | Fedora 44 | `gkey-config-<version>-1.fc44.x86_64.rpm` |
-| Arch Linux and derivatives | AUR: [`gkey-config`](https://aur.archlinux.org/packages/gkey-config), development version [`gkey-config-git`](https://aur.archlinux.org/packages/gkey-config-git) |
+| Arch Linux and derivatives | AUR: [`gkey-config`](https://aur.archlinux.org/packages/gkey-config) |
 
 ```bash
 # Ubuntu
