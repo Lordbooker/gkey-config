@@ -598,6 +598,29 @@ on the device).
 | 7 | G11/G15/G15 v2/G510 model files (untested) and image areas, diagnostics, import from linux-g13-driver | – (G13 only) |
 | 8 | Packages (Arch/AUR, Ubuntu, Fedora), autostart and LED setup in the GUI, release workflow, documentation | – |
 
+Done: 1–5 and 8 (releases 1.0.0–1.1.1). Postponed: 6 and 7.
+
+### 13.1 To do
+
+Agreed ideas that are not scheduled yet:
+
+* **NVIDIA GPUs on the LCD system page** *(discussed 2026-10-22, postponed)*. The proprietary
+  driver exposes neither load, VRAM nor a hwmon temperature in sysfs, so the values come from NVML
+  (`libnvidia-ml.so.1`, part of the driver, e.g. `nvidia-utils` on Arch; no special rights):
+  * loaded at runtime with `dlopen`, only when present; no build or package dependency, own
+    declarations of the few functions used (`nvmlInit_v2`, `nvmlShutdown`,
+    `nvmlDeviceGetCount_v2`, `nvmlDeviceGetHandleByIndex_v2`, `nvmlDeviceGetUtilizationRates`,
+    `nvmlDeviceGetMemoryInfo`, `nvmlDeviceGetTemperature` with the GPU sensor);
+  * same rows as for AMD (GPU load, GPU temperature, VRAM used/total); with AMD and NVIDIA in one
+    system the GPU with the most VRAM wins;
+  * hybrid laptops: if the NVIDIA PCI device is runtime-suspended
+    (`/sys/bus/pci/devices/…/power/runtime_status`), NVML is not touched so the GPU is not woken;
+    the row shows "--%";
+  * nouveau is not supported (no load values);
+  * tests with a fake NVML library; real hardware not available, so marked untested until
+    someone reports back;
+  * release as 1.2.0.
+
 ---
 
 ## 14. Decisions
