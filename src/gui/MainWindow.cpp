@@ -286,8 +286,8 @@ void MainWindow::setupUi()
 
     // --- Status bar: daemon state ---------------------------------------------------------
     m_daemonLabel = new QLabel(this);
-    // Long diagnosis texts wrap instead of widening the window.
-    m_daemonLabel->setWordWrap(true);
+    // Long diagnosis texts must not widen the window (a word-wrapping label
+    // would make the status bar several lines high); the tooltip has the full text.
     m_daemonLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     m_daemonButton = new QPushButton(this);
     statusBar()->addWidget(m_daemonLabel, 1);

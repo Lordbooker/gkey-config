@@ -10,6 +10,8 @@
 #include <QLibraryInfo>
 #include <QLocalServer>
 #include <QLocalSocket>
+#include <QPalette>
+#include <QStyleFactory>
 #include <QLocale>
 #include <QStandardPaths>
 #include <QTimer>
@@ -47,6 +49,38 @@ void installTranslations(QApplication &app)
         QApplication::installTranslator(translator);
 }
 
+// Dark palette (colours of KDE Breeze Dark) for screenshots of the dark mode,
+// independent of the desktop the screenshot is taken on.
+void applyDarkPalette()
+{
+    QApplication::setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
+    const QColor window(0x20, 0x23, 0x26), base(0x14, 0x16, 0x18), button(0x29, 0x2c, 0x30);
+    const QColor text(0xfc, 0xfc, 0xfc), disabled(0x6e, 0x71, 0x75), highlight(0x3d, 0xae, 0xe9);
+    QPalette palette;
+    palette.setColor(QPalette::Window, window);
+    palette.setColor(QPalette::WindowText, text);
+    palette.setColor(QPalette::Base, base);
+    palette.setColor(QPalette::AlternateBase, window);
+    palette.setColor(QPalette::ToolTipBase, window);
+    palette.setColor(QPalette::ToolTipText, text);
+    palette.setColor(QPalette::PlaceholderText, disabled);
+    palette.setColor(QPalette::Text, text);
+    palette.setColor(QPalette::Button, button);
+    palette.setColor(QPalette::ButtonText, text);
+    palette.setColor(QPalette::BrightText, Qt::white);
+    palette.setColor(QPalette::Light, QColor(0x3a, 0x3e, 0x43));
+    palette.setColor(QPalette::Midlight, QColor(0x31, 0x35, 0x39));
+    palette.setColor(QPalette::Mid, QColor(0x1e, 0x20, 0x23));
+    palette.setColor(QPalette::Dark, QColor(0x10, 0x11, 0x13));
+    palette.setColor(QPalette::Shadow, Qt::black);
+    palette.setColor(QPalette::Highlight, highlight);
+    palette.setColor(QPalette::HighlightedText, text);
+    palette.setColor(QPalette::Link, highlight);
+    for (QPalette::ColorRole role : {QPalette::WindowText, QPalette::Text, QPalette::ButtonText})
+        palette.setColor(QPalette::Disabled, role, disabled);
+    QApplication::setPalette(palette);
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -78,13 +112,18 @@ int main(int argc, char *argv[])
     const QCommandLineOption tabOption(QStringLiteral("show-tab"),
                                        QApplication::translate("main", "With --screenshot: show this tab (0-4)."),
                                        QStringLiteral("tab"));
+    const QCommandLineOption darkOption(QStringLiteral("dark"),
+                                        QApplication::translate("main", "With --screenshot: use a dark colour scheme."));
     parser.addOption(trayOption);
+    parser.addOption(darkOption);
     parser.addOption(screenshotOption);
     parser.addOption(keyOption);
     parser.addOption(tabOption);
     parser.process(app);
 
     if (parser.isSet(screenshotOption)) {
+        if (parser.isSet(darkOption))
+            applyDarkPalette();
         MainWindow window;
         window.show();
         window.showKey(parser.value(keyOption), parser.value(tabOption).toInt());

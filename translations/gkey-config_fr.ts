@@ -848,5 +848,9 @@
         <source>With --screenshot: show this tab (0-4).</source>
         <translation>Avec --screenshot&#xa0;: afficher cet onglet (0-4).</translation>
     </message>
+    <message>
+        <source>With --screenshot: use a dark colour scheme.</source>
+        <translation>Avec --screenshot&#xa0;: utiliser un jeu de couleurs sombre.</translation>
+    </message>
 </context>
 </TS>
