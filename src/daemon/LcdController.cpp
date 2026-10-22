@@ -22,7 +22,9 @@ LcdController::LcdController(const DeviceModel &model, const QString &hidSyspath
     m_pages = LcdPages::allPages();
     m_page = m_pages.first();
 
-    if (!model.lcd() || model.lcd()->type != u"g13-hidraw")
+    // G13, G15 and G510 take the same 992-byte frame (output report 3) on their
+    // hidraw node; "g13-hidraw" is the name the format got first.
+    if (!model.lcd() || (model.lcd()->type != u"g13-hidraw" && model.lcd()->type != u"g15-hidraw"))
         return;
     const QStringList nodes = QDir(hidSyspath + QStringLiteral("/hidraw")).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     if (nodes.isEmpty()) {

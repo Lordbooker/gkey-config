@@ -886,6 +886,14 @@ void MainWindow::closeEvent(QCloseEvent *event)
     qApp->quit();
 }
 
+bool MainWindow::showModel(const QString &modelId)
+{
+    if (!m_registry.findById(modelId))
+        return false;
+    selectModel(modelId);   // also updates the model selector
+    return true;
+}
+
 void MainWindow::showKey(const QString &keyId, int tab)
 {
     selectKey(keyId);

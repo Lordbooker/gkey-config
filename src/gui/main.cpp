@@ -112,10 +112,14 @@ int main(int argc, char *argv[])
     const QCommandLineOption tabOption(QStringLiteral("show-tab"),
                                        QApplication::translate("main", "With --screenshot: show this tab (0-4)."),
                                        QStringLiteral("tab"));
+    const QCommandLineOption modelOption(QStringLiteral("show-model"),
+                                         QApplication::translate("main", "With --screenshot: show this device model."),
+                                         QStringLiteral("model"));
     const QCommandLineOption darkOption(QStringLiteral("dark"),
                                         QApplication::translate("main", "With --screenshot: use a dark colour scheme."));
     parser.addOption(trayOption);
     parser.addOption(darkOption);
+    parser.addOption(modelOption);
     parser.addOption(screenshotOption);
     parser.addOption(keyOption);
     parser.addOption(tabOption);
@@ -126,6 +130,8 @@ int main(int argc, char *argv[])
             applyDarkPalette();
         MainWindow window;
         window.show();
+        if (parser.isSet(modelOption))
+            window.showModel(parser.value(modelOption));
         window.showKey(parser.value(keyOption), parser.value(tabOption).toInt());
         QTimer::singleShot(300, &app, [&] {
             window.saveScreenshot(parser.value(screenshotOption));

@@ -860,5 +860,9 @@
         <source>With --screenshot: use a dark colour scheme.</source>
         <translation>Com --screenshot: usar um esquema de cores escuro.</translation>
     </message>
+    <message>
+        <source>With --screenshot: show this device model.</source>
+        <translation>Com --screenshot: mostrar este modelo de dispositivo.</translation>
+    </message>
 </context>
 </TS>
