@@ -28,7 +28,7 @@ USB driver, no input-remapper or keyd.
 - Three layers (M1–M3) per profile, shown by the M LEDs; any number of profiles
 - Macros: record from the keyboard or with MR on the device, edit step by step, run once, while
   held, as a toggle or a fixed number of times
-- Backlight colour (or brightness on the G15) per profile
+- Backlight colour (or brightness on G15 and G15 v2) per profile
 - G13 stick as four keys (diagonals press two), mouse pointer, scroll wheel or normal joystick,
   with adjustable dead zone and measured rest position
 - G13 LCD: status page (profile and layer), system page (CPU, RAM, GPU and VRAM load with
@@ -51,10 +51,11 @@ USB driver, no input-remapper or keyd.
 | Logitech G13 | supported |
 | Logitech G510 | **untested** (no test hardware): 18 G keys, M1–M3/MR, LCD keys, RGB backlight, LCD |
 | Logitech G15 (first version) | **untested** (no test hardware): 18 G keys, M1–M3/MR, LCD keys, backlight brightness of keys and LCD, LCD |
-| G11, G15 v2 | planned (no test hardware) |
+| Logitech G15 v2 | **untested** (no test hardware): 6 G keys, M1–M3/MR, LCD keys, backlight brightness of keys and LCD, LCD |
+| G11 | planned (no test hardware) |
 
 Requires **Linux 6.19 or newer** for the G13 (the first kernel with G13 support in `hid-lg-g15`);
-G15 and G510 are supported by the kernel since Linux 5.5. Feedback from G15 and G510 owners is very welcome –
+G15, G15 v2 and G510 are supported by the kernel since Linux 5.5. Feedback from owners of these keyboards is very welcome –
 please open an [issue](https://github.com/Lordbooker/gkey-config/issues) with the output of
 `journalctl --user -u gkeyd`. Target
 desktops are KDE Plasma and GNOME on Wayland; nothing below the application depends on the display

@@ -23,7 +23,7 @@ real hardware with `evtest` before they are relied on.
 | G11 | 046d:c225 | treated as G15 | 18 | yes | codes registered by the kernel; physical keys *(verify)* | – | `g15::kbd_backlight` (0–2) | – |
 | G13 | 046d:c21c | G13 | 22 | yes | 4 + round "next page" button | yes | `g13:rgb:kbd_backlight` (RGB) | 160×43, hidraw |
 | G15 (v1) | 046d:c222 | G15 | 18 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | 160×43, hidraw |
-| G15 v2 | 046d:c227 | G15 v2 | 6 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | later |
+| G15 v2 | 046d:c227 | G15 v2 | 6 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | 160×43, hidraw |
 | G510 | 046d:c22d | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | later |
 | G510 + USB audio | 046d:c22e | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | later |
 
@@ -608,7 +608,7 @@ on the device).
 | 8 | Packages (Arch/AUR, Ubuntu, Fedora), autostart and LED setup in the GUI, release workflow, documentation | – |
 
 Done: 1–5 and 8 (releases 1.0.0–1.1.1). Postponed: 6. Milestone 7 started with the G510
-(branch `feature/g510`, see 13.0), followed by the G15 (`feature/g15`, 13.0a); G11/G15 v2 and the
+(branch `feature/g510`, see 13.0), followed by the G15 (`feature/g15`, 13.0a) and the G15 v2 (`feature/g15v2`, 13.0c); G11 and the
 import from linux-g13-driver are open.
 
 ### 13.0 G510 *(2026-10-22)*
@@ -646,6 +646,16 @@ Same scheme as the G510 (kernel driver, libg15; untested, no hardware), differen
   brightness in the device itself; the profile sets it again when it becomes active.
 * LCD and its frame as on the G510 (`g15-hidraw`, 160 × 43).
 * udev: `KERNELS=="0003:046D:C222.*"` with `DRIVERS=="lg-g15"`, like the G510.
+
+### 13.0c G15 v2 *(2026-10-22)*
+
+Like the G15 (13.0a), untested; from the kernel driver (`lg_g15_v2_event`, `gkeys = 6`):
+
+* USB 046d:c227; G1–G6, M1–M3, MR; BD = `KEY_KBD_LCD_MENU1` (round button), L1–L4 = MENU2–5.
+* LEDs registered exactly as on the G15: `g15::kbd_backlight` and `g15::lcd_backlight` (0–2),
+  M LEDs.
+* LCD `g15-hidraw`, 160 × 43.
+* View: schematic (LCD with its keys, M row, G1–G6 in 3 × 2); not the physical arrangement.
 
 ### 13.1 To do
 
