@@ -29,6 +29,7 @@ private slots:
     void degreeSign();
     void renderFourRows();
     void renderThreeRows();
+    void realSystem();
 
 private:
     void write(const QString &path, const QByteArray &content);
@@ -166,6 +167,21 @@ void TestSystemStats::renderThreeRows()
     LcdPages::renderSystem(frame, stats.sample());   // CPU without value, RAM, swap
     QVERIFY(frame.pixel(22, 2 + 2 * 14 + 4));      // third bar (swap) 14 px apart
     QVERIFY(!frame.pixel(24, 2 + 4));              // CPU: no value yet, empty bar
+}
+
+// The real /proc behaves differently from regular files (size 0): RAM and
+// CPU load must be readable there.
+void TestSystemStats::realSystem()
+{
+    if (!QFile::exists(QStringLiteral("/proc/meminfo")))
+        QSKIP("no /proc");
+    SystemStats stats;
+    const auto first = stats.sample();
+    QVERIFY(first.ram);
+    QVERIFY(first.ram->total > 0);
+    QVERIFY(first.ram->used > 0);
+    QTest::qWait(100);
+    QVERIFY(stats.sample().cpuPercent);
 }
 
 QTEST_GUILESS_MAIN(TestSystemStats)
