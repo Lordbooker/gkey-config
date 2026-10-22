@@ -83,6 +83,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.1.0" date="2026-10-22">
+      <description>
+        <p>New LCD page with the load of CPU, RAM, GPU and VRAM and the temperatures of CPU and GPU.</p>
+      </description>
+    </release>
     <release version="1.0.0" date="2026-10-22">
       <description>
         <p>First release: G13 keys, layers, macros, backlight, stick and LCD; six languages.</p>

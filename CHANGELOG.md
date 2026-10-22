@@ -6,6 +6,8 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-22
+
 ### Added
 
 - LCD page *System*: load of CPU, RAM, GPU and VRAM as bars with percentages, temperatures of CPU
@@ -13,6 +15,12 @@ All notable changes to gkey-config are documented in this file. The format follo
   shows CPU, RAM and swap. Enabled by default for new installations; existing settings list it
   unchecked in the LCD tab.
 - Degree sign in the LCD font.
+- `gkey-config --screenshot … --dark` renders the window in a dark colour scheme (documentation).
+
+### Fixed
+
+- The status bar of the configuration tool was several lines high when a long diagnosis text was
+  shown.
 
 ## [1.0.0] - 2026-10-22
 
@@ -38,5 +46,6 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/Lordbooker/gkey-config/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Lordbooker/gkey-config/releases/tag/v1.0.0
