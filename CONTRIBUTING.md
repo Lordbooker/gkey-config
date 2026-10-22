@@ -109,10 +109,16 @@ The AUR files are in `packaging/arch/` (`gkey-config` for releases, `gkey-config
    git switch main && git pull
    git tag -a vx.y.z -m "gkey-config x.y.z"
    git push origin vx.y.z
+   git push origin main:dev   # dev contains the tag again (version of gkey-config-git)
    ```
+
+   The last line only fast-forwards `dev` to the merge commit; without it `gkey-config-git` gets a
+   version like `r27.abc1234` instead of `x.y.z.r0.gabc1234`.
 
 4. The workflow *Release packages* checks that the tag matches the project version, builds the
    packages, creates the GitHub release and publishes the AUR packages `gkey-config` and
-   `gkey-config-git`. Publishing to the AUR needs the repository secret `AUR_SSH_PRIVATE_KEY`
-   (private SSH key of the AUR account); without it the AUR files are only attached to the run as
-   artifact `aur`.
+   `gkey-config-git`. Publishing to the AUR needs the repository secret `AUR_SSH_PRIVATE_KEY`:
+   *Settings → Secrets and variables → Actions → Repository secrets*, the complete private SSH key
+   of the AUR account without passphrase, including the `-----BEGIN`/`-----END` lines. Without it
+   the AUR step only shows a notice and the files are attached to the run as artifact `aur`; after
+   adding the secret, *Re-run all jobs* publishes them (existing release assets are replaced).

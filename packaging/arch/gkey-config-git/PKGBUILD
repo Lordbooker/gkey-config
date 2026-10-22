@@ -16,7 +16,7 @@ optdepends=('polkit: allow LED control from the configuration tool'
             'qt6-wayland: native Wayland support'
             'xdg-utils: open the profile and macro folders'
             'qt6-translations: translated standard buttons in the configuration tool')
-provides=("gkey-config=${pkgver%%.r*}")
+provides=('gkey-config')
 conflicts=('gkey-config' 'linux-g13-driver' 'linux-g13-driver-git')
 install=gkey-config.install
 source=("gkey-config::git+https://github.com/Lordbooker/gkey-config.git#branch=dev")
