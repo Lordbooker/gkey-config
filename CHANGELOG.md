@@ -4,7 +4,7 @@ All notable changes to gkey-config are documented in this file. The format follo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
-## [1.0.0] - 2026-10-21
+## [1.0.0] - 2026-10-22
 
 First release.
 
