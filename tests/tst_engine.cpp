@@ -49,6 +49,7 @@ private slots:
     void unboundAndUnmappedKeys();
     void modes();
     void modeKeyAndActions();
+    void bdShowsNextLcdPage();
     void profileSwitchReleasesHeldKeys();
     void sharedOutputReferenceCounting();
     void ignoresAutorepeatAndHardwareKeys();
@@ -152,6 +153,23 @@ void TestEngine::modeKeyAndActions()
     QCOMPARE(profileSpy.size(), 1);
     QCOMPARE(profileSpy.at(0).at(0).toString(), QStringLiteral("next"));
     QVERIFY(m_sink->events.isEmpty());
+}
+
+void TestEngine::bdShowsNextLcdPage()
+{
+    QSignalSpy lcdSpy(m_engine, &BindingEngine::lcdPageRequested);
+    m_engine->handleKey(QStringLiteral("keys"), KEY_KBD_LCD_MENU5, 1);
+    m_engine->handleKey(QStringLiteral("keys"), KEY_KBD_LCD_MENU5, 0);
+    QCOMPARE(lcdSpy.size(), 1);
+    QCOMPARE(lcdSpy.at(0).at(0).toString(), QStringLiteral("next"));
+    QVERIFY(m_sink->events.isEmpty());
+
+    // A binding of BD in a profile is dropped when the profile is validated.
+    Profile profile = m_profile;
+    profile.setBinding(1, QStringLiteral("BD"), Action::key(KEY_X));
+    profile.validateFor(g13());
+    QVERIFY(!profile.bindings(1).contains(QStringLiteral("BD")));
+    QVERIFY(profile.warnings().join(u' ').contains(QStringLiteral("BD")));
 }
 
 void TestEngine::profileSwitchReleasesHeldKeys()

@@ -416,6 +416,9 @@ void MainWindow::reloadView()
 
 void MainWindow::selectKey(const QString &keyId)
 {
+    // Keys with a fixed function (M1-M3, MR, BD, light) have nothing to edit.
+    if (!keyId.isEmpty() && !m_model.bindableKeyIds().contains(keyId))
+        return;
     m_selectedKey = keyId;
     m_view->setSelectedKey(keyId);
     std::optional<Action> action;

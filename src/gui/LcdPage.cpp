@@ -25,7 +25,7 @@ LcdPage::LcdPage(QWidget *parent) : QWidget(parent)
 {
     auto *layout = new QVBoxLayout(this);
     auto *hint = new QLabel(tr("Pages shown on the LCD, in this order. The round button next to the LCD keys "
-                               "switches to the next page (unless it is bound to something else)."),
+                               "switches to the next page."),
                             this);
     hint->setWordWrap(true);
     layout->addWidget(hint);

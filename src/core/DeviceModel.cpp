@@ -51,6 +51,8 @@ std::optional<DeviceModel::KeyRole> parseKeyRole(const QString &text)
         return DeviceModel::KeyRole::Record;
     if (text == u"hardware")
         return DeviceModel::KeyRole::Hardware;
+    if (text == u"lcd")
+        return DeviceModel::KeyRole::LcdNext;
     return std::nullopt;
 }
 

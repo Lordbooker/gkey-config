@@ -73,9 +73,11 @@ void TestDeviceModel::g13Model()
     QCOMPARE(model->keyById(QStringLiteral("M1"))->role, DeviceModel::KeyRole::Mode1);
     QCOMPARE(model->keyById(QStringLiteral("MR"))->role, DeviceModel::KeyRole::Record);
     QCOMPARE(model->keyById(QStringLiteral("LIGHT"))->role, DeviceModel::KeyRole::Hardware);
+    QCOMPARE(model->keyById(QStringLiteral("BD"))->role, DeviceModel::KeyRole::LcdNext);
 
-    // 22 G keys + L1-L4 + BD + 3 stick buttons + 4 stick directions
-    QCOMPARE(model->bindableKeyIds().size(), 34);
+    // 22 G keys + L1-L4 + 3 stick buttons + 4 stick directions (BD is fixed)
+    QCOMPARE(model->bindableKeyIds().size(), 33);
+    QVERIFY(!model->bindableKeyIds().contains(QStringLiteral("BD")));
     QVERIFY(!model->bindableKeyIds().contains(QStringLiteral("M1")));
     QVERIFY(!model->bindableKeyIds().contains(QStringLiteral("LIGHT")));
     QVERIFY(model->bindableKeyIds().contains(QStringLiteral("STICK_UP")));

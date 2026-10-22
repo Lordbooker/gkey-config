@@ -34,6 +34,7 @@ public:
         Mode3,
         Record,
         Hardware,   // handled by the device itself (e.g. G13 light button), never bound
+        LcdNext,    // shows the next LCD page (G13 BD button), never bound
     };
 
     struct Key {

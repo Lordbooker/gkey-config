@@ -6,6 +6,13 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Changed
+
+- The round button BD next to the LCD keys always shows the next LCD page and can no longer be
+  bound; otherwise there was no way left to page through the LCD on the device. Existing bindings
+  of BD are ignored (with a note in the daemon log). L1–L4 remain freely bindable, e.g. for
+  "previous page" or a specific page.
+
 ## [1.1.1] - 2026-10-22
 
 ### Fixed

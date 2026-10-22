@@ -212,10 +212,6 @@
 <context>
     <name>LcdPage</name>
     <message>
-        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page (unless it is bound to something else).</source>
-        <translation>Páginas que muestra la pantalla LCD, en este orden. El botón redondo junto a las teclas LCD pasa a la página siguiente (salvo que tenga otra asignación).</translation>
-    </message>
-    <message>
         <source>Show this page on the device</source>
         <translation>Mostrar esta página en el dispositivo</translation>
     </message>
@@ -246,6 +242,10 @@
     <message>
         <source>System (CPU, RAM, GPU, VRAM)</source>
         <translation>Sistema (CPU, RAM, GPU, VRAM)</translation>
+    </message>
+    <message>
+        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page.</source>
+        <translation>Páginas que muestra la pantalla LCD, en este orden. El botón redondo junto a las teclas LCD pasa a la página siguiente.</translation>
     </message>
 </context>
 <context>

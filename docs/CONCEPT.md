@@ -211,7 +211,7 @@ the kernel uses the known event codes.
   "keys": [
     { "id": "G1",  "code": "KEY_MACRO1" },
     { "id": "L1",  "code": "KEY_KBD_LCD_MENU1" },
-    { "id": "BD",  "code": "KEY_KBD_LCD_MENU5" },
+    { "id": "BD",  "code": "KEY_KBD_LCD_MENU5", "role": "lcd" },
     { "id": "M1",  "code": "KEY_MACRO_PRESET1", "role": "mode1" },
     { "id": "MR",  "code": "KEY_MACRO_RECORD_START", "role": "record" },
     { "id": "STICK_PRESS", "code": "BTN_THUMB", "input": "stick" }
@@ -232,7 +232,9 @@ the kernel uses the known event codes.
 
 * `keys` maps kernel event codes to stable **key IDs** used in profiles (`G1`, `L1`, `BD`, `M1`,
   `STICK_PRESS`, …). Key IDs are the physical labels, not bit positions.
-* `role` marks keys with a fixed function (mode keys, record key). Everything else is bindable.
+* `role` marks keys with a fixed function (mode keys, record key, `lcd` for the key that pages
+  through the LCD, `hardware` for keys the device handles itself). Everything else is bindable;
+  bindings of fixed keys in a profile are ignored with a warning.
 * `image` and `areas` describe the clickable device picture in the GUI.
 * `KEY_LIGHTS_TOGGLE` (G13) is not listed as bindable: the hardware switches the light itself.
 
@@ -412,9 +414,10 @@ buttons are left to the system as well.
   (`{ "lcd": { "pages": ["status", "system", "clock", "text"] } }`), edited in the GUI's LCD tab.
   Without the file all pages are enabled in this order; a page added in a later version appears
   unchecked in existing settings.
-* The round button (BD) shows the next page by default: model files can give a key a `default`
-  action that applies while the key is unbound in the active layer. Any key can be bound to `lcd`
-  actions (`next`, `previous`, page name).
+* The round button (BD) always shows the next page *(fixed after 1.1.1, decided 2026-10-22: it is the
+  only way through the pages on the device)*; it has the role `lcd` and cannot be bound. Model
+  files can still give a bindable key a `default` action that applies while the key is unbound in
+  the active layer. Any bindable key can be bound to `lcd` actions (`next`, `previous`, page name).
 * `LcdText` with a duration shows the text page temporarily and returns to the previous page.
 * Output: output report 3 on the G13's hidraw node (report ID, 31 zero bytes, 160 × 48 pixels in
   bands of 8 rows). Rendering uses an own 1-bit frame and the 5×7 font from linux-g13-driver, so the

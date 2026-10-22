@@ -72,6 +72,11 @@ void BindingEngine::handle(const QString &keyId, DeviceModel::KeyRole role, bool
         return;
     case DeviceModel::KeyRole::Hardware:
         return;
+    case DeviceModel::KeyRole::LcdNext:
+        // Fixed: the only way through the LCD pages on the device itself.
+        if (pressed)
+            emit lcdPageRequested(QStringLiteral("next"));
+        return;
     case DeviceModel::KeyRole::Bindable:
         break;
     }
