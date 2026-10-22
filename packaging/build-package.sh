@@ -24,7 +24,13 @@ BUILD_DIR=$(mktemp -d)
 case "$ID" in
     debian|ubuntu)
         export DEBIAN_FRONTEND=noninteractive
-        apt-get update -q
+        # Retry: a mirror in sync can serve inconsistent index files for a while.
+        echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries
+        for attempt in 1 2 3; do
+            apt-get update -q && break
+            [ "$attempt" = 3 ] && exit 1
+            sleep 60
+        done
         apt-get install -y -q --no-install-recommends \
             build-essential cmake pkg-config git ca-certificates file dpkg-dev \
             qt6-base-dev qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools libgl-dev \
