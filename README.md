@@ -1,18 +1,26 @@
+<div align="center">
+
+<img src="data/icons/gkey-config.svg" alt="" width="96">
+
 # gkey-config
+
+**Configure the gaming keys of Logitech G keyboards and keypads on Linux**
 
 [![Build](https://github.com/Lordbooker/gkey-config/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/Lordbooker/gkey-config/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/Lordbooker/gkey-config)](https://github.com/Lordbooker/gkey-config/releases/latest)
 [![AUR](https://img.shields.io/aur/version/gkey-config)](https://aur.archlinux.org/packages/gkey-config)
 [![License: GPL-2.0-only](https://img.shields.io/badge/license-GPL--2.0--only-blue)](LICENSE)
 
-Configuration tool for the gaming keys of Logitech G keyboards and keypads on Linux.
+[Installation](#installation) · [Usage](#usage) · [Troubleshooting](#troubleshooting) · [Contributing](CONTRIBUTING.md)
+
+</div>
 
 gkey-config builds on the kernel driver `hid-lg-g15`. A small user daemon (`gkeyd`) takes over the
 gaming keys and sends the configured keys, key combinations and macros through a virtual input
 device; the Qt6 application *G-Key Configuration* edits profiles and macros. No extra kernel or
 USB driver, no input-remapper or keyd.
 
-![G-Key Configuration main window](docs/images/main-window.png)
+![G-Key Configuration: key bindings of the G13](docs/images/main-window.png)
 
 ## Features
 
@@ -26,6 +34,14 @@ USB driver, no input-remapper or keyd.
 - G13 LCD: status page (profile and layer), clock, and text from scripts
 - Changes apply immediately; profile and macro files are reloaded when edited by hand
 - D-Bus API for scripts, tray icon, interface in six languages
+
+## Screenshots
+
+| Backlight | Stick |
+|---|---|
+| ![Backlight colour of the profile](docs/images/tab-backlight.png) | ![Stick as four keys, dead zone and rest position](docs/images/tab-stick.png) |
+| **LCD** | **Macros** |
+| ![LCD pages with preview](docs/images/tab-lcd.png) | ![Macro editor with recording](docs/images/tab-macros.png) |
 
 ## Supported devices
 

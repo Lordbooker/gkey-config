@@ -66,6 +66,18 @@ file starts with SPDX headers (`GPL-2.0-only`).
 `--events` it also records key events. It is the starting point for checking a model file on real
 hardware.
 
+## Screenshots
+
+The images in `docs/images/` are rendered by the application itself, in English and dark mode,
+from a sample configuration (status bar cropped):
+
+```bash
+export QT_QPA_PLATFORM=offscreen GKEY_MODEL_DIR=$PWD/data/models LANGUAGE=en LC_ALL=C.UTF-8
+export XDG_CONFIG_HOME=/path/to/sample-config   # profiles, macros, settings.json
+build/src/gui/gkey-config --dark --screenshot key.png --show-key G7 --show-tab 0
+# tabs: 0 Key, 1 Backlight, 2 Stick, 3 LCD, 4 Macros
+```
+
 ## Design
 
 [docs/CONCEPT.md](docs/CONCEPT.md) describes the architecture, the file formats, the D-Bus API and

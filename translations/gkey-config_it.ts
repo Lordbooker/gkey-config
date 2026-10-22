@@ -848,5 +848,9 @@
         <source>With --screenshot: show this tab (0-4).</source>
         <translation>Con --screenshot: mostra questa scheda (0-4).</translation>
     </message>
+    <message>
+        <source>With --screenshot: use a dark colour scheme.</source>
+        <translation>Con --screenshot: usa una combinazione di colori scura.</translation>
+    </message>
 </context>
 </TS>
