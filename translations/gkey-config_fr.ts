@@ -731,6 +731,30 @@
         <translation>Le dossier n’a pas pu être ouvert. Il se trouve ici&#xa0;:
 %1</translation>
     </message>
+    <message>
+        <source>This profile sets the backlight brightness</source>
+        <translation>Ce profil définit la luminosité du rétroéclairage</translation>
+    </message>
+    <message>
+        <source>Keys:</source>
+        <translation>Touches :</translation>
+    </message>
+    <message>
+        <source>LCD:</source>
+        <translation>LCD :</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Éteint</translation>
+    </message>
+    <message>
+        <source>Dim</source>
+        <translation>Faible</translation>
+    </message>
+    <message>
+        <source>Bright</source>
+        <translation>Forte</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

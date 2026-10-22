@@ -50,6 +50,18 @@ std::expected<Profile, QString> Profile::fromJson(const QByteArray &json)
             profile.m_warnings.append(QStringLiteral("\"backlight\" must be [r, g, b] with values 0-255; ignored"));
     }
 
+    // Brightness levels (0..255; the daemon limits them to the LED's maximum).
+    for (const auto &[key, target] : {std::pair{QStringLiteral("backlightLevel"), &profile.m_backlightLevel},
+                                      std::pair{QStringLiteral("lcdBacklightLevel"), &profile.m_lcdBacklightLevel}}) {
+        const QJsonValue value = root.take(key);
+        if (value.isUndefined())
+            continue;
+        if (value.isDouble() && value.toInt(-1) >= 0 && value.toInt(-1) <= 255)
+            *target = value.toInt();
+        else
+            profile.m_warnings.append(QStringLiteral("\"%1\" must be a number 0-255; ignored").arg(key));
+    }
+
     const QJsonObject modes = root.take(QStringLiteral("modes")).toObject();
     for (auto it = modes.begin(); it != modes.end(); ++it) {
         int mode = 0;
@@ -85,6 +97,10 @@ QByteArray Profile::toJson() const
     root.insert(QStringLiteral("name"), m_name);
     if (m_backlight)
         root.insert(QStringLiteral("backlight"), QJsonArray{m_backlight->red, m_backlight->green, m_backlight->blue});
+    if (m_backlightLevel)
+        root.insert(QStringLiteral("backlightLevel"), *m_backlightLevel);
+    if (m_lcdBacklightLevel)
+        root.insert(QStringLiteral("lcdBacklightLevel"), *m_lcdBacklightLevel);
 
     QJsonObject modes;
     for (int mode = 1; mode <= ModeCount; ++mode) {

@@ -27,6 +27,11 @@ public:
     void setRecording(bool recording);
     // Applies the colour if the device has an RGB backlight; nullopt leaves it unchanged.
     void setBacklight(const std::optional<Profile::Rgb> &rgb);
+    // Applies the brightness level of a Level LED ("backlight", "lcd-backlight");
+    // nullopt leaves it unchanged. Limited to the LED's max_brightness.
+    void setLevel(const QString &role, const std::optional<int> &level);
+    // Backlight of a profile: colour or levels, whatever the device has.
+    void applyProfile(const Profile &profile);
 
     // True if a write failed for lack of permission.
     bool permissionDenied() const { return m_permissionDenied; }

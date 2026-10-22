@@ -731,6 +731,30 @@
         <translation>Der Ordner konnte nicht geöffnet werden. Er liegt hier:
 %1</translation>
     </message>
+    <message>
+        <source>This profile sets the backlight brightness</source>
+        <translation>Dieses Profil setzt die Helligkeit der Beleuchtung</translation>
+    </message>
+    <message>
+        <source>Keys:</source>
+        <translation>Tasten:</translation>
+    </message>
+    <message>
+        <source>LCD:</source>
+        <translation>LCD:</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Aus</translation>
+    </message>
+    <message>
+        <source>Dim</source>
+        <translation>Gedimmt</translation>
+    </message>
+    <message>
+        <source>Bright</source>
+        <translation>Hell</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

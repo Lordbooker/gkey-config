@@ -67,6 +67,31 @@ void LedController::setBacklight(const std::optional<Profile::Rgb> &rgb)
         writeAttribute(led->role, QStringLiteral("brightness"), maximum);
 }
 
+void LedController::setLevel(const QString &role, const std::optional<int> &level)
+{
+    if (!level)
+        return;
+    const DeviceModel::Led *led = m_model.ledByRole(role);
+    if (!led || led->type != DeviceModel::LedType::Level || !m_paths.contains(role))
+        return;
+    int value = *level;
+    QFile maxFile(m_paths.value(role) + QStringLiteral("/max_brightness"));
+    if (maxFile.open(QIODevice::ReadOnly)) {
+        bool ok = false;
+        const int maximum = maxFile.readAll().trimmed().toInt(&ok);
+        if (ok)
+            value = qBound(0, value, maximum);
+    }
+    writeAttribute(role, QStringLiteral("brightness"), QByteArray::number(value));
+}
+
+void LedController::applyProfile(const Profile &profile)
+{
+    setBacklight(profile.backlight());
+    setLevel(QStringLiteral("backlight"), profile.backlightLevel());
+    setLevel(QStringLiteral("lcd-backlight"), profile.lcdBacklightLevel());
+}
+
 void LedController::writeOnOff(const QString &role, bool on)
 {
     if (m_paths.contains(role))

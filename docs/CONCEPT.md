@@ -22,7 +22,7 @@ real hardware with `evtest` before they are relied on.
 |---|---|---|---|---|---|---|---|---|
 | G11 | 046d:c225 | treated as G15 | 18 | yes | codes registered by the kernel; physical keys *(verify)* | – | `g15::kbd_backlight` (0–2) | – |
 | G13 | 046d:c21c | G13 | 22 | yes | 4 + round "next page" button | yes | `g13:rgb:kbd_backlight` (RGB) | 160×43, hidraw |
-| G15 (v1) | 046d:c222 | G15 | 18 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | later |
+| G15 (v1) | 046d:c222 | G15 | 18 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | 160×43, hidraw |
 | G15 v2 | 046d:c227 | G15 v2 | 6 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | later |
 | G510 | 046d:c22d | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | later |
 | G510 + USB audio | 046d:c22e | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | later |
@@ -236,6 +236,9 @@ the kernel uses the known event codes.
   through the LCD, `hardware` for keys the device handles itself). Everything else is bindable;
   bindings of fixed keys in a profile are ignored with a warning.
 * `image` and `areas` describe the clickable device picture in the GUI.
+* LED roles: `backlight`, `lcd-backlight` (G15 family), `mode1`–`mode3`, `record`. Types: `onoff`
+  (default), `rgb`, `level` with `"max"` = highest brightness (the GUI offers 0 … max; with max 2
+  *Off / Dim / Bright*).
 * `KEY_LIGHTS_TOGGLE` (G13) is not listed as bindable: the hardware switches the light itself.
 
 ---
@@ -318,6 +321,9 @@ Runtime state that is not configuration (active profile and mode per model) live
 }
 ```
 
+* `backlight` (RGB models) or `backlightLevel` and `lcdBacklightLevel` (models with brightness
+  levels, G15 family): set when the profile becomes active; missing means the LEDs are left as
+  they are. Levels above the LED's `max_brightness` are lowered to it.
 * `name` identifies the profile; the file name is only derived from it when the profile is created.
 * Key IDs are those of the model file; bindings for keys the model cannot bind are ignored with a
   warning in the log.
@@ -602,7 +608,8 @@ on the device).
 | 8 | Packages (Arch/AUR, Ubuntu, Fedora), autostart and LED setup in the GUI, release workflow, documentation | – |
 
 Done: 1–5 and 8 (releases 1.0.0–1.1.1). Postponed: 6. Milestone 7 started with the G510
-(branch `feature/g510`, see 13.0); G11/G15/G15 v2 and the import from linux-g13-driver are open.
+(branch `feature/g510`, see 13.0), followed by the G15 (`feature/g15`, 13.0a); G11/G15 v2 and the
+import from linux-g13-driver are open.
 
 ### 13.0 G510 *(2026-10-22)*
 
@@ -624,6 +631,21 @@ untested:
 * udev: unlike the G13, access is restricted to the hid-lg-g15 interface (`KERNELS` + `DRIVERS`
   on the HID device), so the normal keyboard is not opened to the session user.
 * View: simple schematic (LCD with its keys, M row, 3 × 6 G keys).
+
+### 13.0a G15 *(2026-10-22)*
+
+Same scheme as the G510 (kernel driver, libg15; untested, no hardware), differences only:
+
+* USB 046d:c222, no audio interface; no mute keys.
+* LCD keys as stated in the driver for the G15: `KEY_KBD_LCD_MENU1` = round button left of the LCD
+  (BD, role `lcd`), MENU2–5 = the four keys below it (L1–L4).
+* Backlight of keys and LCD: `g15::kbd_backlight` and `g15::lcd_backlight`, brightness 0–2 each
+  (LED type `level`, roles `backlight` and `lcd-backlight`). The profile stores
+  `backlightLevel` and `lcdBacklightLevel`; the *Backlight* tab shows two selectors
+  *Off / Dim / Bright* instead of the colour. The backlight button of the keyboard changes the
+  brightness in the device itself; the profile sets it again when it becomes active.
+* LCD and its frame as on the G510 (`g15-hidraw`, 160 × 43).
+* udev: `KERNELS=="0003:046D:C222.*"` with `DRIVERS=="lg-g15"`, like the G510.
 
 ### 13.1 To do
 

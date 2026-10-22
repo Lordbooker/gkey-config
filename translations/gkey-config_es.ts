@@ -731,6 +731,30 @@
         <translation>No se pudo abrir la carpeta. Se encuentra en:
 %1</translation>
     </message>
+    <message>
+        <source>This profile sets the backlight brightness</source>
+        <translation>Este perfil establece el brillo de la retroiluminación</translation>
+    </message>
+    <message>
+        <source>Keys:</source>
+        <translation>Teclas:</translation>
+    </message>
+    <message>
+        <source>LCD:</source>
+        <translation>LCD:</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Apagado</translation>
+    </message>
+    <message>
+        <source>Dim</source>
+        <translation>Baja</translation>
+    </message>
+    <message>
+        <source>Bright</source>
+        <translation>Alta</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

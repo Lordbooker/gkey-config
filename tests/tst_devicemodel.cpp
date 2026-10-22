@@ -21,6 +21,7 @@ private slots:
     void allShippedModelsAreValid();
     void g13Model();
     void g510Model();
+    void g15Model();
     void invalidModels_data();
     void invalidModels();
     void registryOverride();
@@ -126,6 +127,27 @@ void TestDeviceModel::g510Model()
     QCOMPARE(model->ledByRole(QStringLiteral("backlight"))->type, DeviceModel::LedType::Rgb);
     QCOMPARE(model->ledByRole(QStringLiteral("mode1"))->suffix, QStringLiteral("macro_preset1"));
     QVERIFY(model->lcd());
+    QCOMPARE(model->lcd()->type, QStringLiteral("g15-hidraw"));
+}
+
+void TestDeviceModel::g15Model()
+{
+    ModelRegistry registry;
+    registry.load({QStringLiteral(GKEY_SOURCE_MODEL_DIR)});
+    const DeviceModel *model = registry.findByUsb(0x046d, 0xc222);
+    QVERIFY(model);
+    QCOMPARE(model->id(), QStringLiteral("g15"));
+    QVERIFY(!model->tested());
+    QCOMPARE(model->inputs().value(QStringLiteral("keys")), QStringLiteral("Logitech Gaming Keyboard Gaming Keys"));
+    QCOMPARE(model->keyById(QStringLiteral("BD"))->role, DeviceModel::KeyRole::LcdNext);
+    QCOMPARE(model->keyForCode(QStringLiteral("keys"), KEY_KBD_LCD_MENU5)->id, QStringLiteral("L4"));
+    QCOMPARE(model->bindableKeyIds().size(), 22);   // 18 G keys + L1-L4
+
+    // Backlight of keys and LCD in three levels (0..2, hid-lg-g15)
+    const DeviceModel::Led *keys = model->ledByRole(QStringLiteral("backlight"));
+    QCOMPARE(keys->type, DeviceModel::LedType::Level);
+    QCOMPARE(keys->max, 2);
+    QCOMPARE(model->ledByRole(QStringLiteral("lcd-backlight"))->suffix, QStringLiteral("lcd_backlight"));
     QCOMPARE(model->lcd()->type, QStringLiteral("g15-hidraw"));
 }
 
