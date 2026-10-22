@@ -71,6 +71,10 @@ QString LcdFrame::toAscii(const QString &text)
             result.append(c);
             continue;
         }
+        if (c.unicode() == 0xb0) {   // degree sign: own glyph in the font
+            result.append(QChar(char16_t(LcdFont::DegreeSign)));
+            continue;
+        }
         const auto it = replacements.constFind(c);
         if (it != replacements.constEnd()) {
             result.append(it.value());

@@ -6,6 +6,7 @@
 #include "DeviceModel.h"
 #include "LcdFrame.h"
 #include "LcdPages.h"
+#include "SystemStats.h"
 
 #include <QObject>
 #include <QStringList>
@@ -13,8 +14,9 @@
 class QTimer;
 
 // The LCD of one device (G13: written through its hidraw node). Shows one of
-// the enabled pages (status, clock, text); text sent over D-Bus is shown on
-// the text page, optionally only for some seconds.
+// the enabled pages (status, system, clock, text); text sent over D-Bus is
+// shown on the text page, optionally only for some seconds. Clock and system
+// page are redrawn every second while they are shown.
 class LcdController : public QObject {
     Q_OBJECT
 public:
@@ -53,6 +55,7 @@ private:
     QString m_pageBeforeText;
     LcdPages::Status m_status;
     QStringList m_textLines;
-    QTimer *m_clockTimer = nullptr;
+    SystemStats m_stats;
+    QTimer *m_clockTimer = nullptr;   // ticks while the clock or the system page is shown
     QTimer *m_textTimer = nullptr;
 };

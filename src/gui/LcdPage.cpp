@@ -89,6 +89,8 @@ QString LcdPage::title(const QString &page)
 {
     if (page == u"status")
         return tr("Status (profile and layer)");
+    if (page == u"system")
+        return tr("System (CPU, RAM, GPU, VRAM)");
     if (page == u"clock")
         return tr("Clock");
     if (page == u"text")
@@ -143,12 +145,14 @@ void LcdPage::updatePreview()
     LcdFrame frame(160, 43);
     if (page == u"clock")
         LcdPages::renderClock(frame, QDateTime::currentDateTime());
+    else if (page == u"system")
+        LcdPages::renderSystem(frame, m_stats.sample());
     else if (page == u"text")
         LcdPages::renderText(frame, {tr("Text from scripts"), tr("appears here.")});
     else
         LcdPages::renderStatus(frame, m_status);
 
-    if (page == u"clock" && isVisible())
+    if ((page == u"clock" || page == u"system") && isVisible())
         m_clock->start();
     else
         m_clock->stop();
@@ -161,4 +165,10 @@ void LcdPage::updatePreview()
             painter.fillRect(4 + x * PreviewScale, 4 + y * PreviewScale, PreviewScale, PreviewScale,
                              frame.pixel(x, y) ? QColor(0x1d, 0x2a, 0x1d) : QColor(0x9c, 0xc8, 0x8c));
     m_preview->setPixmap(QPixmap::fromImage(image));
+}
+
+void LcdPage::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    updatePreview();
 }

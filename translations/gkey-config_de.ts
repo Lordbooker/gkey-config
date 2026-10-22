@@ -139,6 +139,10 @@
         <source>Text</source>
         <translation>Text</translation>
     </message>
+    <message>
+        <source>System</source>
+        <translation>System</translation>
+    </message>
 </context>
 <context>
     <name>DeviceView</name>
@@ -238,6 +242,10 @@
     <message>
         <source>appears here.</source>
         <translation>erscheint hier.</translation>
+    </message>
+    <message>
+        <source>System (CPU, RAM, GPU, VRAM)</source>
+        <translation>System (CPU, RAM, GPU, VRAM)</translation>
     </message>
 </context>
 <context>

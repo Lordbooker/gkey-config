@@ -23,7 +23,8 @@ int centeredX(const LcdFrame &frame, const QString &text, int scale)
 
 const QStringList &allPages()
 {
-    static const QStringList pages = {QStringLiteral("status"), QStringLiteral("clock"), QStringLiteral("text")};
+    static const QStringList pages = {QStringLiteral("status"), QStringLiteral("system"), QStringLiteral("clock"),
+                                      QStringLiteral("text")};
     return pages;
 }
 
@@ -85,6 +86,57 @@ void renderText(LcdFrame &frame, const QStringList &lines)
     const int maxLines = frame.height() / LineHeight;
     for (int i = 0; i < qMin<int>(maxLines, static_cast<int>(lines.size())); ++i)
         frame.drawText(1, 1 + i * LineHeight, LcdFrame::elided(lines.at(i), frame.width() - 2));
+}
+
+QString formatSize(qint64 bytes)
+{
+    const double gib = bytes / (1024.0 * 1024.0 * 1024.0);
+    if (gib >= 99.95)
+        return QStringLiteral("%1G").arg(qRound(gib));
+    return QStringLiteral("%1G").arg(gib, 0, 'f', 1);
+}
+
+void renderSystem(LcdFrame &frame, const SystemStats::Sample &sample)
+{
+    struct Row {
+        QString label;
+        std::optional<int> percent;
+        QString extra;
+    };
+    const auto temperature = [](const std::optional<double> &celsius) {
+        return celsius ? QStringLiteral("%1\u00b0C").arg(qRound(*celsius)) : QString();
+    };
+    const auto memoryRow = [](const QString &label, const std::optional<SystemStats::Memory> &memory) {
+        return memory ? Row{label, memory->percent(), formatSize(memory->used)} : Row{label, std::nullopt, QString()};
+    };
+
+    QList<Row> rows;
+    rows.append(Row{QStringLiteral("CPU"), sample.cpuPercent, temperature(sample.cpuTemperature)});
+    rows.append(memoryRow(QStringLiteral("RAM"), sample.ram));
+    if (sample.gpu) {
+        rows.append(Row{QStringLiteral("GPU"), sample.gpu->busyPercent, temperature(sample.gpu->temperature)});
+        rows.append(memoryRow(QStringLiteral("VRM"), sample.gpu->vram));
+    } else if (sample.swap) {
+        rows.append(memoryRow(QStringLiteral("SWP"), sample.swap));
+    }
+
+    // Rows of label, bar (22..91), percent (96..119) and right-aligned extra.
+    frame.clear();
+    constexpr int BarX = 22, BarWidth = 70, BarHeight = 9, PercentX = 96;
+    const int pitch = rows.size() > 3 ? 11 : 14;
+    const int top = rows.size() > 3 ? 0 : 2;
+    for (qsizetype i = 0; i < rows.size(); ++i) {
+        const Row &row = rows.at(i);
+        const int y = top + int(i) * pitch;
+        frame.drawText(1, y + 1, row.label);
+        frame.drawRect(BarX, y, BarWidth, BarHeight);
+        if (row.percent)
+            frame.fillRect(BarX + 1, y + 1, (BarWidth - 2) * qBound(0, *row.percent, 100) / 100, BarHeight - 2);
+        frame.drawText(PercentX, y + 1,
+                       row.percent ? QStringLiteral("%1%").arg(*row.percent, 3) : QStringLiteral(" --%"));
+        if (!row.extra.isEmpty())
+            frame.drawText(frame.width() - LcdFrame::textWidth(row.extra) - 1, y + 1, row.extra);
+    }
 }
 
 }

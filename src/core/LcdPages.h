@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "SystemStats.h"
+
 #include <QDateTime>
 #include <QString>
 #include <QStringList>
@@ -27,5 +29,11 @@ void renderStatus(LcdFrame &frame, const Status &status);
 void renderClock(LcdFrame &frame, const QDateTime &time);
 // Up to five lines; longer lines are cut.
 void renderText(LcdFrame &frame, const QStringList &lines);
+// CPU, RAM, GPU and VRAM with bar, percent and temperature or amount; without
+// a supported GPU CPU, RAM and swap.
+void renderSystem(LcdFrame &frame, const SystemStats::Sample &sample);
+
+// "16.4G": bytes in GiB, at most five characters.
+QString formatSize(qint64 bytes);
 
 }

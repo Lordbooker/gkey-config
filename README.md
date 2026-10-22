@@ -31,7 +31,8 @@ USB driver, no input-remapper or keyd.
 - Backlight colour per profile
 - G13 stick as four keys (diagonals press two), mouse pointer, scroll wheel or normal joystick,
   with adjustable dead zone and measured rest position
-- G13 LCD: status page (profile and layer), clock, and text from scripts
+- G13 LCD: status page (profile and layer), system page (CPU, RAM, GPU and VRAM load with
+  temperatures), clock, and text from scripts
 - Changes apply immediately; profile and macro files are reloaded when edited by hand
 - D-Bus API for scripts, tray icon, interface in six languages
 
@@ -107,7 +108,7 @@ the device as well.
 | Key | binding of the selected key in the current layer |
 | Backlight | colour of the profile, LED access |
 | Stick | stick mode, dead zone, speeds, rest position |
-| LCD | pages and their order; the round key next to the LCD keys pages through them |
+| LCD | pages (status, system, clock, text) and their order; the round key next to the LCD keys pages through them |
 | Macros | create, record and edit macros (shared by all profiles and devices) |
 
 Closing the window keeps the tray icon running; the daemon works without the application. GNOME
