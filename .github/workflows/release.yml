@@ -43,7 +43,19 @@ jobs:
       - name: Install git
         run: |
           if command -v apt-get >/dev/null; then
-            apt-get update -q && apt-get install -y -q --no-install-recommends git ca-certificates
+            # Ubuntu mirror inside Azure (as on the GitHub runners): faster than
+            # archive.ubuntu.com. Retry: a mirror in sync can serve
+            # inconsistent index files for a while.
+            sed -i 's#http://archive.ubuntu.com/#http://azure.archive.ubuntu.com/#' \
+              /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
+            grep -h '^URIs' /etc/apt/sources.list.d/*.sources 2>/dev/null || true
+            echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries
+            for attempt in 1 2 3; do
+              apt-get update -q && break
+              [ "$attempt" = 3 ] && exit 1
+              sleep 60
+            done
+            apt-get install -y -q --no-install-recommends git ca-certificates
           else
             dnf install -y -q git
           fi
