@@ -49,7 +49,7 @@ public slots:
     // Shows text on the LCD text page ("\n" separates lines); seconds > 0
     // returns to the previous page afterwards.
     void LcdText(const QString &text, int seconds);
-    // "next", "previous", "status", "clock" or "text".
+    // "next", "previous", "status", "system", "clock" or "text".
     void LcdPage(const QString &page);
     // Takes the current stick position as its rest position.
     bool CalibrateStick(const QString &model);

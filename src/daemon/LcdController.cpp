@@ -107,15 +107,18 @@ void LcdController::refresh()
 {
     if (m_page == u"clock")
         LcdPages::renderClock(m_frame, QDateTime::currentDateTime());
+    else if (m_page == u"system")
+        LcdPages::renderSystem(m_frame, m_stats.sample());
     else if (m_page == u"text")
         LcdPages::renderText(m_frame, m_textLines);
     else
         LcdPages::renderStatus(m_frame, m_status);
 
     if (m_clockTimer) {
-        if (m_page == u"clock" && !m_clockTimer->isActive())
+        const bool ticking = m_page == u"clock" || m_page == u"system";
+        if (ticking && !m_clockTimer->isActive())
             m_clockTimer->start(1000 - QTime::currentTime().msec());
-        else if (m_page != u"clock")
+        else if (!ticking)
             m_clockTimer->stop();
     }
     write();

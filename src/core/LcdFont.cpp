@@ -7,7 +7,7 @@
 // the top row. Taken from linux-g13-driver (same author, GPL-2.0-only).
 namespace {
 
-const unsigned char font5x7[95][5] = {
+const unsigned char font5x7[96][5] = {
     {0x00, 0x00, 0x00, 0x00, 0x00}, // Space (32)
     {0x00, 0x00, 0x5F, 0x00, 0x00}, // !
     {0x00, 0x07, 0x00, 0x07, 0x00}, // "
@@ -103,6 +103,7 @@ const unsigned char font5x7[95][5] = {
     {0x00, 0x00, 0x7F, 0x00, 0x00}, // |
     {0x00, 0x41, 0x36, 0x08, 0x00}, // }
     {0x10, 0x08, 0x08, 0x10, 0x08}, // ~
+    {0x06, 0x09, 0x09, 0x06, 0x00}, // degree sign (code 127, see LcdFrame::toAscii)
 };
 
 }
@@ -111,7 +112,7 @@ namespace LcdFont {
 
 const unsigned char *glyph(char32_t c)
 {
-    if (c < 32 || c > 126)
+    if (c < 32 || c > DegreeSign)
         c = U'?';
     return font5x7[c - 32];
 }

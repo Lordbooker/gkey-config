@@ -4,6 +4,16 @@ All notable changes to gkey-config are documented in this file. The format follo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- LCD page *System*: load of CPU, RAM, GPU and VRAM as bars with percentages, temperatures of CPU
+  and GPU, used RAM and VRAM. GPU values for AMD graphics cards (`amdgpu`); without one the page
+  shows CPU, RAM and swap. Enabled by default for new installations; existing settings list it
+  unchecked in the LCD tab.
+- Degree sign in the LCD font.
+
 ## [1.0.0] - 2026-10-22
 
 First release.
@@ -28,4 +38,5 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/Lordbooker/gkey-config/releases/tag/v1.0.0

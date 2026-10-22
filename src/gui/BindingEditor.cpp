@@ -125,6 +125,7 @@ BindingEditor::BindingEditor(QWidget *parent) : QWidget(parent)
     m_lcd->addItem(tr("Next page"), QStringLiteral("next"));
     m_lcd->addItem(tr("Previous page"), QStringLiteral("previous"));
     m_lcd->addItem(tr("Status"), QStringLiteral("status"));
+    m_lcd->addItem(tr("System"), QStringLiteral("system"));
     m_lcd->addItem(tr("Clock"), QStringLiteral("clock"));
     m_lcd->addItem(tr("Text"), QStringLiteral("text"));
     addPage(nullptr)->addRow(tr("Page:"), m_lcd);

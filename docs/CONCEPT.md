@@ -405,10 +405,13 @@ buttons are left to the system as well.
 
 ### 7.2 LCD (version 1)
 
-* Pages: status (device, profile, layer M1–M3, "REC" while recording), clock (time, seconds, day
-  and date in the user's locale), text (set via D-Bus `LcdText`, up to five lines).
+* Pages: status (device, profile, layer M1–M3, "REC" while recording), system (see below), clock
+  (time, seconds, day and date in the user's locale), text (set via D-Bus `LcdText`, up to five
+  lines).
 * Enabled pages and their order are global settings in `~/.config/gkey-config/settings.json`
-  (`{ "lcd": { "pages": ["status", "clock", "text"] } }`), edited in the GUI's LCD tab.
+  (`{ "lcd": { "pages": ["status", "system", "clock", "text"] } }`), edited in the GUI's LCD tab.
+  Without the file all pages are enabled in this order; a page added in a later version appears
+  unchecked in existing settings.
 * The round button (BD) shows the next page by default: model files can give a key a `default`
   action that applies while the key is unbound in the active layer. Any key can be bound to `lcd`
   actions (`next`, `previous`, page name).
@@ -417,7 +420,17 @@ buttons are left to the system as well.
   bands of 8 rows). Rendering uses an own 1-bit frame and the 5×7 font from linux-g13-driver, so the
   daemon needs no Qt GUI modules; the GUI uses the same code for its preview. The LCD is cleared
   when the daemon stops.
-* Further pages (system load, media) are later additions.
+* System page *(added after 1.0, decided 2026-10-22)*: rows CPU, RAM, GPU, VRM, each with a bar,
+  the percentage and on the right the temperature (CPU, GPU) or the used amount in GiB (RAM,
+  VRAM); four rows 11 px apart. Without a supported GPU the rows are CPU, RAM and swap (if
+  configured), 14 px apart. Sources, readable without special rights: `/proc/stat` (load since the
+  previous refresh), `/proc/meminfo` (used = total − available), hwmon `k10temp`/`zenpower`
+  (`Tctl`/`Tdie`) or `coretemp` (`Package id 0`) for the CPU temperature, and for AMD GPUs
+  (`amdgpu`) `gpu_busy_percent`, `mem_info_vram_used/total` and the hwmon temperature `edge` of
+  the card with the most VRAM. Intel GPUs have no load value in sysfs; NVIDIA is not supported
+  yet. The values are read once per second, only while the page is shown. The font got a degree
+  sign (code 127).
+* A media page is a possible later addition.
 * G15/G510 LCD: after the protocol has been analysed on hardware.
 
 ---
@@ -517,7 +530,7 @@ session; the systemd unit is `Type=dbus`.
 | Method | `RunMacro(s name) → b` / `StopMacros()` | |
 | Method | `SetRecording(b)` | MR LED and `RecordingChanged` |
 | Method | `LcdText(s text, i seconds)` | text page; `\n` separates lines; seconds 0 = until the page is changed |
-| Method | `LcdPage(s page)` | `next`, `previous`, `status`, `clock`, `text` |
+| Method | `LcdPage(s page)` | `next`, `previous`, `status`, `system`, `clock`, `text` |
 | Method | `CalibrateStick(s model) → b` | current stick position becomes the rest position |
 | Property | `Recording` (b) | |
 | Signals | `DeviceAdded(s model, s syspath)`, `DeviceRemoved(s, s)`, `ProfileChanged(s model, s name)`, `ModeChanged(s model, i mode)`, `KeyEvent(s model, s key, b pressed)`, `RecordingChanged(b)` | |

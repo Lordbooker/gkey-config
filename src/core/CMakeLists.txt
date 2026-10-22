@@ -51,6 +51,8 @@ add_library(gkey-core STATIC
     StickProcessor.h
     StickSettings.cpp
     StickSettings.h
+    SystemStats.cpp
+    SystemStats.h
 )
 
 target_include_directories(gkey-core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

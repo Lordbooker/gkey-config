@@ -8,6 +8,8 @@
 #include <QStringList>
 #include <QWidget>
 
+#include "SystemStats.h"
+
 class QLabel;
 class QListWidget;
 class QPushButton;
@@ -21,6 +23,10 @@ public:
 
     void setPages(const QStringList &enabled);
     void setStatus(const LcdPages::Status &status);
+
+protected:
+    // Restarts the live preview (clock, system) when the tab is shown again.
+    void showEvent(QShowEvent *event) override;
 
 signals:
     void pagesChanged(const QStringList &pages);
@@ -36,5 +42,6 @@ private:
     QListWidget *m_list;
     QLabel *m_preview;
     QPushButton *m_show;
-    QTimer *m_clock;
+    QTimer *m_clock;   // redraws the clock and system preview every second
+    SystemStats m_stats;   // live values for the system preview
 };
