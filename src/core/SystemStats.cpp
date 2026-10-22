@@ -132,11 +132,14 @@ SystemStats::Sample SystemStats::sample()
     sample.cpuTemperature = readMilliCelsius(m_cpuTempFile);
 
     // /proc/meminfo in kB; used = total - available (as "free" reports it).
+    // Files in /proc report size 0, so QFile::atEnd() is true before the
+    // first read: read everything at once instead of line by line.
     QFile meminfo(m_procRoot + QStringLiteral("/meminfo"));
     if (meminfo.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QHash<QString, qint64> values;
-        while (!meminfo.atEnd()) {
-            const QStringList parts = QString::fromLatin1(meminfo.readLine()).split(u' ', Qt::SkipEmptyParts);
+        const QStringList lines = QString::fromLatin1(meminfo.readAll()).split(u'\n', Qt::SkipEmptyParts);
+        for (const QString &line : lines) {
+            const QStringList parts = line.split(u' ', Qt::SkipEmptyParts);
             if (parts.size() >= 2)
                 values.insert(parts.first().chopped(1), parts.at(1).toLongLong() * 1024);
         }

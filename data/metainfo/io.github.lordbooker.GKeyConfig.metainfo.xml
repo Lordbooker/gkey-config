@@ -83,6 +83,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.1.1" date="2026-10-22">
+      <description>
+        <p>The RAM row of the LCD system page shows its value again.</p>
+      </description>
+    </release>
     <release version="1.1.0" date="2026-10-22">
       <description>
         <p>New LCD page with the load of CPU, RAM, GPU and VRAM and the temperatures of CPU and GPU.</p>

@@ -6,6 +6,13 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-22
+
+### Fixed
+
+- LCD page *System*: the RAM row showed no value. Files in `/proc` report a size of 0, so
+  `/proc/meminfo` was read as empty.
+
 ## [1.1.0] - 2026-10-22
 
 ### Added
@@ -46,6 +53,7 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/Lordbooker/gkey-config/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Lordbooker/gkey-config/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Lordbooker/gkey-config/releases/tag/v1.0.0
