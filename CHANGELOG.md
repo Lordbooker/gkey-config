@@ -13,6 +13,13 @@ All notable changes to gkey-config are documented in this file. The format follo
   of BD are ignored (with a note in the daemon log). L1–L4 remain freely bindable, e.g. for
   "previous page" or a specific page.
 
+### Fixed
+
+- G13 stick in key mode: after a restart of the computer a key bound to the stick (e.g. A for
+  "left") stayed pressed and did not work on the normal keyboard until the daemon was restarted.
+  Before the G13 reports for the first time, the kernel shows the stick at 0/0 ("left" and "up");
+  the daemon no longer takes this as the stick position.
+
 ## [1.1.1] - 2026-10-22
 
 ### Fixed

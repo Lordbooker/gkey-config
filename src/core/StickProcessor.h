@@ -26,6 +26,9 @@ class StickProcessor : public QObject {
 public:
     static constexpr int TickMs = 10;            // update rate of mouse and scroll modes
     static constexpr double Hysteresis = 0.05;   // keys mode: release below deadzone - hysteresis
+    // A position further away from the middle than this is no plausible rest
+    // position (stick held, or no report from the device yet: 0/0).
+    static constexpr int PlausibleCenterOffset = 24;
 
     StickProcessor(BindingEngine &engine, KeyOutput &output, int minimum, int maximum, QObject *parent = nullptr);
 
@@ -41,6 +44,12 @@ public:
     int y() const { return m_y; }
 
     void setPosition(int x, int y);
+    // Takes the rest position as the current position, so nothing is pressed.
+    // Used when the stick input is opened: the kernel driver sets no initial
+    // position, so until the device's first report the axes read 0/0, which
+    // would be "full left and up".
+    void assumeRest();
+    bool isPlausibleRest(int x, int y) const;
     void setX(int x) { setPosition(x, m_y); }
     void setY(int y) { setPosition(m_x, y); }
 

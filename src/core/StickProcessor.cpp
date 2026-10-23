@@ -41,6 +41,17 @@ void StickProcessor::reset()
     m_timer->stop();
 }
 
+void StickProcessor::assumeRest()
+{
+    setPosition(m_centerX, m_centerY);
+}
+
+bool StickProcessor::isPlausibleRest(int x, int y) const
+{
+    const int middle = (m_minimum + m_maximum + 1) / 2;
+    return qAbs(x - middle) <= PlausibleCenterOffset && qAbs(y - middle) <= PlausibleCenterOffset;
+}
+
 double StickProcessor::normalize(int value, int center) const
 {
     const double range = value >= center ? m_maximum - center : center - m_minimum;
