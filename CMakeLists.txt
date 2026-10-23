@@ -41,7 +41,8 @@ if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_link_options(-fsanitize=address,undefined)
 endif()
 
-add_compile_options(-Wall -Wextra -Wpedantic)
+add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wold-style-cast
+                    -Wnon-virtual-dtor -Woverloaded-virtual -Wnull-dereference -Wformat=2 -Wimplicit-fallthrough)
 
 # --- Dependencies -------------------------------------------------------------
 include(GNUInstallDirs)

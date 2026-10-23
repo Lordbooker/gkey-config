@@ -37,8 +37,8 @@ bool VirtualInput::create(QString *error)
 
     // Relative axes for the stick's pointer and scroll modes.
     libevdev_enable_event_type(m_device, EV_REL);
-    for (unsigned int code : {REL_X, REL_Y, REL_WHEEL, REL_HWHEEL})
-        libevdev_enable_event_code(m_device, EV_REL, code, nullptr);
+    for (const int code : {REL_X, REL_Y, REL_WHEEL, REL_HWHEEL})
+        libevdev_enable_event_code(m_device, EV_REL, static_cast<unsigned int>(code), nullptr);
 
     const int rc = libevdev_uinput_create_from_device(m_device, LIBEVDEV_UINPUT_OPEN_MANAGED, &m_uinput);
     if (rc < 0) {

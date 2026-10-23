@@ -90,7 +90,7 @@ void renderText(LcdFrame &frame, const QStringList &lines)
 
 QString formatSize(qint64 bytes)
 {
-    const double gib = bytes / (1024.0 * 1024.0 * 1024.0);
+    const double gib = static_cast<double>(bytes) / (1024.0 * 1024.0 * 1024.0);
     if (gib >= 99.95)
         return QStringLiteral("%1G").arg(qRound(gib));
     return QStringLiteral("%1G").arg(gib, 0, 'f', 1);

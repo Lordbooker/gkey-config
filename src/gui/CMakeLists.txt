@@ -4,6 +4,8 @@
 # gkey-config: Qt6 configuration tool.
 add_executable(gkey-config
     main.cpp
+    BacklightPage.cpp
+    BacklightPage.h
     BindingEditor.cpp
     BindingEditor.h
     DaemonClient.cpp

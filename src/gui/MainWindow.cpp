@@ -4,6 +4,7 @@
 #include "MainWindow.h"
 
 #include "Action.h"
+#include "BacklightPage.h"
 #include "BindingEditor.h"
 #include "ConfigPaths.h"
 #include "DaemonClient.h"
@@ -37,7 +38,6 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <QPainterPath>
-#include <QProcess>
 #include <QPushButton>
 #include <QSettings>
 #include <QSplitter>
@@ -60,18 +60,6 @@ QString keyTitle(const DeviceModel &model, const QString &keyId)
             return QStringLiteral("%1 (%2)").arg(keyId, area.label);
     }
     return keyId;
-}
-
-QIcon colorIcon(const QColor &color)
-{
-    QPixmap pixmap(32, 20);
-    pixmap.fill(Qt::transparent);
-    QPainter painter(&pixmap);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setPen(QPen(Qt::gray, 1));
-    painter.setBrush(color.isValid() ? color : QColor(Qt::transparent));
-    painter.drawRoundedRect(QRectF(0.5, 0.5, 31, 19), 4, 4);
-    return QIcon(pixmap);
 }
 
 }
@@ -235,44 +223,15 @@ void MainWindow::setupUi()
     connect(m_bindingEditor, &BindingEditor::bindingChanged, this, &MainWindow::onBindingChanged);
     tabs->addTab(m_bindingEditor, tr("Key"));
 
-    auto *profileTab = new QWidget(tabs);
-    auto *profileLayout = new QVBoxLayout(profileTab);
-    // RGB backlight (G13, G510)
-    m_colourWidget = new QWidget(profileTab);
-    auto *backlightForm = new QFormLayout(m_colourWidget);
-    backlightForm->setContentsMargins(0, 0, 0, 0);
-    m_backlightEnabled = new QCheckBox(tr("This profile sets the backlight colour"), m_colourWidget);
-    m_backlightButton = new QPushButton(tr("Choose colour..."), m_colourWidget);
-    backlightForm->addRow(m_backlightEnabled);
-    backlightForm->addRow(tr("Colour:"), m_backlightButton);
-    profileLayout->addWidget(m_colourWidget);
-    // Backlight in brightness levels (G15 family): keys and LCD
-    m_levelWidget = new QWidget(profileTab);
-    auto *levelForm = new QFormLayout(m_levelWidget);
-    levelForm->setContentsMargins(0, 0, 0, 0);
-    m_levelEnabled = new QCheckBox(tr("This profile sets the backlight brightness"), m_levelWidget);
-    m_levelBox = new QComboBox(m_levelWidget);
-    m_lcdLevelBox = new QComboBox(m_levelWidget);
-    levelForm->addRow(m_levelEnabled);
-    levelForm->addRow(tr("Keys:"), m_levelBox);
-    levelForm->addRow(tr("LCD:"), m_lcdLevelBox);
-    profileLayout->addWidget(m_levelWidget);
-    connect(m_levelEnabled, &QCheckBox::toggled, this, &MainWindow::onLevelToggled);
-    connect(m_levelBox, &QComboBox::activated, this, &MainWindow::onLevelChanged);
-    connect(m_lcdLevelBox, &QComboBox::activated, this, &MainWindow::onLevelChanged);
-    m_ledHint = new QLabel(profileTab);
-    m_ledHint->setWordWrap(true);
-    profileLayout->addWidget(m_ledHint);
-    m_ledButton = new QPushButton(tr("Allow LED control..."), profileTab);
-    connect(m_ledButton, &QPushButton::clicked, m_session, &SessionSetup::requestLedAccess);
-    auto *ledButtonRow = new QHBoxLayout;
-    ledButtonRow->addWidget(m_ledButton);
-    ledButtonRow->addStretch();
-    profileLayout->addLayout(ledButtonRow);
-    profileLayout->addStretch();
-    connect(m_backlightEnabled, &QCheckBox::toggled, this, &MainWindow::onBacklightToggled);
-    connect(m_backlightButton, &QPushButton::clicked, this, &MainWindow::onChooseBacklight);
-    tabs->addTab(profileTab, tr("Backlight"));
+    m_backlightPage = new BacklightPage(tabs);
+    connect(m_backlightPage, &BacklightPage::colourChanged, this, &MainWindow::onBacklightColourChanged);
+    connect(m_backlightPage, &BacklightPage::colourPreview, this,
+            [this](const QColor &color) { m_client->setBacklight(m_model.id(), color); });
+    connect(m_backlightPage, &BacklightPage::colourPreviewEnded, this,
+            [this] { m_client->resetBacklight(m_model.id()); });
+    connect(m_backlightPage, &BacklightPage::levelsChanged, this, &MainWindow::onBacklightLevelsChanged);
+    connect(m_backlightPage, &BacklightPage::ledAccessRequested, m_session, &SessionSetup::requestLedAccess);
+    tabs->addTab(m_backlightPage, tr("Backlight"));
 
     m_stickPage = new StickPage(tabs);
     connect(m_stickPage, &StickPage::settingsChanged, this, &MainWindow::onStickSettingsChanged);
@@ -361,6 +320,7 @@ void MainWindow::selectModel(const QString &modelId)
     m_model = *model;
     m_modelCombo->setCurrentIndex(m_modelCombo->findData(modelId));
     m_view->setModel(m_model);
+    m_backlightPage->setModel(m_model);
 
     delete m_store;
     m_store = new ProfileStore(m_model, ConfigPaths::profileDir(modelId), this);
@@ -412,14 +372,7 @@ void MainWindow::reloadView()
         accent = QColor(profile->backlight()->red, profile->backlight()->green, profile->backlight()->blue);
     m_view->setAccentColor(accent);
 
-    {
-        const QSignalBlocker blocker(m_backlightEnabled);
-        m_backlightEnabled->setChecked(profile && profile->backlight());
-    }
-    m_backlightButton->setEnabled(profile && profile->backlight());
-    m_backlightButton->setIcon(colorIcon(accent));
-    m_backlightEnabled->setEnabled(profile && m_model.ledByRole(QStringLiteral("backlight")));
-    updateLevelWidgets(profile);
+    m_backlightPage->setProfile(profile);
 
     // Stick and LCD tabs exist only for models that have them.
     m_tabs->setTabEnabled(m_tabs->indexOf(m_stickPage), m_model.stick().has_value());
@@ -624,104 +577,25 @@ void MainWindow::onStickCalibrate()
 
 // --- Backlight --------------------------------------------------------------------------------
 
-void MainWindow::onBacklightToggled(bool enabled)
+void MainWindow::onBacklightColourChanged(const std::optional<Profile::Rgb> &rgb)
 {
     const Profile *current = currentProfile();
     if (!current)
         return;
     Profile profile = *current;
-    profile.setBacklight(enabled ? std::optional<Profile::Rgb>(Profile::Rgb{51, 153, 255}) : std::nullopt);
+    profile.setBacklight(rgb);
     if (saveProfile(profile))
         reloadView();
 }
 
-void MainWindow::onChooseBacklight()
-{
-    const Profile *current = currentProfile();
-    if (!current || !current->backlight())
-        return;
-    const Profile::Rgb rgb = *current->backlight();
-    QColorDialog dialog(QColor(rgb.red, rgb.green, rgb.blue), this);
-    dialog.setWindowTitle(tr("Backlight colour"));
-    // Live preview on the device while choosing.
-    connect(&dialog, &QColorDialog::currentColorChanged, this,
-            [this](const QColor &color) { m_client->setBacklight(m_model.id(), color); });
-    if (dialog.exec() != QDialog::Accepted) {
-        m_client->resetBacklight(m_model.id());
-        return;
-    }
-    const QColor color = dialog.selectedColor();
-    Profile profile = *currentProfile();
-    profile.setBacklight(Profile::Rgb{color.red(), color.green(), color.blue()});
-    if (saveProfile(profile))
-        reloadView();
-}
-
-// Level backlight: one selector per LED (keys, LCD) with the levels of the model.
-void MainWindow::updateLevelWidgets(const Profile *profile)
-{
-    const DeviceModel::Led *keys = m_model.ledByRole(QStringLiteral("backlight"));
-    const DeviceModel::Led *lcd = m_model.ledByRole(QStringLiteral("lcd-backlight"));
-    const bool levels = keys && keys->type == DeviceModel::LedType::Level;
-    m_colourWidget->setVisible(!levels);
-    m_levelWidget->setVisible(levels);
-    if (!levels)
-        return;
-
-    const auto fill = [this](QComboBox *box, const DeviceModel::Led *led, const std::optional<int> &value) {
-        const QSignalBlocker blocker(box);
-        box->clear();
-        if (!led)
-            return;
-        for (int level = 0; level <= led->max; ++level) {
-            QString name = QString::number(level);
-            if (level == 0)
-                name = tr("Off");
-            else if (led->max == 2)
-                name = level == 1 ? tr("Dim") : tr("Bright");
-            box->addItem(name, level);
-        }
-        box->setCurrentIndex(qMax(0, box->findData(value.value_or(led->max))));
-    };
-    const bool set = profile && (profile->backlightLevel() || profile->lcdBacklightLevel());
-    {
-        const QSignalBlocker blocker(m_levelEnabled);
-        m_levelEnabled->setChecked(set);
-    }
-    m_levelEnabled->setEnabled(profile != nullptr);
-    fill(m_levelBox, keys, profile ? profile->backlightLevel() : std::nullopt);
-    fill(m_lcdLevelBox, lcd, profile ? profile->lcdBacklightLevel() : std::nullopt);
-    m_levelBox->setEnabled(set);
-    m_lcdLevelBox->setEnabled(set && lcd);
-    m_lcdLevelBox->setVisible(lcd != nullptr);
-    if (auto *form = qobject_cast<QFormLayout *>(m_levelWidget->layout()))
-        form->setRowVisible(m_lcdLevelBox, lcd != nullptr);
-}
-
-void MainWindow::onLevelToggled(bool enabled)
+void MainWindow::onBacklightLevelsChanged(const std::optional<int> &keys, const std::optional<int> &lcd)
 {
     const Profile *current = currentProfile();
     if (!current)
         return;
     Profile profile = *current;
-    const DeviceModel::Led *keys = m_model.ledByRole(QStringLiteral("backlight"));
-    const DeviceModel::Led *lcd = m_model.ledByRole(QStringLiteral("lcd-backlight"));
-    profile.setBacklightLevel(enabled && keys ? std::optional<int>(keys->max) : std::nullopt);
-    profile.setLcdBacklightLevel(enabled && lcd ? std::optional<int>(lcd->max) : std::nullopt);
-    if (saveProfile(profile))
-        reloadView();
-}
-
-void MainWindow::onLevelChanged()
-{
-    const Profile *current = currentProfile();
-    if (!current)
-        return;
-    Profile profile = *current;
-    profile.setBacklightLevel(m_levelBox->currentData().isValid() ? std::optional<int>(m_levelBox->currentData().toInt())
-                                                                  : std::nullopt);
-    if (m_model.ledByRole(QStringLiteral("lcd-backlight")))
-        profile.setLcdBacklightLevel(m_lcdLevelBox->currentData().toInt());
+    profile.setBacklightLevel(keys);
+    profile.setLcdBacklightLevel(lcd);
     if (saveProfile(profile))
         reloadView();
 }
@@ -816,9 +690,7 @@ void MainWindow::updateLedHint()
         text = tr("The daemon may not change the LEDs although your user is in the group \"gkey\". "
                   "Replug the device; if that does not help, log out completely and back in.");
     }
-    m_ledHint->setText(text);
-    m_ledHint->setVisible(!text.isEmpty());
-    m_ledButton->setVisible(canRequest);
+    m_backlightPage->setLedHint(text, canRequest);
     m_ledAccessAction->setEnabled(canRequest);
 }
 
@@ -892,16 +764,11 @@ void MainWindow::askFirstRunSetup()
 
 void MainWindow::runSystemctl(const QString &verb)
 {
-    auto *process = new QProcess(this);
-    connect(process, &QProcess::finished, this, [this, process, verb](int exitCode) {
+    m_session->runDaemonCommand(verb, [this, verb](int exitCode, const QString &output) {
         if (exitCode != 0)
-            statusBar()->showMessage(tr("systemctl --user %1 gkeyd failed: %2")
-                                         .arg(verb, QString::fromLocal8Bit(process->readAllStandardError()).trimmed()),
-                                     8000);
-        process->deleteLater();
+            statusBar()->showMessage(tr("systemctl --user %1 gkeyd failed: %2").arg(verb, output), 8000);
         QTimer::singleShot(500, m_client, &DaemonClient::refreshStatus);
     });
-    process->start(QStringLiteral("systemctl"), {QStringLiteral("--user"), verb, QStringLiteral("gkeyd")});
 }
 
 bool MainWindow::setupTray()

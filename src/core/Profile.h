@@ -84,7 +84,7 @@ public:
     const QStringList &warnings() const { return m_warnings; }
 
 private:
-    static int modeIndex(int mode);
+    static std::size_t modeIndex(int mode);
 
     QString m_name;
     std::optional<Rgb> m_backlight;

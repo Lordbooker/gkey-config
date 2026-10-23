@@ -36,13 +36,17 @@ public:
     // emits ledAccessFinished.
     void requestLedAccess();
 
+    // Runs "systemctl --user <verb> gkeyd.service" (start, stop, restart);
+    // done gets the exit code (-1 if systemctl could not run) and its output.
+    void runDaemonCommand(const QString &verb, std::function<void(int, const QString &)> done);
+
 signals:
     void daemonAutostartChanged(SessionSetup::DaemonAutostart state);
     void failed(const QString &message);
     void ledAccessFinished(bool success, const QString &message);
 
 private:
-    void runSystemctl(const QStringList &arguments, std::function<void(int, const QString &)> done);
+    void runSystemctl(const QStringList &arguments, const std::function<void(int, const QString &)> &done);
 
     DaemonAutostart m_daemonAutostart = DaemonAutostart::Unknown;
 };

@@ -155,7 +155,7 @@ void Profile::removeBinding(int mode, const QString &keyId)
     m_modes[modeIndex(mode)].remove(keyId);
 }
 
-int Profile::modeIndex(int mode)
+std::size_t Profile::modeIndex(int mode)
 {
-    return std::clamp(mode, 1, ModeCount) - 1;
+    return static_cast<std::size_t>(std::clamp(mode, 1, ModeCount) - 1);
 }
