@@ -29,6 +29,8 @@ jobs:
   packages:
     name: Build ${{ matrix.name }}
     runs-on: ubuntu-latest
+    # A normal build takes 2-5 minutes; a hanging mirror must not block for 6 hours.
+    timeout-minutes: 30
     container: ${{ matrix.image }}
     strategy:
       fail-fast: false
@@ -45,11 +47,13 @@ jobs:
           if command -v apt-get >/dev/null; then
             # Ubuntu mirror inside Azure (as on the GitHub runners): faster than
             # archive.ubuntu.com. Retry: a mirror in sync can serve
-            # inconsistent index files for a while.
+            # inconsistent index files for a while; a stalled download fails
+            # after 30 s and is retried.
             sed -i 's#http://archive.ubuntu.com/#http://azure.archive.ubuntu.com/#' \
               /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
             grep -h '^URIs' /etc/apt/sources.list.d/*.sources 2>/dev/null || true
-            echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries
+            printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' \
+              > /etc/apt/apt.conf.d/80-retries
             for attempt in 1 2 3; do
               apt-get update -q && break
               [ "$attempt" = 3 ] && exit 1
@@ -92,6 +96,7 @@ jobs:
   arch:
     name: Build Arch Linux (AUR)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     container: archlinux:latest
 
     steps:
@@ -144,6 +149,7 @@ jobs:
     name: Publish release
     needs: [packages, arch]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
 
@@ -219,6 +225,7 @@ jobs:
     needs: release
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Check secret

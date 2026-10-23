@@ -25,7 +25,10 @@ case "$ID" in
     debian|ubuntu)
         export DEBIAN_FRONTEND=noninteractive
         # Retry: a mirror in sync can serve inconsistent index files for a while.
-        echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries
+        # Timeout: a download that stalls (no data for 30 s) fails and is retried
+        # instead of hanging until the CI job is cancelled.
+        printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' \
+            > /etc/apt/apt.conf.d/80-retries
         for attempt in 1 2 3; do
             apt-get update -q && break
             [ "$attempt" = 3 ] && exit 1
