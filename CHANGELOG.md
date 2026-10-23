@@ -12,8 +12,16 @@ All notable changes to gkey-config are documented in this file. The format follo
   (`$XDG_RUNTIME_DIR`) and only accessible by the user. Before, it was in `/tmp`, where another
   local user could block the configuration tool from starting.
 
+### Changed
+
+- The daemon writes the LCD in a thread of its own: a hanging USB device can no longer stop the
+  key handling (a write to the LCD can block for seconds).
+
 ### Fixed
 
+- The LCD stayed off for the whole connection when its device node appeared after the keys;
+  the daemon now looks for it when writing and reopens it after an error.
+- Errors when sending keys through the virtual input device are logged (once per kind of error).
 - Saving a profile from the configuration tool no longer drops bindings that this version cannot
   use (e.g. key names of a newer version, or keys that cannot be bound on the device); they are
   kept unchanged in the file.

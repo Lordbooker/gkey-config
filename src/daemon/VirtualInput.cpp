@@ -8,7 +8,11 @@
 #include <libevdev/libevdev-uinput.h>
 #include <libevdev/libevdev.h>
 
+#include <QLoggingCategory>
+
 #include <cstring>
+
+Q_LOGGING_CATEGORY(lcOutput, "gkey.output")
 
 VirtualInput::~VirtualInput()
 {
@@ -52,18 +56,28 @@ bool VirtualInput::create(QString *error)
 
 void VirtualInput::writeKey(int code, bool pressed)
 {
-    if (m_uinput)
-        libevdev_uinput_write_event(m_uinput, EV_KEY, static_cast<unsigned int>(code), pressed ? 1 : 0);
+    write(EV_KEY, code, pressed ? 1 : 0);
 }
 
 void VirtualInput::writeRel(int code, int value)
 {
-    if (m_uinput)
-        libevdev_uinput_write_event(m_uinput, EV_REL, static_cast<unsigned int>(code), value);
+    write(EV_REL, code, value);
 }
 
 void VirtualInput::sync()
 {
-    if (m_uinput)
-        libevdev_uinput_write_event(m_uinput, EV_SYN, SYN_REPORT, 0);
+    write(EV_SYN, SYN_REPORT, 0);
+}
+
+void VirtualInput::write(unsigned int type, int code, int value)
+{
+    if (!m_uinput)
+        return;
+    const int rc = libevdev_uinput_write_event(m_uinput, type, static_cast<unsigned int>(code), value);
+    // Logged once per kind of error, so a broken device cannot flood the journal.
+    if (rc < 0 && rc != m_lastError) {
+        qCWarning(lcOutput).noquote() << QStringLiteral("writing to the virtual input device failed: %1")
+                                             .arg(QString::fromLocal8Bit(std::strerror(-rc)));
+    }
+    m_lastError = rc < 0 ? rc : 0;
 }

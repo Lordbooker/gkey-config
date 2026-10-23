@@ -204,9 +204,8 @@ QList<Device *> Daemon::devicesOf(const QString &modelId) const
 
 Daemon::ModelContext *Daemon::context(const QString &modelId)
 {
-    auto it = m_contexts.find(modelId);
-    if (it != m_contexts.end())
-        return &it.value();
+    if (const auto it = m_contexts.find(modelId); it != m_contexts.end())
+        return &it->second;
     const DeviceModel *model = m_registry.findById(modelId);
     if (!model)
         return nullptr;
@@ -218,10 +217,10 @@ Daemon::ModelContext *Daemon::context(const QString &modelId)
     ctx.mode = m_state.mode(modelId);
     connect(ctx.store, &ProfileStore::changed, this, [this, modelId] { onProfilesChanged(modelId); });
 
-    it = m_contexts.insert(modelId, ctx);
-    logStoreMessages(it.value());
-    selectProfile(it.value(), m_state.profile(modelId));
-    return &it.value();
+    ModelContext &inserted = m_contexts.emplace(modelId, std::move(ctx)).first->second;
+    logStoreMessages(inserted);
+    selectProfile(inserted, m_state.profile(modelId));
+    return &inserted;
 }
 
 void Daemon::selectProfile(ModelContext &ctx, const QString &requested)
@@ -355,9 +354,9 @@ void Daemon::reload()
 {
     if (m_macros)
         m_macros->reload();
-    for (auto it = m_contexts.begin(); it != m_contexts.end(); ++it) {
-        it->store->reload();
-        onProfilesChanged(it.key());
+    for (auto &[modelId, ctx] : m_contexts) {
+        ctx.store->reload();
+        onProfilesChanged(modelId);
     }
 }
 
@@ -406,12 +405,12 @@ void Daemon::updateLcdStatus(Device *device)
 {
     if (!device->lcd())
         return;
-    const auto it = m_contexts.constFind(device->model().id());
+    const auto it = m_contexts.find(device->model().id());
     LcdPages::Status status;
     status.deviceName = device->model().name();
-    if (it != m_contexts.constEnd()) {
-        status.profile = it->profile.name();
-        status.mode = it->mode;
+    if (it != m_contexts.end()) {
+        status.profile = it->second.profile.name();
+        status.mode = it->second.mode;
     }
     status.recording = m_recording;
     device->lcd()->setStatus(status);
@@ -478,11 +477,12 @@ QByteArray Daemon::statusJson()
         QJsonObject object;
         object.insert(QStringLiteral("name"), model.name());
         object.insert(QStringLiteral("tested"), model.tested());
-        if (const auto it = m_contexts.constFind(model.id()); it != m_contexts.constEnd()) {
-            object.insert(QStringLiteral("profile"), it->profile.name());
-            object.insert(QStringLiteral("mode"), it->mode);
-            object.insert(QStringLiteral("profiles"), QJsonArray::fromStringList(it->store->names()));
-            object.insert(QStringLiteral("profileDir"), it->store->directory());
+        if (const auto it = m_contexts.find(model.id()); it != m_contexts.end()) {
+            const ModelContext &ctx = it->second;
+            object.insert(QStringLiteral("profile"), ctx.profile.name());
+            object.insert(QStringLiteral("mode"), ctx.mode);
+            object.insert(QStringLiteral("profiles"), QJsonArray::fromStringList(ctx.store->names()));
+            object.insert(QStringLiteral("profileDir"), ctx.store->directory());
         }
         models.insert(model.id(), object);
     }

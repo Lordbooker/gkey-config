@@ -16,6 +16,7 @@
 #include <QSet>
 #include <QString>
 
+#include <map>
 #include <memory>
 #include <optional>
 
@@ -93,7 +94,9 @@ private:
     DeviceMonitor *m_monitor = nullptr;
     MacroStore *m_macros = nullptr;
     Settings *m_settings = nullptr;
-    QHash<QString, ModelContext> m_contexts;   // model id -> context
+    // model id -> context; std::map keeps the address of a context stable when
+    // others are added (context() hands out pointers).
+    std::map<QString, ModelContext> m_contexts;
     QHash<QString, Device *> m_devices;        // HID syspath -> device
     QList<MacroRun *> m_freeRuns;              // macros started via D-Bus
     QSet<QString> m_ignoredRoles;              // logged once: "<model>/<role>"
