@@ -6,6 +6,8 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-23
+
 ### Added
 
 - Logitech G510 (untested, no test hardware): 18 G keys, M1–M3 and MR, LCD keys, RGB backlight,
@@ -19,6 +21,8 @@ All notable changes to gkey-config are documented in this file. The format follo
 - Logitech G15 v2 (untested, no test hardware): 6 G keys, M1–M3 and MR, LCD keys, M LEDs, the
   LCD pages and the backlight brightness of keys and LCD per profile.
 - `gkey-config --screenshot … --show-model <id>` (documentation).
+- Documentation moved to the [wiki](https://github.com/Lordbooker/gkey-config/wiki), with one page
+  per device; the README is a short overview.
 
 ### Changed
 
@@ -81,7 +85,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/Lordbooker/gkey-config/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/Lordbooker/gkey-config/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Lordbooker/gkey-config/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Lordbooker/gkey-config/releases/tag/v1.0.0

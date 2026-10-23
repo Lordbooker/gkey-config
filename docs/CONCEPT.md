@@ -608,7 +608,7 @@ on the device).
 | 8 | Packages (Arch/AUR, Ubuntu, Fedora), autostart and LED setup in the GUI, release workflow, documentation | – |
 
 Done: 1–5 and 8 (releases 1.0.0–1.1.1). Postponed: 6. Milestone 7: model files for
-G510, G15, G11 and G15 v2 are done (untested, see 13.0–13.0c); the import from linux-g13-driver is
+G510, G15, G11 and G15 v2 are done in 1.2.0 (untested, see 13.0–13.0c); the import from linux-g13-driver is
 open.
 
 ### 13.0 G510 *(2026-10-22)*
