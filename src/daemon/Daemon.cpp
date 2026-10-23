@@ -18,6 +18,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLoggingCategory>
+#include <QThread>
 
 Q_LOGGING_CATEGORY(lcDaemon, "gkey.daemon")
 
@@ -58,7 +59,21 @@ bool Daemon::start(QString *error, const DaemonStartOptions &options)
     if (options.output) {
         m_output = std::make_unique<KeyOutput>(*options.output);
     } else {
-        if (!m_virtualInput.create(error))
+        // Right after login the daemon may start before logind has given the
+        // session user access to /dev/uinput (udev "uaccess"): wait for it a
+        // little instead of failing (and being restarted by systemd).
+        constexpr int Attempts = 20;
+        constexpr unsigned long WaitMs = 500;
+        bool created = false;
+        for (int attempt = 1; attempt <= Attempts; ++attempt) {
+            created = m_virtualInput.create(error);
+            if (created || !m_virtualInput.permissionDenied() || attempt == Attempts)
+                break;
+            if (attempt == 1)
+                qCInfo(lcDaemon) << "no access to /dev/uinput yet, waiting for the login session";
+            QThread::msleep(WaitMs);
+        }
+        if (!created)
             return false;
         m_output = std::make_unique<KeyOutput>(m_virtualInput);
     }

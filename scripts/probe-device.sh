@@ -63,6 +63,7 @@ probe_hid() {
         node="/dev/$(basename "$raw")"
         echo
         echo "-- hidraw: $node ($(access "$node"))"
+        command -v getfacl >/dev/null 2>&1 && getfacl -p "$node" 2>/dev/null | grep '^user:' | sed 's/^/acl: /'
     done
 
     for led in "$hid"/leds/*; do

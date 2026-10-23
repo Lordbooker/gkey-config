@@ -24,6 +24,8 @@ public:
 
     // Creates the device. Returns false and sets an error text on failure.
     bool create(QString *error);
+    // The last create() failed because /dev/uinput was not accessible (yet).
+    bool permissionDenied() const { return m_permissionDenied; }
 
     void writeKey(int code, bool pressed) override;
     void writeRel(int code, int value) override;
@@ -33,6 +35,7 @@ private:
     void write(unsigned int type, int code, int value);
 
     libevdev *m_device = nullptr;
-    int m_lastError = 0;   // last failed write (negative errno), 0 after a success
+    int m_lastError = 0;
+    bool m_permissionDenied = false;   // last failed write (negative errno), 0 after a success
     libevdev_uinput *m_uinput = nullptr;
 };

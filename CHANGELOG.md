@@ -8,7 +8,8 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ### Changed
 
-- `scripts/probe-g13.sh` is now `scripts/probe-device.sh` and covers all supported devices.
+- `scripts/probe-g13.sh` is now `scripts/probe-device.sh` and covers all supported devices,
+  including the access rights (ACL) of the LCD node.
 - Install directories of the udev rule, the systemd user unit and sysusers.d come from
   `pkg-config` and can be set with CMake options.
 - The daemon writes the LCD in a thread of its own: a hanging USB device can no longer stop the
@@ -17,6 +18,8 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ### Fixed
 
+- Right after login the daemon could start before the session had access to `/dev/uinput`; it
+  failed and was restarted by systemd 5 s later. It now waits up to 10 s for the access.
 - The LCD stayed off for the whole connection when its device node appeared after the keys;
   the daemon now looks for it when writing and reopens it after an error.
 - Errors when sending keys through the virtual input device are logged (once per kind of error).

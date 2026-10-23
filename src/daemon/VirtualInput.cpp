@@ -24,6 +24,9 @@ VirtualInput::~VirtualInput()
 
 bool VirtualInput::create(QString *error)
 {
+    m_permissionDenied = false;
+    if (m_device)
+        libevdev_free(m_device);   // from an earlier, failed attempt
     m_device = libevdev_new();
     libevdev_set_name(m_device, DeviceName);
     libevdev_set_id_bustype(m_device, BUS_VIRTUAL);
@@ -43,6 +46,7 @@ bool VirtualInput::create(QString *error)
     const int rc = libevdev_uinput_create_from_device(m_device, LIBEVDEV_UINPUT_OPEN_MANAGED, &m_uinput);
     if (rc < 0) {
         m_uinput = nullptr;
+        m_permissionDenied = rc == -EACCES || rc == -EPERM;
         if (error) {
             *error = QStringLiteral("cannot create the virtual input device (/dev/uinput): %1")
                          .arg(QString::fromLocal8Bit(std::strerror(-rc)));
