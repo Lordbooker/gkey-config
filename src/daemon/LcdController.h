@@ -6,14 +6,18 @@
 #include "DeviceModel.h"
 #include "LcdFrame.h"
 #include "LcdPages.h"
+#include "LcdWriter.h"
 #include "SystemStats.h"
 
 #include <QObject>
 #include <QStringList>
 
+#include <memory>
+
 class QTimer;
 
-// The LCD of one device (G13: written through its hidraw node). Shows one of
+// The LCD of one device (written through its hidraw node by an LcdWriter in a
+// thread of its own). Shows one of
 // the enabled pages (status, system, clock, text); text sent over D-Bus is
 // shown on the text page, optionally only for some seconds. Clock and system
 // page are redrawn every second while they are shown.
@@ -23,7 +27,8 @@ public:
     LcdController(const DeviceModel &model, const QString &hidSyspath, QObject *parent = nullptr);
     ~LcdController() override;
 
-    // False if the model has no supported LCD.
+    // False if the model has no supported LCD (whether the hidraw node can be
+    // written is only known when the writer tries).
     bool available() const { return m_available; }
 
     void setPages(const QStringList &pages);
@@ -46,9 +51,7 @@ private:
 
     DeviceModel m_model;
     bool m_available = false;
-    QString m_hidrawNode;
-    int m_fd = -1;
-    bool m_errorLogged = false;
+    std::unique_ptr<LcdWriter> m_writer;   // only for a supported LCD
     LcdFrame m_frame;
     QStringList m_pages;
     QString m_page;

@@ -28,7 +28,7 @@ SessionSetup::SessionSetup(QObject *parent) : QObject(parent)
 {
 }
 
-void SessionSetup::runSystemctl(const QStringList &arguments, std::function<void(int, const QString &)> done)
+void SessionSetup::runSystemctl(const QStringList &arguments, const std::function<void(int, const QString &)> &done)
 {
     auto *process = new QProcess(this);
     connect(process, &QProcess::finished, this, [process, done](int exitCode, QProcess::ExitStatus status) {
@@ -44,6 +44,11 @@ void SessionSetup::runSystemctl(const QStringList &arguments, std::function<void
         done(-1, process->errorString());
     });
     process->start(QStringLiteral("systemctl"), QStringList{QStringLiteral("--user")} + arguments);
+}
+
+void SessionSetup::runDaemonCommand(const QString &verb, const std::function<void(int, const QString &)> &done)
+{
+    runSystemctl({verb, Unit}, done);
 }
 
 void SessionSetup::refreshDaemonAutostart()

@@ -15,14 +15,18 @@ add_library(gkeyd-lib STATIC
     InputDevice.h
     LcdController.cpp
     LcdController.h
+    LcdWriter.cpp
+    LcdWriter.h
     LedController.cpp
     LedController.h
     VirtualInput.cpp
     VirtualInput.h
 )
 target_include_directories(gkeyd-lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+find_package(Threads REQUIRED)
 target_link_libraries(gkeyd-lib PUBLIC
     gkey-core
+    Threads::Threads
     Qt6::Core
     Qt6::DBus
     PkgConfig::LIBEVDEV

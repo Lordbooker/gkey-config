@@ -2,6 +2,53 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="fr_FR">
 <context>
+    <name>BacklightPage</name>
+    <message>
+        <source>This profile sets the backlight colour</source>
+        <translation>Ce profil définit la couleur du rétroéclairage</translation>
+    </message>
+    <message>
+        <source>Choose colour...</source>
+        <translation>Choisir la couleur…</translation>
+    </message>
+    <message>
+        <source>Colour:</source>
+        <translation>Couleur&#xa0;:</translation>
+    </message>
+    <message>
+        <source>This profile sets the backlight brightness</source>
+        <translation>Ce profil définit la luminosité du rétroéclairage</translation>
+    </message>
+    <message>
+        <source>Keys:</source>
+        <translation>Touches&#xa0;:</translation>
+    </message>
+    <message>
+        <source>LCD:</source>
+        <translation>LCD :</translation>
+    </message>
+    <message>
+        <source>Allow LED control...</source>
+        <translation>Autoriser le contrôle des LED…</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Éteint</translation>
+    </message>
+    <message>
+        <source>Dim</source>
+        <translation>Faible</translation>
+    </message>
+    <message>
+        <source>Bright</source>
+        <translation>Forte</translation>
+    </message>
+    <message>
+        <source>Backlight colour</source>
+        <translation>Couleur du rétroéclairage</translation>
+    </message>
+</context>
+<context>
     <name>BindingEditor</name>
     <message>
         <source>Click a key in the picture or press it on the device.</source>
@@ -450,18 +497,6 @@
         <translation>Touche</translation>
     </message>
     <message>
-        <source>This profile sets the backlight colour</source>
-        <translation>Ce profil définit la couleur du rétroéclairage</translation>
-    </message>
-    <message>
-        <source>Choose colour...</source>
-        <translation>Choisir la couleur…</translation>
-    </message>
-    <message>
-        <source>Colour:</source>
-        <translation>Couleur&#xa0;:</translation>
-    </message>
-    <message>
         <source>Backlight</source>
         <translation>Rétroéclairage</translation>
     </message>
@@ -576,10 +611,6 @@
     <message>
         <source>The rest position could not be measured (device connected?)</source>
         <translation>La position de repos n’a pas pu être mesurée (appareil connecté&#xa0;?)</translation>
-    </message>
-    <message>
-        <source>Backlight colour</source>
-        <translation>Couleur du rétroéclairage</translation>
     </message>
     <message>
         <source>The daemon gkeyd is not running: changes are saved but not active.</source>
@@ -730,30 +761,6 @@
 %1</source>
         <translation>Le dossier n’a pas pu être ouvert. Il se trouve ici&#xa0;:
 %1</translation>
-    </message>
-    <message>
-        <source>This profile sets the backlight brightness</source>
-        <translation>Ce profil définit la luminosité du rétroéclairage</translation>
-    </message>
-    <message>
-        <source>Keys:</source>
-        <translation>Touches :</translation>
-    </message>
-    <message>
-        <source>LCD:</source>
-        <translation>LCD :</translation>
-    </message>
-    <message>
-        <source>Off</source>
-        <translation>Éteint</translation>
-    </message>
-    <message>
-        <source>Dim</source>
-        <translation>Faible</translation>
-    </message>
-    <message>
-        <source>Bright</source>
-        <translation>Forte</translation>
     </message>
 </context>
 <context>

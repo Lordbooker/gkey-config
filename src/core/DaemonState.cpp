@@ -3,6 +3,8 @@
 
 #include "DaemonState.h"
 
+#include "Profile.h"
+
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -25,7 +27,7 @@ void DaemonState::load()
         Entry entry;
         entry.profile = object.value(u"profile").toString();
         entry.mode = object.value(u"mode").toInt(1);
-        if (entry.mode < 1 || entry.mode > 3)
+        if (entry.mode < 1 || entry.mode > Profile::ModeCount)
             entry.mode = 1;
         const QJsonArray center = object.value(u"stickCenter").toArray();
         if (center.size() == 2)

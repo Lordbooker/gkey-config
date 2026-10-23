@@ -60,6 +60,11 @@ daemon autostart and LED access. Details in the
 gkey-config replaces [linux-g13-driver](https://github.com/Lordbooker/linux-g13-driver); both
 cannot run at the same time.
 
+**Note:** for its key output the daemon needs `/dev/uinput`, which the udev rule opens to the
+logged-in user. Every program of that user can then create virtual keyboards and type into any
+window – the same access that Steam's controller support requires. Details in the
+[wiki](https://github.com/Lordbooker/gkey-config/wiki/Installation#what-gets-installed).
+
 ## License
 
 GNU General Public License, version 2 only (GPL-2.0-only) – see [LICENSE](LICENSE).

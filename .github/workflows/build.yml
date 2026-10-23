@@ -9,10 +9,15 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: ${{ matrix.distro }}
     runs-on: ubuntu-latest
+    # A normal build takes a few minutes; a hanging mirror must not block for 6 hours.
+    timeout-minutes: 30
     container: ${{ matrix.image }}
     strategy:
       fail-fast: false
@@ -41,7 +46,7 @@ jobs:
       - name: Install dependencies
         run: ${{ matrix.install }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DCMAKE_INSTALL_PREFIX=/usr
@@ -71,3 +76,12 @@ jobs:
 
       - name: Install into staging directory
         run: DESTDIR="$PWD/stage" cmake --install build
+
+  reuse:
+    name: REUSE compliance
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check copyright and license information
+        run: pipx run reuse lint

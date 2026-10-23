@@ -33,8 +33,11 @@ class DeviceModel;
 //     "stick": { ... }
 //   }
 //
-// Unknown top-level members (e.g. written by a newer version) are kept and
-// written back unchanged.
+// Nothing the daemon cannot use is lost when the profile is written again:
+// unknown top-level members, unknown modes and bindings that are invalid or not
+// bindable on the model (e.g. written by a newer version) are kept unchanged.
+// Such bindings are inactive; setting or removing a binding of that key
+// replaces them.
 class Profile {
 public:
     static constexpr int ModeCount = 3;
@@ -49,12 +52,12 @@ public:
     using Bindings = QMap<QString, Action>;   // key ID -> action
 
     // Parses a profile file. Invalid bindings do not fail the whole profile:
-    // they are skipped and reported in warnings().
+    // they are kept inactive and reported in warnings().
     static std::expected<Profile, QString> fromJson(const QByteArray &json);
     QByteArray toJson() const;
 
-    // Removes bindings for key IDs that the model cannot bind and reports them
-    // in warnings().
+    // Makes bindings of key IDs that the model cannot bind inactive and reports
+    // them in warnings().
     void validateFor(const DeviceModel &model);
 
     const QString &name() const { return m_name; }
@@ -81,13 +84,15 @@ public:
     const QStringList &warnings() const { return m_warnings; }
 
 private:
-    static int modeIndex(int mode);
+    static std::size_t modeIndex(int mode);
 
     QString m_name;
     std::optional<Rgb> m_backlight;
     std::optional<int> m_backlightLevel;
     std::optional<int> m_lcdBacklightLevel;
     std::array<Bindings, ModeCount> m_modes;
+    std::array<QJsonObject, ModeCount> m_inactive;   // key ID -> binding as read, per mode
+    QJsonObject m_unknownModes;                      // e.g. "M4" from a newer version
     QJsonObject m_stick;
     QJsonObject m_unknown;
     QStringList m_warnings;

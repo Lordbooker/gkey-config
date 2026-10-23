@@ -17,12 +17,20 @@
 #include <QTimer>
 #include <QTranslator>
 
+#include <unistd.h>
+
 namespace {
 
 // Single instance: a second start asks the running instance to show its window.
+// The socket lives in the user's runtime directory ($XDG_RUNTIME_DIR, only
+// accessible by the user), not in the shared /tmp where another user could
+// take the name first.
 QString instanceSocketName()
 {
-    return QStringLiteral("gkey-config-") + qEnvironmentVariable("USER");
+    const QString runtimeDir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
+    if (!runtimeDir.isEmpty())
+        return runtimeDir + QStringLiteral("/gkey-config.socket");
+    return QStringLiteral("gkey-config-%1").arg(::getuid());   // fallback, restricted below
 }
 
 bool notifyRunningInstance()
@@ -144,7 +152,9 @@ int main(int argc, char *argv[])
         return 0;
     QLocalServer::removeServer(instanceSocketName());
     QLocalServer server;
-    server.listen(instanceSocketName());
+    server.setSocketOptions(QLocalServer::UserAccessOption);
+    if (!server.listen(instanceSocketName()))
+        qWarning("single instance disabled: %s", qPrintable(server.errorString()));
 
     QApplication::setQuitOnLastWindowClosed(false);
     MainWindow window;

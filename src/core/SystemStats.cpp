@@ -31,7 +31,7 @@ std::optional<double> readMilliCelsius(const QString &path)
     if (path.isEmpty())
         return std::nullopt;
     const auto value = readNumber(path);
-    return value ? std::optional<double>(*value / 1000.0) : std::nullopt;
+    return value ? std::optional<double>(static_cast<double>(*value) / 1000.0) : std::nullopt;
 }
 
 // temp*_input of a hwmon directory whose label is one of the preferred ones,

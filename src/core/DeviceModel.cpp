@@ -121,7 +121,7 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
     const QJsonArray usb = root.value(u"usb").toArray();
     if (usb.isEmpty())
         return error(QStringLiteral("\"usb\" must list at least one vendor/product pair"));
-    for (const QJsonValue &entry : usb) {
+    for (const auto &entry : usb) {
         const auto vendor = parseHex16(entry.toObject().value(u"vendor"));
         const auto product = parseHex16(entry.toObject().value(u"product"));
         if (!vendor || !product)
@@ -146,7 +146,7 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
         return error(QStringLiteral("\"keys\" is empty"));
     QSet<QString> keyIds;
     QSet<QString> inputCodes;   // "<input>/<code>" to detect duplicate mappings
-    for (const QJsonValue &entry : keys) {
+    for (const auto &entry : keys) {
         const QJsonObject object = entry.toObject();
         Key key;
         key.id = object.value(u"id").toString();
@@ -264,7 +264,7 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
             return shape.width > 0 && shape.height > 0;
         };
 
-        for (const QJsonValue &entry : view.value(u"decorations").toArray()) {
+        for (const auto &entry : view.value(u"decorations").toArray()) {
             Decoration decoration;
             decoration.role = entry.toObject().value(u"role").toString();
             if (!parseShape(entry.toObject(), decoration))
@@ -275,7 +275,7 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
         const QList<QString> bindableIds = model.bindableKeyIds();
         const QSet<QString> bindable(bindableIds.begin(), bindableIds.end());
         QSet<QString> drawn;
-        for (const QJsonValue &entry : view.value(u"keys").toArray()) {
+        for (const auto &entry : view.value(u"keys").toArray()) {
             const QJsonObject object = entry.toObject();
             Area area;
             area.key = object.value(u"key").toString();

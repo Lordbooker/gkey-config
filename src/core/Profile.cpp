@@ -71,6 +71,7 @@ std::expected<Profile, QString> Profile::fromJson(const QByteArray &json)
         }
         if (mode == 0) {
             profile.m_warnings.append(QStringLiteral("unknown mode \"%1\"; ignored").arg(it.key()));
+            profile.m_unknownModes.insert(it.key(), it.value());
             continue;
         }
         const QJsonObject bindings = it.value().toObject();
@@ -79,6 +80,7 @@ std::expected<Profile, QString> Profile::fromJson(const QByteArray &json)
             if (!action) {
                 profile.m_warnings.append(QStringLiteral("%1/%2: %3; binding ignored")
                                               .arg(it.key(), binding.key(), action.error()));
+                profile.m_inactive[modeIndex(mode)].insert(binding.key(), binding.value());
                 continue;
             }
             profile.m_modes[modeIndex(mode)].insert(binding.key(), *action);
@@ -102,9 +104,9 @@ QByteArray Profile::toJson() const
     if (m_lcdBacklightLevel)
         root.insert(QStringLiteral("lcdBacklightLevel"), *m_lcdBacklightLevel);
 
-    QJsonObject modes;
+    QJsonObject modes = m_unknownModes;
     for (int mode = 1; mode <= ModeCount; ++mode) {
-        QJsonObject bindings;
+        QJsonObject bindings = m_inactive[modeIndex(mode)];
         const Bindings &map = m_modes[modeIndex(mode)];
         for (auto it = map.begin(); it != map.end(); ++it)
             bindings.insert(it.key(), it.value().toJson());
@@ -130,6 +132,7 @@ void Profile::validateFor(const DeviceModel &model)
             }
             m_warnings.append(QStringLiteral("%1/%2: key cannot be bound on the %3; binding ignored")
                                   .arg(modeName(mode), it.key(), model.name()));
+            m_inactive[modeIndex(mode)].insert(it.key(), it.value().toJson());
             it = map.erase(it);
         }
     }
@@ -142,15 +145,17 @@ const Profile::Bindings &Profile::bindings(int mode) const
 
 void Profile::setBinding(int mode, const QString &keyId, const Action &action)
 {
+    m_inactive[modeIndex(mode)].remove(keyId);
     m_modes[modeIndex(mode)].insert(keyId, action);
 }
 
 void Profile::removeBinding(int mode, const QString &keyId)
 {
+    m_inactive[modeIndex(mode)].remove(keyId);
     m_modes[modeIndex(mode)].remove(keyId);
 }
 
-int Profile::modeIndex(int mode)
+std::size_t Profile::modeIndex(int mode)
 {
-    return std::clamp(mode, 1, ModeCount) - 1;
+    return static_cast<std::size_t>(std::clamp(mode, 1, ModeCount) - 1);
 }

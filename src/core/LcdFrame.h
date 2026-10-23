@@ -46,6 +46,11 @@ public:
     bool operator==(const LcdFrame &other) const = default;
 
 private:
+    // Index of a pixel that is inside the frame.
+    size_t index(int x, int y) const
+    {
+        return static_cast<size_t>(y) * static_cast<size_t>(m_width) + static_cast<size_t>(x);
+    }
     int m_width;
     int m_height;
     std::vector<unsigned char> m_pixels;   // one byte per pixel, row-major

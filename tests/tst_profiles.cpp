@@ -26,6 +26,7 @@ private slots:
     void profileParsing();
     void profileRoundTrip();
     void profileValidation();
+    void invalidBindingsAreKept();
     void storeLoadSaveAndReload();
     void storeDuplicateNames();
     void storeRenameAndRemove();
@@ -181,6 +182,41 @@ void TestProfiles::profileRoundTrip()
     QCOMPARE(again->backlightLevel(), std::optional<int>(1));
     QCOMPARE(again->lcdBacklightLevel(), std::optional<int>(0));
     QCOMPARE(QJsonDocument::fromJson(again->toJson()).object().value(u"futureOption").toObject().value(u"a").toInt(), 1);
+}
+
+// Bindings the daemon cannot use (unknown key name, key not bindable on the
+// model, unknown mode) must survive a load/save cycle, e.g. from the GUI.
+void TestProfiles::invalidBindingsAreKept()
+{
+    auto profile = Profile::fromJson(R"({
+        "name": "Keep",
+        "modes": {
+            "M1": { "G1": { "type": "key", "key": "KEY_FROM_THE_FUTURE" },
+                    "G2": { "type": "key", "key": "KEY_2" },
+                    "BD": { "type": "key", "key": "KEY_3" } },
+            "M4": { "G1": { "type": "key", "key": "KEY_4" } }
+        }
+    })");
+    QVERIFY(profile);
+    profile->validateFor(*g13());   // BD is not bindable on the G13
+    QCOMPARE(profile->bindings(1).size(), 1);
+    QCOMPARE(profile->warnings().size(), 3);   // G1, M4, BD
+
+    const QJsonObject saved = QJsonDocument::fromJson(profile->toJson()).object();
+    const QJsonObject m1 = saved.value(u"modes").toObject().value(u"M1").toObject();
+    QCOMPARE(m1.value(u"G1").toObject().value(u"key").toString(), QStringLiteral("KEY_FROM_THE_FUTURE"));
+    QCOMPARE(m1.value(u"G2").toObject().value(u"key").toString(), QStringLiteral("KEY_2"));
+    QCOMPARE(m1.value(u"BD").toObject().value(u"key").toString(), QStringLiteral("KEY_3"));
+    QVERIFY(saved.value(u"modes").toObject().contains(u"M4"));
+
+    // An explicit change of the key replaces the inactive binding.
+    profile->setBinding(1, QStringLiteral("G1"), Action::key(KEY_5));
+    const QJsonObject changed = QJsonDocument::fromJson(profile->toJson()).object();
+    QCOMPARE(changed.value(u"modes").toObject().value(u"M1").toObject().value(u"G1").toObject().value(u"key").toString(),
+             QStringLiteral("KEY_5"));
+    profile->removeBinding(1, QStringLiteral("BD"));
+    QVERIFY(!QJsonDocument::fromJson(profile->toJson()).object().value(u"modes").toObject()
+                 .value(u"M1").toObject().contains(u"BD"));
 }
 
 void TestProfiles::profileValidation()

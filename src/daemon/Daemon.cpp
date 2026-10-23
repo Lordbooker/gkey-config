@@ -18,6 +18,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLoggingCategory>
+#include <QThread>
 
 Q_LOGGING_CATEGORY(lcDaemon, "gkey.daemon")
 
@@ -44,7 +45,7 @@ Daemon::~Daemon()
     m_devices.clear();
 }
 
-bool Daemon::start(QString *error)
+bool Daemon::start(QString *error, const DaemonStartOptions &options)
 {
     m_registry.load();
     for (const QString &message : m_registry.errors())
@@ -55,9 +56,27 @@ bool Daemon::start(QString *error)
         return false;
     }
 
-    if (!m_virtualInput.create(error))
-        return false;
-    m_output = std::make_unique<KeyOutput>(m_virtualInput);
+    if (options.output) {
+        m_output = std::make_unique<KeyOutput>(*options.output);
+    } else {
+        // Right after login the daemon may start before logind has given the
+        // session user access to /dev/uinput (udev "uaccess"): wait for it a
+        // little instead of failing (and being restarted by systemd).
+        constexpr int Attempts = 20;
+        constexpr unsigned long WaitMs = 500;
+        bool created = false;
+        for (int attempt = 1; attempt <= Attempts; ++attempt) {
+            created = m_virtualInput.create(error);
+            if (created || !m_virtualInput.permissionDenied() || attempt == Attempts)
+                break;
+            if (attempt == 1)
+                qCInfo(lcDaemon) << "no access to /dev/uinput yet, waiting for the login session";
+            QThread::msleep(WaitMs);
+        }
+        if (!created)
+            return false;
+        m_output = std::make_unique<KeyOutput>(m_virtualInput);
+    }
     m_state.load();
 
     m_macros = new MacroStore(ConfigPaths::macroDir(), this);
@@ -78,11 +97,13 @@ bool Daemon::start(QString *error)
         }
     });
 
-    m_monitor = new DeviceMonitor(this);
-    connect(m_monitor, &DeviceMonitor::inputAdded, this, &Daemon::onInputAdded);
-    connect(m_monitor, &DeviceMonitor::inputRemoved, this, &Daemon::onInputRemoved);
-    if (!m_monitor->start(error))
-        return false;
+    if (options.monitorDevices) {
+        m_monitor = new DeviceMonitor(this);
+        connect(m_monitor, &DeviceMonitor::inputAdded, this, &Daemon::onInputAdded);
+        connect(m_monitor, &DeviceMonitor::inputRemoved, this, &Daemon::onInputRemoved);
+        if (!m_monitor->start(error))
+            return false;
+    }
 
     qCInfo(lcDaemon) << "running," << m_registry.models().size() << "model(s) known,"
                      << m_macros->names().size() << "macro(s)";
@@ -146,7 +167,7 @@ Device *Daemon::createDevice(const DeviceModel &model, const QString &hidSyspath
 {
     ModelContext *ctx = context(model.id());
     auto *device = new Device(model, hidSyspath, *m_output, this);
-    const QString modelId = model.id();
+    const QString &modelId = model.id();
     BindingEngine *engine = device->engine();
     engine->setMacroStore(m_macros);
     engine->setProfile(ctx->profile);
@@ -204,9 +225,8 @@ QList<Device *> Daemon::devicesOf(const QString &modelId) const
 
 Daemon::ModelContext *Daemon::context(const QString &modelId)
 {
-    auto it = m_contexts.find(modelId);
-    if (it != m_contexts.end())
-        return &it.value();
+    if (const auto it = m_contexts.find(modelId); it != m_contexts.end())
+        return &it->second;
     const DeviceModel *model = m_registry.findById(modelId);
     if (!model)
         return nullptr;
@@ -218,10 +238,10 @@ Daemon::ModelContext *Daemon::context(const QString &modelId)
     ctx.mode = m_state.mode(modelId);
     connect(ctx.store, &ProfileStore::changed, this, [this, modelId] { onProfilesChanged(modelId); });
 
-    it = m_contexts.insert(modelId, ctx);
-    logStoreMessages(it.value());
-    selectProfile(it.value(), m_state.profile(modelId));
-    return &it.value();
+    ModelContext &inserted = m_contexts.emplace(modelId, std::move(ctx)).first->second;
+    logStoreMessages(inserted);
+    selectProfile(inserted, m_state.profile(modelId));
+    return &inserted;
 }
 
 void Daemon::selectProfile(ModelContext &ctx, const QString &requested)
@@ -355,9 +375,9 @@ void Daemon::reload()
 {
     if (m_macros)
         m_macros->reload();
-    for (auto it = m_contexts.begin(); it != m_contexts.end(); ++it) {
-        it->store->reload();
-        onProfilesChanged(it.key());
+    for (auto &[modelId, ctx] : m_contexts) {
+        ctx.store->reload();
+        onProfilesChanged(modelId);
     }
 }
 
@@ -406,12 +426,12 @@ void Daemon::updateLcdStatus(Device *device)
 {
     if (!device->lcd())
         return;
-    const auto it = m_contexts.constFind(device->model().id());
+    const auto it = m_contexts.find(device->model().id());
     LcdPages::Status status;
     status.deviceName = device->model().name();
-    if (it != m_contexts.constEnd()) {
-        status.profile = it->profile.name();
-        status.mode = it->mode;
+    if (it != m_contexts.end()) {
+        status.profile = it->second.profile.name();
+        status.mode = it->second.mode;
     }
     status.recording = m_recording;
     device->lcd()->setStatus(status);
@@ -478,11 +498,12 @@ QByteArray Daemon::statusJson()
         QJsonObject object;
         object.insert(QStringLiteral("name"), model.name());
         object.insert(QStringLiteral("tested"), model.tested());
-        if (const auto it = m_contexts.constFind(model.id()); it != m_contexts.constEnd()) {
-            object.insert(QStringLiteral("profile"), it->profile.name());
-            object.insert(QStringLiteral("mode"), it->mode);
-            object.insert(QStringLiteral("profiles"), QJsonArray::fromStringList(it->store->names()));
-            object.insert(QStringLiteral("profileDir"), it->store->directory());
+        if (const auto it = m_contexts.find(model.id()); it != m_contexts.end()) {
+            const ModelContext &ctx = it->second;
+            object.insert(QStringLiteral("profile"), ctx.profile.name());
+            object.insert(QStringLiteral("mode"), ctx.mode);
+            object.insert(QStringLiteral("profiles"), QJsonArray::fromStringList(ctx.store->names()));
+            object.insert(QStringLiteral("profileDir"), ctx.store->directory());
         }
         models.insert(model.id(), object);
     }

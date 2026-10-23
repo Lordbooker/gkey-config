@@ -35,6 +35,7 @@ add_library(gkey-core STATIC
     Macro.h
     MacroRun.cpp
     MacroRun.h
+    JsonFileStore.h
     MacroStore.cpp
     MacroStore.h
     ModelRegistry.cpp

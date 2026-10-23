@@ -7,6 +7,7 @@
 #include <pwd.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <vector>
 
 namespace GroupAccess {
@@ -29,12 +30,10 @@ State state(const QString &group)
         return State::Active;
     const int count = getgroups(0, nullptr);
     if (count > 0) {
-        std::vector<gid_t> groups(count);
+        std::vector<gid_t> groups(static_cast<size_t>(count));
         const int read = getgroups(count, groups.data());
-        for (int i = 0; i < read; ++i) {
-            if (groups[i] == gid)
-                return State::Active;
-        }
+        if (read > 0 && std::find(groups.begin(), groups.begin() + read, gid) != groups.begin() + read)
+            return State::Active;
     }
 
     // Group database: a change takes effect at the next login.
@@ -42,17 +41,14 @@ State state(const QString &group)
     if (!pw)
         return State::NotMember;
     int size = 32;
-    std::vector<gid_t> groups(size);
+    std::vector<gid_t> groups(static_cast<size_t>(size));
     if (getgrouplist(pw->pw_name, pw->pw_gid, groups.data(), &size) < 0) {
-        groups.resize(size);
+        groups.resize(static_cast<size_t>(size));
         if (getgrouplist(pw->pw_name, pw->pw_gid, groups.data(), &size) < 0)
             return State::NotMember;
     }
-    for (int i = 0; i < size; ++i) {
-        if (groups[i] == gid)
-            return State::NeedsRelogin;
-    }
-    return State::NotMember;
+    const auto end = groups.begin() + size;
+    return std::find(groups.begin(), end, gid) != end ? State::NeedsRelogin : State::NotMember;
 }
 
 }

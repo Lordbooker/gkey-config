@@ -2,7 +2,7 @@
   "id": "g11",
   "name": "Logitech G11",
   "tested": false,
-  "minKernel": "5.5",
+  "minKernel": "5.7",
   "usb": [
     { "vendor": "046d", "product": "c225" }
   ],

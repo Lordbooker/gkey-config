@@ -8,7 +8,7 @@
 #include <QHash>
 
 LcdFrame::LcdFrame(int width, int height)
-    : m_width(width), m_height(height), m_pixels(static_cast<size_t>(width * height), 0)
+    : m_width(width), m_height(height), m_pixels(static_cast<size_t>(width) * static_cast<size_t>(height), 0)
 {
 }
 
@@ -20,14 +20,14 @@ void LcdFrame::clear()
 void LcdFrame::setPixel(int x, int y, bool on)
 {
     if (x >= 0 && y >= 0 && x < m_width && y < m_height)
-        m_pixels[static_cast<size_t>(y * m_width + x)] = on ? 1 : 0;
+        m_pixels[index(x, y)] = on ? 1 : 0;
 }
 
 bool LcdFrame::pixel(int x, int y) const
 {
     if (x < 0 || y < 0 || x >= m_width || y >= m_height)
         return false;
-    return m_pixels[static_cast<size_t>(y * m_width + x)] != 0;
+    return m_pixels[index(x, y)] != 0;
 }
 
 void LcdFrame::fillRect(int x, int y, int width, int height, bool on)

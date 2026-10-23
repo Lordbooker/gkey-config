@@ -2,6 +2,53 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="de_DE">
 <context>
+    <name>BacklightPage</name>
+    <message>
+        <source>This profile sets the backlight colour</source>
+        <translation>Dieses Profil setzt die Farbe der Beleuchtung</translation>
+    </message>
+    <message>
+        <source>Choose colour...</source>
+        <translation>Farbe wählen …</translation>
+    </message>
+    <message>
+        <source>Colour:</source>
+        <translation>Farbe:</translation>
+    </message>
+    <message>
+        <source>This profile sets the backlight brightness</source>
+        <translation>Dieses Profil setzt die Helligkeit der Beleuchtung</translation>
+    </message>
+    <message>
+        <source>Keys:</source>
+        <translation>Tasten:</translation>
+    </message>
+    <message>
+        <source>LCD:</source>
+        <translation>LCD:</translation>
+    </message>
+    <message>
+        <source>Allow LED control...</source>
+        <translation>LED-Steuerung erlauben …</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Aus</translation>
+    </message>
+    <message>
+        <source>Dim</source>
+        <translation>Gedimmt</translation>
+    </message>
+    <message>
+        <source>Bright</source>
+        <translation>Hell</translation>
+    </message>
+    <message>
+        <source>Backlight colour</source>
+        <translation>Farbe der Beleuchtung</translation>
+    </message>
+</context>
+<context>
     <name>BindingEditor</name>
     <message>
         <source>Click a key in the picture or press it on the device.</source>
@@ -450,18 +497,6 @@
         <translation>Taste</translation>
     </message>
     <message>
-        <source>This profile sets the backlight colour</source>
-        <translation>Dieses Profil setzt die Farbe der Beleuchtung</translation>
-    </message>
-    <message>
-        <source>Choose colour...</source>
-        <translation>Farbe wählen …</translation>
-    </message>
-    <message>
-        <source>Colour:</source>
-        <translation>Farbe:</translation>
-    </message>
-    <message>
         <source>Backlight</source>
         <translation>Beleuchtung</translation>
     </message>
@@ -556,10 +591,6 @@
     <message>
         <source>Delete the profile &quot;%1&quot;?</source>
         <translation>Das Profil „%1“ löschen?</translation>
-    </message>
-    <message>
-        <source>Backlight colour</source>
-        <translation>Farbe der Beleuchtung</translation>
     </message>
     <message>
         <source>The daemon gkeyd is not running: changes are saved but not active.</source>
@@ -730,30 +761,6 @@
 %1</source>
         <translation>Der Ordner konnte nicht geöffnet werden. Er liegt hier:
 %1</translation>
-    </message>
-    <message>
-        <source>This profile sets the backlight brightness</source>
-        <translation>Dieses Profil setzt die Helligkeit der Beleuchtung</translation>
-    </message>
-    <message>
-        <source>Keys:</source>
-        <translation>Tasten:</translation>
-    </message>
-    <message>
-        <source>LCD:</source>
-        <translation>LCD:</translation>
-    </message>
-    <message>
-        <source>Off</source>
-        <translation>Aus</translation>
-    </message>
-    <message>
-        <source>Dim</source>
-        <translation>Gedimmt</translation>
-    </message>
-    <message>
-        <source>Bright</source>
-        <translation>Hell</translation>
     </message>
 </context>
 <context>

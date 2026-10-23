@@ -78,7 +78,7 @@ std::expected<Action, QString> Action::fromJson(const QJsonObject &json)
         const QJsonArray keys = json.value(u"keys").toArray();
         if (keys.size() < 2)
             return fail(QStringLiteral("a combo needs at least two keys"));
-        for (const QJsonValue &key : keys) {
+        for (const auto &key : keys) {
             const auto code = keyboardKey(key.toString());
             if (!code)
                 return fail(code.error());

@@ -11,6 +11,8 @@
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <memory>
+
 #include <grp.h>
 #include <unistd.h>
 
@@ -44,14 +46,13 @@ private slots:
     void groupStates();
 
 private:
-    QTemporaryDir *m_dir = nullptr;
+    std::unique_ptr<QTemporaryDir> m_dir;
     Autostart::Paths m_paths;
 };
 
 void TestSession::init()
 {
-    delete m_dir;
-    m_dir = new QTemporaryDir;
+    m_dir = std::make_unique<QTemporaryDir>();
     QVERIFY(m_dir->isValid());
     m_paths.userDir = m_dir->filePath(QStringLiteral("home/autostart"));
     m_paths.systemDirs = {m_dir->filePath(QStringLiteral("etc1/autostart")),

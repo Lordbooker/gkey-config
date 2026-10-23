@@ -16,6 +16,7 @@
 #include <QSet>
 #include <QString>
 
+#include <map>
 #include <memory>
 #include <optional>
 
@@ -24,6 +25,14 @@ class MacroRun;
 class MacroStore;
 class ProfileStore;
 class Settings;
+
+struct DaemonStartOptions {
+    // Where key events go; nullptr = the virtual uinput device. Tests pass a
+    // recording sink, so the daemon runs without /dev/uinput.
+    OutputSink *output = nullptr;
+    // false: no udev monitoring and no devices (tests).
+    bool monitorDevices = true;
+};
 
 // Ties everything together: device discovery, one profile store per model,
 // the macro library, the active profile and mode, LEDs, macro recording state
@@ -36,7 +45,7 @@ public:
     ~Daemon() override;
 
     // Returns false and sets an error text if the daemon cannot run at all.
-    bool start(QString *error);
+    bool start(QString *error, const DaemonStartOptions &options = {});
 
     // --- Used by the D-Bus service --------------------------------------
     // Status as JSON (devices, models with profiles, macros, recording).
@@ -93,7 +102,9 @@ private:
     DeviceMonitor *m_monitor = nullptr;
     MacroStore *m_macros = nullptr;
     Settings *m_settings = nullptr;
-    QHash<QString, ModelContext> m_contexts;   // model id -> context
+    // model id -> context; std::map keeps the address of a context stable when
+    // others are added (context() hands out pointers).
+    std::map<QString, ModelContext> m_contexts;
     QHash<QString, Device *> m_devices;        // HID syspath -> device
     QList<MacroRun *> m_freeRuns;              // macros started via D-Bus
     QSet<QString> m_ignoredRoles;              // logged once: "<model>/<role>"

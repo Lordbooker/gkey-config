@@ -36,10 +36,16 @@ ctest --test-dir build --output-on-failure
 | `ENABLE_SANITIZERS` | `OFF` | ASan/UBSan, only for `CMAKE_BUILD_TYPE=Debug` |
 | `GKEY_VERSION` | `git describe` | displayed version |
 | `GKEY_PACKAGE_VERSION`, `GKEY_PACKAGE_RELEASE` | from the version, `1` | package version and release for CPack |
+| `GKEY_UDEV_RULES_DIR`, `GKEY_SYSTEMD_USER_UNIT_DIR`, `GKEY_SYSUSERS_DIR` | from `pkg-config` (udev, systemd), else `lib/...` | install directories, relative to the prefix |
 
 The code is C++23 with Qt 6: Qt types for strings and containers (standard library only at
-system interfaces), errors as return values instead of exceptions, comments in English. Each source
-file starts with SPDX headers (`GPL-2.0-only`).
+system interfaces), errors as return values instead of exceptions, comments in English. The build
+uses strict warnings (`-Wall -Wextra -Wpedantic -Wshadow -Wconversion …`); new code should not add
+any. Before a pull request, run the tests once with `-DENABLE_SANITIZERS=ON` (ASan/UBSan).
+
+Licensing follows the [REUSE specification](https://reuse.software/): each file starts with SPDX
+headers (`GPL-2.0-only`), files that cannot carry one are listed in `REUSE.toml`; `reuse lint`
+checks it (also in CI).
 
 ## Running the development version
 
@@ -62,9 +68,9 @@ file starts with SPDX headers (`GPL-2.0-only`).
 
    `gkeyd --list-models` lists the model files found.
 
-`scripts/probe-g13.sh` shows what the kernel exposes for a G13 (input devices, LEDs, hidraw); with
-`--events` it also records key events. It is the starting point for checking a model file on real
-hardware.
+`scripts/probe-device.sh` shows what the kernel exposes for the supported devices (input devices,
+LEDs, hidraw, access rights); with `--events` it also records key events. It is the starting point
+for checking a model file on real hardware.
 
 ## Screenshots
 

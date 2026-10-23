@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
+# The workflow actions are pinned to commit hashes; Dependabot proposes
+# updates (new hash and version comment) as pull requests against dev.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: monthly

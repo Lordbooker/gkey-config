@@ -4,16 +4,7 @@
 #include "LcdController.h"
 
 #include <QDateTime>
-#include <QDir>
-#include <QLoggingCategory>
 #include <QTimer>
-
-#include <cerrno>
-#include <cstring>
-#include <fcntl.h>
-#include <unistd.h>
-
-Q_LOGGING_CATEGORY(lcLcd, "gkey.lcd")
 
 LcdController::LcdController(const DeviceModel &model, const QString &hidSyspath, QObject *parent)
     : QObject(parent), m_model(model),
@@ -26,13 +17,8 @@ LcdController::LcdController(const DeviceModel &model, const QString &hidSyspath
     // hidraw node; "g13-hidraw" is the name the format got first.
     if (!model.lcd() || (model.lcd()->type != u"g13-hidraw" && model.lcd()->type != u"g15-hidraw"))
         return;
-    const QStringList nodes = QDir(hidSyspath + QStringLiteral("/hidraw")).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-    if (nodes.isEmpty()) {
-        qCWarning(lcLcd).noquote() << model.name() << ": no hidraw node found, LCD disabled";
-        return;
-    }
-    m_hidrawNode = QStringLiteral("/dev/") + nodes.first();
     m_available = true;
+    m_writer = std::make_unique<LcdWriter>(model.name(), hidSyspath);
 
     m_clockTimer = new QTimer(this);
     m_clockTimer->setTimerType(Qt::PreciseTimer);
@@ -48,10 +34,9 @@ LcdController::LcdController(const DeviceModel &model, const QString &hidSyspath
 
 LcdController::~LcdController()
 {
-    if (m_fd >= 0) {
+    if (m_writer) {
         m_frame.clear();   // do not leave stale content behind
-        write();
-        ::close(m_fd);
+        write();           // the writer writes it before its thread ends
     }
 }
 
@@ -128,27 +113,6 @@ void LcdController::refresh()
 
 void LcdController::write()
 {
-    if (!m_available)
-        return;
-    if (m_fd < 0) {
-        m_fd = ::open(m_hidrawNode.toLocal8Bit().constData(), O_WRONLY | O_CLOEXEC);
-        if (m_fd < 0) {
-            if (!m_errorLogged) {
-                m_errorLogged = true;
-                const int err = errno;
-                qCWarning(lcLcd).noquote() << QStringLiteral("%1: cannot open %2 for the LCD: %3%4")
-                                                  .arg(m_model.name(), m_hidrawNode,
-                                                       QString::fromLocal8Bit(std::strerror(err)),
-                                                       err == EACCES ? QStringLiteral(" - is the udev rule installed?")
-                                                                     : QString());
-            }
-            return;
-        }
-    }
-    const QByteArray report = m_frame.toG13Report();
-    if (::write(m_fd, report.constData(), static_cast<size_t>(report.size())) < 0 && !m_errorLogged) {
-        m_errorLogged = true;
-        qCWarning(lcLcd).noquote() << QStringLiteral("%1: LCD write failed: %2")
-                                          .arg(m_model.name(), QString::fromLocal8Bit(std::strerror(errno)));
-    }
+    if (m_writer)
+        m_writer->submit(m_frame.toG13Report());
 }

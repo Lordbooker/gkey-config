@@ -49,7 +49,7 @@ void Settings::reload()
     if (file.open(QIODevice::ReadOnly))
         root = QJsonDocument::fromJson(file.readAll()).object();
     QStringList pages;
-    for (const QJsonValue &page : root.value(u"lcd").toObject().value(u"pages").toArray())
+    for (const auto &page : root.value(u"lcd").toObject().value(u"pages").toArray())
         pages.append(page.toString());
     m_lcdPages = validPages(pages);
     m_watcher->setFiles(QFile::exists(m_filePath) ? QStringList{m_filePath} : QStringList{});

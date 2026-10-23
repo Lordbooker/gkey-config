@@ -74,7 +74,7 @@ void DaemonClient::refreshStatus()
 QStringList DaemonClient::connectedModels() const
 {
     QStringList models;
-    for (const QJsonValue &device : m_status.value(u"devices").toArray()) {
+    for (const auto &device : m_status.value(u"devices").toArray()) {
         const QString model = device.toObject().value(u"model").toString();
         if (!models.contains(model))
             models.append(model);
@@ -94,7 +94,7 @@ int DaemonClient::activeMode(const QString &modelId) const
 
 bool DaemonClient::ledPermission(const QString &modelId) const
 {
-    for (const QJsonValue &device : m_status.value(u"devices").toArray()) {
+    for (const auto &device : m_status.value(u"devices").toArray()) {
         const QJsonObject object = device.toObject();
         if (object.value(u"model").toString() == modelId && !object.value(u"ledPermission").toBool(true))
             return false;
@@ -104,7 +104,7 @@ bool DaemonClient::ledPermission(const QString &modelId) const
 
 QString DaemonClient::stickCenter(const QString &modelId) const
 {
-    for (const QJsonValue &device : m_status.value(u"devices").toArray()) {
+    for (const auto &device : m_status.value(u"devices").toArray()) {
         const QJsonObject object = device.toObject();
         const QJsonArray center = object.value(u"stickCenter").toArray();
         if (object.value(u"model").toString() == modelId && center.size() == 2)
