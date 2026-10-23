@@ -73,7 +73,7 @@ const QSet<QString> &knownLedRoles()
 {
     static const QSet<QString> roles = {
         QStringLiteral("backlight"), QStringLiteral("mode1"), QStringLiteral("mode2"),
-        QStringLiteral("mode3"), QStringLiteral("record"),
+        QStringLiteral("mode3"), QStringLiteral("record"), QStringLiteral("lcd-backlight"),
     };
     return roles;
 }
@@ -202,6 +202,9 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
             return error(QStringLiteral("LED \"%1\": unknown type \"%2\"")
                              .arg(led.role, object.value(u"type").toString()));
         led.type = *type;
+        led.max = object.value(u"max").toInt(led.type == LedType::Rgb ? 255 : 1);
+        if (led.type == LedType::Level && led.max < 1)
+            return error(QStringLiteral("LED \"%1\": \"max\" must be at least 1").arg(led.role));
         model.m_leds.append(led);
     }
 

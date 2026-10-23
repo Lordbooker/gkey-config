@@ -37,7 +37,7 @@
       <li>G13 LCD pages: status, clock and text from scripts</li>
       <li>D-Bus API for scripts</li>
     </ul>
-    <p>Supported: Logitech G13 (Linux 6.19 or newer); Logitech G510, untested.</p>
+    <p>Supported: Logitech G13 (Linux 6.19 or newer); Logitech G15 and G510, untested.</p>
   </description>
 
   <launchable type="desktop-id">io.github.lordbooker.GKeyConfig.desktop</launchable>
@@ -73,6 +73,7 @@
     <binary>gkey-config</binary>
     <binary>gkeyd</binary>
     <modalias>usb:v046DpC21C*</modalias>
+    <modalias>usb:v046DpC222*</modalias>
     <modalias>usb:v046DpC22D*</modalias>
     <modalias>usb:v046DpC22E*</modalias>
   </provides>

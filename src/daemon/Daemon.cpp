@@ -173,7 +173,7 @@ Device *Daemon::createDevice(const DeviceModel &model, const QString &hidSyspath
     device->setStickSettings(ctx->profile.stickSettings());
 
     // The G13 forgets its LED state at power loss: always apply on connect.
-    device->leds().setBacklight(ctx->profile.backlight());
+    device->leds().applyProfile(ctx->profile);
     device->leds().setMode(ctx->mode);
     device->leds().setRecording(m_recording);
     if (device->lcd())
@@ -243,7 +243,7 @@ void Daemon::applyProfile(ModelContext &ctx)
     for (Device *device : devicesOf(ctx.model.id())) {
         device->engine()->setProfile(ctx.profile);
         device->setStickSettings(ctx.profile.stickSettings());
-        device->leds().setBacklight(ctx.profile.backlight());
+        device->leds().applyProfile(ctx.profile);
         updateLcdStatus(device);
     }
     emit profileChanged(ctx.model.id(), ctx.profile.name());
@@ -342,8 +342,12 @@ bool Daemon::setBacklight(const QString &modelId, const std::optional<Profile::R
     ModelContext *ctx = context(modelId);
     if (!ctx)
         return false;
-    for (Device *device : devicesOf(modelId))
-        device->leds().setBacklight(rgb ? rgb : ctx->profile.backlight());
+    for (Device *device : devicesOf(modelId)) {
+        if (rgb)
+            device->leds().setBacklight(rgb);
+        else
+            device->leds().applyProfile(ctx->profile);   // ResetBacklight
+    }
     return true;
 }
 

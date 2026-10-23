@@ -731,6 +731,30 @@
         <translation>Não foi possível abrir a pasta. Ela fica em:
 %1</translation>
     </message>
+    <message>
+        <source>This profile sets the backlight brightness</source>
+        <translation>Este perfil define o brilho da iluminação</translation>
+    </message>
+    <message>
+        <source>Keys:</source>
+        <translation>Teclas:</translation>
+    </message>
+    <message>
+        <source>LCD:</source>
+        <translation>LCD:</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Desligado</translation>
+    </message>
+    <message>
+        <source>Dim</source>
+        <translation>Baixo</translation>
+    </message>
+    <message>
+        <source>Bright</source>
+        <translation>Alto</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

@@ -81,6 +81,9 @@ private:
     void onStickCalibrate();
     void onBacklightToggled(bool enabled);
     void onChooseBacklight();
+    void updateLevelWidgets(const Profile *profile);
+    void onLevelToggled(bool enabled);
+    void onLevelChanged();
     void updateDaemonState();
     void runSystemctl(const QString &verb);
     void updateLedHint();
@@ -113,6 +116,11 @@ private:
     Settings *m_settings = nullptr;
     QCheckBox *m_backlightEnabled = nullptr;
     QPushButton *m_backlightButton = nullptr;
+    QWidget *m_colourWidget = nullptr;
+    QWidget *m_levelWidget = nullptr;
+    QCheckBox *m_levelEnabled = nullptr;
+    QComboBox *m_levelBox = nullptr;
+    QComboBox *m_lcdLevelBox = nullptr;
     QLabel *m_ledHint = nullptr;
     QPushButton *m_ledButton = nullptr;
     SessionSetup *m_session = nullptr;

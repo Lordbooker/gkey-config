@@ -151,6 +151,13 @@ void TestProfiles::profileParsing()
     QVERIFY(badBacklight);
     QVERIFY(!badBacklight->backlight());
     QCOMPARE(badBacklight->warnings().size(), 1);
+
+    // Brightness levels (G15 family)
+    const auto levels = Profile::fromJson(R"({"name":"x","backlightLevel":2,"lcdBacklightLevel":-1})");
+    QVERIFY(levels);
+    QCOMPARE(levels->backlightLevel(), std::optional<int>(2));
+    QVERIFY(!levels->lcdBacklightLevel());
+    QCOMPARE(levels->warnings().size(), 1);
 }
 
 void TestProfiles::profileRoundTrip()
@@ -160,6 +167,8 @@ void TestProfiles::profileRoundTrip()
         "backlight": [1, 2, 3],
         "modes": { "M2": { "L1": { "type": "combo", "keys": ["KEY_LEFTALT", "KEY_TAB"] } } },
         "stick": { "mode": "keys" },
+        "backlightLevel": 1,
+        "lcdBacklightLevel": 0,
         "futureOption": { "a": 1 }
     })");
     QVERIFY(profile);
@@ -169,6 +178,8 @@ void TestProfiles::profileRoundTrip()
     QCOMPARE(again->backlight(), profile->backlight());
     QCOMPARE(again->bindings(2), profile->bindings(2));
     QCOMPARE(again->stick(), profile->stick());
+    QCOMPARE(again->backlightLevel(), std::optional<int>(1));
+    QCOMPARE(again->lcdBacklightLevel(), std::optional<int>(0));
     QCOMPARE(QJsonDocument::fromJson(again->toJson()).object().value(u"futureOption").toObject().value(u"a").toInt(), 1);
 }
 

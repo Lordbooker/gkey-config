@@ -24,6 +24,7 @@ private slots:
     void backlight();
     void noBacklightInProfile();
     void permissionDenied();
+    void levels();
 
 private:
     QString read(const QString &led, const QString &attribute) const;
@@ -122,6 +123,31 @@ void TestLeds::permissionDenied()
     LedController leds(*m_registry.findById(QStringLiteral("g13")), m_hid);
     leds.setMode(1);
     QVERIFY(leds.permissionDenied());
+}
+
+// G15: backlight of keys and LCD as LEDs with brightness 0..2.
+void TestLeds::levels()
+{
+    const DeviceModel *g15 = m_registry.findById(QStringLiteral("g15"));
+    QVERIFY(g15);
+    m_hid = m_dir->filePath(QStringLiteral("0003:046D:C222.0007"));
+    for (const QString &name : {QStringLiteral("g15::kbd_backlight"), QStringLiteral("g15::lcd_backlight")}) {
+        createLed(name, false);
+        QFile file(m_hid + QStringLiteral("/leds/") + name + QStringLiteral("/max_brightness"));
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write("2\n");
+    }
+    LedController leds(*g15, m_hid);
+    Profile profile;
+    profile.setBacklightLevel(1);
+    profile.setLcdBacklightLevel(7);   // clamped to max_brightness
+    leds.applyProfile(profile);
+    QCOMPARE(read(QStringLiteral("g15::kbd_backlight"), QStringLiteral("brightness")), QStringLiteral("1"));
+    QCOMPARE(read(QStringLiteral("g15::lcd_backlight"), QStringLiteral("brightness")), QStringLiteral("2"));
+
+    // A colour does not touch a level LED.
+    leds.setBacklight(Profile::Rgb{1, 2, 3});
+    QCOMPARE(read(QStringLiteral("g15::kbd_backlight"), QStringLiteral("brightness")), QStringLiteral("1"));
 }
 
 QTEST_GUILESS_MAIN(TestLeds)

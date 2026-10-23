@@ -731,6 +731,30 @@
         <translation>Impossibile aprire la cartella. Si trova qui:
 %1</translation>
     </message>
+    <message>
+        <source>This profile sets the backlight brightness</source>
+        <translation>Questo profilo imposta la luminosità della retroilluminazione</translation>
+    </message>
+    <message>
+        <source>Keys:</source>
+        <translation>Tasti:</translation>
+    </message>
+    <message>
+        <source>LCD:</source>
+        <translation>LCD:</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Spento</translation>
+    </message>
+    <message>
+        <source>Dim</source>
+        <translation>Bassa</translation>
+    </message>
+    <message>
+        <source>Bright</source>
+        <translation>Alta</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>
