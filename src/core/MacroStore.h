@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include "JsonFileStore.h"
 #include "Macro.h"
 
-#include <QMap>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -22,27 +22,24 @@ public:
     void reload();
 
     // Macro names, sorted case-insensitively.
-    QStringList names() const;
+    QStringList names() const { return m_store.names(); }
 
     // Macro with the given name; nullptr if unknown.
-    const Macro *macro(const QString &name) const;
+    const Macro *macro(const QString &name) const { return m_store.item(name); }
 
     // Writes the macro atomically. A macro with the same name keeps its file.
-    bool save(const Macro &macro, QString *error = nullptr);
+    bool save(const Macro &macro, QString *error = nullptr) { return m_store.save(macro, error); }
 
     // Deletes the macro's file.
-    bool remove(const QString &name, QString *error = nullptr);
+    bool remove(const QString &name, QString *error = nullptr) { return m_store.remove(name, error); }
 
-    const QStringList &messages() const { return m_messages; }
-    const QString &directory() const { return m_directory; }
+    const QStringList &messages() const { return m_store.messages(); }
+    const QString &directory() const { return m_store.directory(); }
 
 signals:
     void changed();
 
 private:
-    QString m_directory;
-    QMap<QString, Macro> m_macros;    // name -> macro
-    QMap<QString, QString> m_files;   // name -> file path
-    QStringList m_messages;
+    JsonFileStore<Macro> m_store;
     DirectoryWatcher *m_watcher = nullptr;
 };

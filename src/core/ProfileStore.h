@@ -4,10 +4,9 @@
 #pragma once
 
 #include "DeviceModel.h"
+#include "JsonFileStore.h"
 #include "Profile.h"
 
-#include <QList>
-#include <QMap>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -27,38 +26,38 @@ public:
     void reload();
 
     // Profile names, sorted case-insensitively.
-    QStringList names() const;
+    QStringList names() const { return m_store.names(); }
 
     // Profile with the given name; nullptr if unknown.
-    const Profile *profile(const QString &name) const;
+    const Profile *profile(const QString &name) const { return m_store.item(name); }
 
     // Writes the profile atomically. A profile with the same name keeps its file.
-    bool save(const Profile &profile, QString *error = nullptr);
+    bool save(const Profile &profile, QString *error = nullptr) { return m_store.save(profile, error); }
 
     // Deletes the profile's file.
-    bool remove(const QString &name, QString *error = nullptr);
+    bool remove(const QString &name, QString *error = nullptr) { return m_store.remove(name, error); }
 
     // Renames a profile; its file gets a name derived from the new name.
-    bool rename(const QString &oldName, const QString &newName, QString *error = nullptr);
+    bool rename(const QString &oldName, const QString &newName, QString *error = nullptr)
+    {
+        return m_store.rename(oldName, newName, error);
+    }
 
     // Creates an empty profile "Default" if there is no profile at all.
     void ensureDefault();
 
     // Problems found by the last reload (invalid files, ignored bindings).
-    const QStringList &messages() const { return m_messages; }
+    QStringList messages() const;
 
-    const QString &directory() const { return m_directory; }
+    const QString &directory() const { return m_store.directory(); }
 
 signals:
     // Emitted after a reload triggered by a change on disk.
     void changed();
 
 private:
-
     DeviceModel m_model;   // copy: the store must not depend on the registry's lifetime
-    QString m_directory;
-    QMap<QString, Profile> m_profiles;     // name -> profile
-    QMap<QString, QString> m_files;        // name -> file path
-    QStringList m_messages;
+    JsonFileStore<Profile> m_store;
+    QStringList m_extraMessages;   // e.g. the default profile could not be written
     DirectoryWatcher *m_watcher = nullptr;
 };
