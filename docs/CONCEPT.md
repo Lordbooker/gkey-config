@@ -23,9 +23,9 @@ real hardware with `evtest` before they are relied on.
 | G11 | 046d:c225 | treated as G15 | 18 | yes | codes registered by the kernel, no physical keys | – | `g15::kbd_backlight` (0–2) | – |
 | G13 | 046d:c21c | G13 | 22 | yes | 4 + round "next page" button | yes | `g13:rgb:kbd_backlight` (RGB) | 160×43, hidraw |
 | G15 (v1) | 046d:c222 | G15 | 18 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | 160×43, hidraw |
-| G15 v2 | 046d:c227 | G15 v2 | 6 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | later |
-| G510 | 046d:c22d | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | later |
-| G510 + USB audio | 046d:c22e | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | later |
+| G15 v2 | 046d:c227 | G15 v2 | 6 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | 160×43, hidraw |
+| G510 | 046d:c22d | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | 160×43, hidraw |
+| G510 + USB audio | 046d:c22e | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | 160×43, hidraw |
 
 The Logitech Z-10 speakers are also handled by `hid-lg-g15`, but are out of scope.
 
@@ -68,7 +68,7 @@ until someone with the device confirms them.
 ### 1.4 Version 1 includes
 
 Keys, M1–M3 modes, MR, LEDs, profiles, macros, G13 stick modes, G13 LCD, per-application profiles,
-GUI, packages. LCD support for G15/G510 is a later stage (protocol not documented yet).
+GUI, packages. LCD support for G15/G510 was added later with the model files (13.0, 13.0a; untested).
 
 ---
 
@@ -607,9 +607,9 @@ on the device).
 | 7 | G11/G15/G15 v2/G510 model files (untested) and image areas, diagnostics, import from linux-g13-driver | – (G13 only) |
 | 8 | Packages (Arch/AUR, Ubuntu, Fedora), autostart and LED setup in the GUI, release workflow, documentation | – |
 
-Done: 1–5 and 8 (releases 1.0.0–1.1.1). Postponed: 6. Milestone 7 started with the G510
-(branch `feature/g510`, see 13.0), followed by the G15 (`feature/g15`, 13.0a) and the G11 (`feature/g11`, 13.0b); G15 v2 and the
-import from linux-g13-driver are open.
+Done: 1–5 and 8 (releases 1.0.0–1.1.1). Postponed: 6. Milestone 7: model files for
+G510, G15, G11 and G15 v2 are done (untested, see 13.0–13.0c); the import from linux-g13-driver is
+open.
 
 ### 13.0 G510 *(2026-10-22)*
 
@@ -657,6 +657,16 @@ handling, so it also registers the LCD key codes and `g15::lcd_backlight`). The 
 * Backlight `g15::kbd_backlight`, brightness 0–2 (type `level`), M LEDs as on the G15.
 * udev: only the input device of the hid-lg-g15 interface; the hidraw node stays closed.
 * View: M row and 3 × 6 G keys.
+
+### 13.0c G15 v2 *(2026-10-22)*
+
+Like the G15 (13.0a), untested; from the kernel driver (`lg_g15_v2_event`, `gkeys = 6`):
+
+* USB 046d:c227; G1–G6, M1–M3, MR; BD = `KEY_KBD_LCD_MENU1` (round button), L1–L4 = MENU2–5.
+* LEDs registered exactly as on the G15: `g15::kbd_backlight` and `g15::lcd_backlight` (0–2),
+  M LEDs.
+* LCD `g15-hidraw`, 160 × 43.
+* View: schematic (LCD with its keys, M row, G1–G6 in 3 × 2); not the physical arrangement.
 
 ### 13.1 To do
 

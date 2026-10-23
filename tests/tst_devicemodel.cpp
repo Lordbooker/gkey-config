@@ -23,6 +23,7 @@ private slots:
     void g510Model();
     void g15Model();
     void g11Model();
+    void g15v2Model();
     void invalidModels_data();
     void invalidModels();
     void registryOverride();
@@ -167,6 +168,22 @@ void TestDeviceModel::g11Model()
     QVERIFY(!model->ledByRole(QStringLiteral("lcd-backlight")));
     QCOMPARE(model->ledByRole(QStringLiteral("backlight"))->type, DeviceModel::LedType::Level);
     QCOMPARE(model->keyById(QStringLiteral("MR"))->role, DeviceModel::KeyRole::Record);
+}
+
+void TestDeviceModel::g15v2Model()
+{
+    ModelRegistry registry;
+    registry.load({QStringLiteral(GKEY_SOURCE_MODEL_DIR)});
+    const DeviceModel *model = registry.findByUsb(0x046d, 0xc227);
+    QVERIFY(model);
+    QCOMPARE(model->id(), QStringLiteral("g15v2"));
+    QVERIFY(!model->tested());
+    // 6 G keys + L1-L4 (hid-lg-g15: gkeys = 6)
+    QCOMPARE(model->bindableKeyIds().size(), 10);
+    QVERIFY(!model->keyById(QStringLiteral("G7")));
+    QCOMPARE(model->keyForCode(QStringLiteral("keys"), KEY_KBD_LCD_MENU1)->id, QStringLiteral("BD"));
+    QCOMPARE(model->ledByRole(QStringLiteral("lcd-backlight"))->max, 2);
+    QCOMPARE(model->lcd()->type, QStringLiteral("g15-hidraw"));
 }
 
 void TestDeviceModel::invalidModels_data()
