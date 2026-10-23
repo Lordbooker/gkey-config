@@ -49,9 +49,13 @@ USB driver, no input-remapper or keyd.
 | Model | Status |
 |---|---|
 | Logitech G13 | supported |
-| G11, G15, G15 v2, G510 | planned (no test hardware) |
+| Logitech G510 | **untested** (no test hardware): 18 G keys, M1–M3/MR, LCD keys, RGB backlight, LCD |
+| G11, G15, G15 v2 | planned (no test hardware) |
 
-Requires **Linux 6.19 or newer**, the first kernel with G13 support in `hid-lg-g15`. Target
+Requires **Linux 6.19 or newer** for the G13 (the first kernel with G13 support in `hid-lg-g15`);
+the G510 is supported by the kernel since Linux 5.5. Feedback from G510 owners is very welcome –
+please open an [issue](https://github.com/Lordbooker/gkey-config/issues) with the output of
+`journalctl --user -u gkeyd`. Target
 desktops are KDE Plasma and GNOME on Wayland; nothing below the application depends on the display
 server.
 

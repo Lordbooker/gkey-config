@@ -601,7 +601,29 @@ on the device).
 | 7 | G11/G15/G15 v2/G510 model files (untested) and image areas, diagnostics, import from linux-g13-driver | – (G13 only) |
 | 8 | Packages (Arch/AUR, Ubuntu, Fedora), autostart and LED setup in the GUI, release workflow, documentation | – |
 
-Done: 1–5 and 8 (releases 1.0.0–1.1.1). Postponed: 6 and 7.
+Done: 1–5 and 8 (releases 1.0.0–1.1.1). Postponed: 6. Milestone 7 started with the G510
+(branch `feature/g510`, see 13.0); G11/G15/G15 v2 and the import from linux-g13-driver are open.
+
+### 13.0 G510 *(2026-10-22)*
+
+Taken from the kernel driver (`hid-lg-g15.c`) and libg15; no test hardware, so the model is marked
+untested:
+
+* USB 046d:c22d, and 046d:c22e while a headset uses the built-in audio. hid-lg-g15 drives the HID
+  interface with the gaming keys and the LCD; the normal keyboard is another interface (hid-generic)
+  and is never touched. Input device "Logitech Gaming Keyboard Gaming Keys".
+* G1–G18 = `KEY_MACRO1`–`18`, M1–M3/MR as on the G13. LCD keys: `KEY_KBD_LCD_MENU1` is the round
+  page button (BD, fixed role `lcd`; MENU5 on the G13), MENU2–5 are L1–L4 – assumed from the G15
+  comments in the driver, to be confirmed on hardware.
+* Headphone and microphone mute (`KEY_MUTE`, `KEY_F20`) arrive on the grabbed device; the role
+  `passthrough` sends them on unchanged.
+* LEDs `g15::kbd_backlight` (RGB, multicolor like the G13), `g15::macro_preset1`–`3`,
+  `g15::macro_record`; `g15::power_on_backlight_val` is not used.
+* LCD 160 × 43 with the same 992-byte frame as the G13 (libg15 uses one format for G13, G15 and
+  G510); LCD type `g15-hidraw`.
+* udev: unlike the G13, access is restricted to the hid-lg-g15 interface (`KERNELS` + `DRIVERS`
+  on the HID device), so the normal keyboard is not opened to the session user.
+* View: simple schematic (LCD with its keys, M row, 3 × 6 G keys).
 
 ### 13.1 To do
 

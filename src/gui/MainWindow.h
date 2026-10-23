@@ -49,6 +49,8 @@ public:
 
     // Selects a key and a tab (0 key, 1 backlight, 2 stick, 3 LCD, 4 macros), e.g. for screenshots.
     void showKey(const QString &keyId, int tab);
+    // Selects a device model by ID, e.g. for screenshots; false if unknown.
+    bool showModel(const QString &modelId);
 
     // Renders the window to an image file (documentation, tests).
     bool saveScreenshot(const QString &path);

@@ -20,6 +20,7 @@ private slots:
     void eventCodes();
     void allShippedModelsAreValid();
     void g13Model();
+    void g510Model();
     void invalidModels_data();
     void invalidModels();
     void registryOverride();
@@ -99,6 +100,33 @@ void TestDeviceModel::g13Model()
     for (const auto &key : model->keys())
         QVERIFY2(drawn.contains(key.id), qPrintable(key.id));
     QCOMPARE(drawn.size(), model->view().areas.size());
+}
+
+void TestDeviceModel::g510Model()
+{
+    ModelRegistry registry;
+    registry.load({QStringLiteral(GKEY_SOURCE_MODEL_DIR)});
+    const DeviceModel *model = registry.findByUsb(0x046d, 0xc22e);   // with headset
+    QVERIFY(model);
+    QCOMPARE(model->id(), QStringLiteral("g510"));
+    QVERIFY(registry.findByUsb(0x046d, 0xc22d) == model);
+    QVERIFY(!model->tested());
+    QCOMPARE(model->minKernel(), QStringLiteral("5.5"));
+    QCOMPARE(model->inputs().value(QStringLiteral("keys")), QStringLiteral("Logitech Gaming Keyboard Gaming Keys"));
+
+    QCOMPARE(model->keyForCode(QStringLiteral("keys"), KEY_KBD_LCD_MENU1)->id, QStringLiteral("BD"));
+    QCOMPARE(model->keyById(QStringLiteral("BD"))->role, DeviceModel::KeyRole::LcdNext);
+    QCOMPARE(model->keyForCode(QStringLiteral("keys"), KEY_KBD_LCD_MENU2)->id, QStringLiteral("L1"));
+    QCOMPARE(model->keyById(QStringLiteral("MUTE_HEADPHONE"))->role, DeviceModel::KeyRole::Passthrough);
+
+    // 18 G keys + L1-L4; no stick
+    QCOMPARE(model->bindableKeyIds().size(), 22);
+    QVERIFY(!model->bindableKeyIds().contains(QStringLiteral("MUTE_MIC")));
+    QVERIFY(!model->stick());
+    QCOMPARE(model->ledByRole(QStringLiteral("backlight"))->type, DeviceModel::LedType::Rgb);
+    QCOMPARE(model->ledByRole(QStringLiteral("mode1"))->suffix, QStringLiteral("macro_preset1"));
+    QVERIFY(model->lcd());
+    QCOMPARE(model->lcd()->type, QStringLiteral("g15-hidraw"));
 }
 
 void TestDeviceModel::invalidModels_data()

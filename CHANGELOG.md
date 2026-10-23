@@ -6,6 +6,13 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Added
+
+- Logitech G510 (untested, no test hardware): 18 G keys, M1–M3 and MR, LCD keys, RGB backlight,
+  M LEDs and the LCD pages, with a simple device picture. The headphone and microphone mute keys
+  keep working while gkey-config uses the keyboard's gaming keys.
+- `gkey-config --screenshot … --show-model <id>` (documentation).
+
 ### Changed
 
 - The round button BD next to the LCD keys always shows the next LCD page and can no longer be

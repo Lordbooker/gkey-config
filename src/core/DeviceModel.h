@@ -35,6 +35,7 @@ public:
         Record,
         Hardware,   // handled by the device itself (e.g. G13 light button), never bound
         LcdNext,    // shows the next LCD page (G13 BD button), never bound
+        Passthrough,   // sent on unchanged (e.g. G510 mute keys on the grabbed device), never bound
     };
 
     struct Key {

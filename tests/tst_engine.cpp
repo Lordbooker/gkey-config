@@ -50,6 +50,7 @@ private slots:
     void modes();
     void modeKeyAndActions();
     void bdShowsNextLcdPage();
+    void g510Keys();
     void profileSwitchReleasesHeldKeys();
     void sharedOutputReferenceCounting();
     void ignoresAutorepeatAndHardwareKeys();
@@ -153,6 +154,35 @@ void TestEngine::modeKeyAndActions()
     QCOMPARE(profileSpy.size(), 1);
     QCOMPARE(profileSpy.at(0).at(0).toString(), QStringLiteral("next"));
     QVERIFY(m_sink->events.isEmpty());
+}
+
+// G510: the grabbed gaming-keys device also carries the mute keys; they go
+// out unchanged. BD is MENU1 there (MENU5 on the G13).
+void TestEngine::g510Keys()
+{
+    const DeviceModel *g510 = m_registry.findById(QStringLiteral("g510"));
+    QVERIFY(g510);
+    BindingEngine engine(*g510, *m_output);
+    Profile profile;
+    profile.setBinding(1, QStringLiteral("G18"), Action::key(KEY_Z));
+    profile.setBinding(1, QStringLiteral("L4"), Action::key(KEY_Y));
+    engine.setProfile(profile);
+    QSignalSpy lcdSpy(&engine, &BindingEngine::lcdPageRequested);
+
+    engine.handleKey(QStringLiteral("keys"), KEY_MUTE, 1);
+    engine.handleKey(QStringLiteral("keys"), KEY_MUTE, 0);
+    engine.handleKey(QStringLiteral("keys"), KEY_F20, 1);
+    engine.handleKey(QStringLiteral("keys"), KEY_F20, 0);
+    engine.handleKey(QStringLiteral("keys"), KEY_MACRO18, 1);
+    engine.handleKey(QStringLiteral("keys"), KEY_MACRO18, 0);
+    engine.handleKey(QStringLiteral("keys"), KEY_KBD_LCD_MENU5, 1);   // L4 on the G510
+    engine.handleKey(QStringLiteral("keys"), KEY_KBD_LCD_MENU5, 0);
+    engine.handleKey(QStringLiteral("keys"), KEY_KBD_LCD_MENU1, 1);   // BD on the G510
+    engine.handleKey(QStringLiteral("keys"), KEY_KBD_LCD_MENU1, 0);
+
+    QCOMPARE(m_sink->events, (QStringList{down(KEY_MUTE), up(KEY_MUTE), down(KEY_F20), up(KEY_F20), down(KEY_Z),
+                                          up(KEY_Z), down(KEY_Y), up(KEY_Y)}));
+    QCOMPARE(lcdSpy.size(), 1);
 }
 
 void TestEngine::bdShowsNextLcdPage()
