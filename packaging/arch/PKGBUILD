@@ -1,5 +1,8 @@
 # Maintainer: Lordbooker <lordbooker@gmail.com>
 #
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+#
 # The release workflow sets pkgver and sha256sums from the tag and publishes
 # this file to the AUR (package gkey-config).
 

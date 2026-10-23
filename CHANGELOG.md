@@ -6,18 +6,14 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
-### Security
-
-- The systemd user unit of the daemon is hardened (system call filter, only the socket types
-  the daemon needs, no new privileges, files created by the daemon only readable by the user).
-- The configuration tool's single-instance socket is now in the user's runtime directory
-  (`$XDG_RUNTIME_DIR`) and only accessible by the user. Before, it was in `/tmp`, where another
-  local user could block the configuration tool from starting.
-
 ### Changed
 
+- `scripts/probe-g13.sh` is now `scripts/probe-device.sh` and covers all supported devices.
+- Install directories of the udev rule, the systemd user unit and sysusers.d come from
+  `pkg-config` and can be set with CMake options.
 - The daemon writes the LCD in a thread of its own: a hanging USB device can no longer stop the
   key handling (a write to the LCD can block for seconds).
+
 
 ### Fixed
 
@@ -29,6 +25,17 @@ All notable changes to gkey-config are documented in this file. The format follo
   kept unchanged in the file.
 - Logitech G11: the minimum kernel is Linux 5.7, not 5.5 (the G11 was added to `hid-lg-g15` after
   the G15 and G510). The status bar now reports Linux 5.5 and 5.6 as too old for the G11.
+
+### Security
+
+- Documented: the access to `/dev/uinput` that the daemon needs lets every program of the
+  logged-in user send key presses (README, wiki).
+- The systemd user unit of the daemon is hardened (system call filter, only the socket types
+  the daemon needs, no new privileges, files created by the daemon only readable by the user).
+- The configuration tool's single-instance socket is now in the user's runtime directory
+  (`$XDG_RUNTIME_DIR`) and only accessible by the user. Before, it was in `/tmp`, where another
+  local user could block the configuration tool from starting.
+
 
 ## [1.2.0] - 2026-10-23
 

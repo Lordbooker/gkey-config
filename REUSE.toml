@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
+# Copyright and license of files that cannot carry a header of their own
+# (REUSE specification 3.3, https://reuse.software/).
+version = 1
+
+[[annotations]]
+path = [
+    "*.md",
+    "docs/**.md",
+    "docs/images/**.png",
+    "data/icons/**.svg",
+    "data/models/**.json",
+    "translations/**.ts",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Lordbooker"
+SPDX-License-Identifier = "GPL-2.0-only"

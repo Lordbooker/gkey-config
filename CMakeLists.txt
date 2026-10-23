@@ -60,6 +60,33 @@ endif()
 find_package(Qt6 6.4 REQUIRED COMPONENTS ${GKEY_QT_COMPONENTS})
 qt_standard_project_setup()
 
+# Install directories of udev, systemd and sysusers.d: taken from pkg-config
+# (udev.pc, systemd.pc) when available, otherwise the usual places below the
+# prefix. They are kept relative to the prefix when they lie below it: CPack's
+# RPM generator would mark absolute destinations as %config. Each can be
+# overridden, e.g. -DGKEY_UDEV_RULES_DIR=lib/udev/rules.d.
+function(gkey_system_dir var module variable suffix fallback description)
+    set(dir "")
+    pkg_get_variable(found ${module} ${variable})
+    if(found)
+        string(REGEX REPLACE "/+$" "" prefix "${CMAKE_INSTALL_PREFIX}")
+        string(FIND "${found}" "${prefix}/" position)
+        if(position EQUAL 0)
+            string(LENGTH "${prefix}/" length)
+            string(SUBSTRING "${found}" ${length} -1 dir)
+            set(dir "${dir}${suffix}")
+        endif()
+    endif()
+    if(NOT dir)
+        set(dir "${fallback}")
+    endif()
+    set(${var} "${dir}" CACHE STRING "${description}")
+endfunction()
+gkey_system_dir(GKEY_UDEV_RULES_DIR udev udevdir "/rules.d" "lib/udev/rules.d" "udev rules directory")
+gkey_system_dir(GKEY_SYSTEMD_USER_UNIT_DIR systemd systemduserunitdir "" "lib/systemd/user" "systemd user units")
+gkey_system_dir(GKEY_SYSUSERS_DIR systemd sysusersdir "" "lib/sysusers.d" "sysusers.d directory")
+message(STATUS "udev rules: ${GKEY_UDEV_RULES_DIR}, user units: ${GKEY_SYSTEMD_USER_UNIT_DIR}, sysusers: ${GKEY_SYSUSERS_DIR}")
+
 # Directory of the installed model files, compiled into the binaries.
 set(GKEY_DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/gkey-config")
 
@@ -79,17 +106,15 @@ install(DIRECTORY data/models/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/gkey-config/models
     FILES_MATCHING PATTERN "*.json"
 )
-# Relative destinations (= <prefix>/lib/...): CPack/RPM would otherwise mark
-# absolute paths as %config, which is wrong for files below /usr/lib.
 install(FILES data/udev/70-gkey-config.rules
-    DESTINATION lib/udev/rules.d
+    DESTINATION ${GKEY_UDEV_RULES_DIR}
 )
 install(FILES data/sysusers/gkey-config.conf
-    DESTINATION lib/sysusers.d
+    DESTINATION ${GKEY_SYSUSERS_DIR}
 )
 configure_file(data/systemd/gkeyd.service.in ${CMAKE_CURRENT_BINARY_DIR}/gkeyd.service @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/gkeyd.service
-    DESTINATION lib/systemd/user
+    DESTINATION ${GKEY_SYSTEMD_USER_UNIT_DIR}
 )
 configure_file(data/dbus/io.github.lordbooker.GKeyConfig.service.in
     ${CMAKE_CURRENT_BINARY_DIR}/io.github.lordbooker.GKeyConfig.service @ONLY)

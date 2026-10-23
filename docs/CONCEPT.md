@@ -52,7 +52,8 @@ Only a **G13** is available for testing *(decided)*. The model files for G11, G1
 are derived from the kernel source only and are marked **untested** in the GUI and documentation
 until someone with the device confirms them.
 
-**G13 verified on hardware on 2026-10-21** (Arch Linux, kernel 7.2.11, `scripts/probe-g13.sh` and
+**G13 verified on hardware on 2026-10-21** (Arch Linux, kernel 7.2.11, `scripts/probe-g13.sh` – now
+`scripts/probe-device.sh` – and
 `evtest`):
 
 * Keypad: all event codes of section 2.2 confirmed (G1–G22, L1–L4, round button, M1–M3, MR,
@@ -432,6 +433,10 @@ buttons are left to the system as well.
   bands of 8 rows). Rendering uses an own 1-bit frame and the 5×7 font from linux-g13-driver, so the
   daemon needs no Qt GUI modules; the GUI uses the same code for its preview. The LCD is cleared
   when the daemon stops.
+* The reports are written by `LcdWriter` in a thread of its own *(after 1.2.0)*: a hidraw write is
+  a synchronous USB transfer that can block for seconds on a hanging device and must not stop the
+  key handling. Only the newest report is kept. The hidraw node is looked up when writing (it may
+  appear after the input devices) and reopened after an error.
 * System page *(added after 1.0, decided 2026-10-22)*: rows CPU, RAM, GPU, VRM, each with a bar,
   the percentage and on the right the temperature (CPU, GPU) or the used amount in GiB (RAM,
   VRAM); four rows 11 px apart. Without a supported GPU the rows are CPU, RAM and swap (if
@@ -474,12 +479,20 @@ implemented *(verify)*.
 | Node | Access |
 |---|---|
 | input event nodes of supported devices | `TAG+="uaccess"` |
-| hidraw node of the G13 (LCD) | `TAG+="uaccess"` |
+| hidraw node of devices with LCD (G13; G15, G15 v2, G510 via the hid-lg-g15 interface) | `TAG+="uaccess"` |
 | `/dev/uinput` | `TAG+="uaccess"` |
 | LED attributes (`brightness`, `multi_intensity`) of supported devices | group `gkey`, mode 0664 (see 9.1a) |
 
 `uaccess` gives access to the user of the active local session only (systemd-logind), the same
 approach as linux-g13-driver.
+
+**Security note on `/dev/uinput`** *(reviewed 2026-10-23, kept)*: with access to `/dev/uinput`
+every program of the session user can create virtual input devices and send key presses to any
+window, which bypasses the isolation of input that Wayland compositors otherwise provide. The
+daemon needs it for its output; Steam's udev rules grant the same access for its controller
+support. Restricting it to the group `gkey` was considered: it would protect nothing against
+programs of a user in that group and would make the basic function depend on a group membership
+and a new login. The access is therefore kept and documented (README, wiki).
 
 ### 9.1a LED permissions *(decided)*
 
@@ -519,8 +532,9 @@ linux-g13-driver and gkey-config cannot drive the same G13 at the same time; the
 
 ### 9.3 Virtual device
 
-One uinput device named `gkey-config virtual input` with its **own** vendor/product ID (not
-Logitech's), so it is never mistaken for a real device by our own discovery or by udev rules. It
+One uinput device named `gkey-config virtual input` with bus type `BUS_VIRTUAL` and vendor/product
+ID 0000:0000 (not Logitech's), so it is never mistaken for a real device by our own discovery
+(which only takes HID devices) or by udev rules. It
 offers all keyboard keys, mouse buttons, `REL_X`, `REL_Y`, `REL_WHEEL`, `REL_HWHEEL`.
 
 ---
