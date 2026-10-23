@@ -26,6 +26,14 @@ class MacroStore;
 class ProfileStore;
 class Settings;
 
+struct DaemonStartOptions {
+    // Where key events go; nullptr = the virtual uinput device. Tests pass a
+    // recording sink, so the daemon runs without /dev/uinput.
+    OutputSink *output = nullptr;
+    // false: no udev monitoring and no devices (tests).
+    bool monitorDevices = true;
+};
+
 // Ties everything together: device discovery, one profile store per model,
 // the macro library, the active profile and mode, LEDs, macro recording state
 // and the shared virtual output device. The D-Bus service (DBusService) is a
@@ -37,7 +45,7 @@ public:
     ~Daemon() override;
 
     // Returns false and sets an error text if the daemon cannot run at all.
-    bool start(QString *error);
+    bool start(QString *error, const DaemonStartOptions &options = {});
 
     // --- Used by the D-Bus service --------------------------------------
     // Status as JSON (devices, models with profiles, macros, recording).

@@ -44,7 +44,7 @@ Daemon::~Daemon()
     m_devices.clear();
 }
 
-bool Daemon::start(QString *error)
+bool Daemon::start(QString *error, const DaemonStartOptions &options)
 {
     m_registry.load();
     for (const QString &message : m_registry.errors())
@@ -55,9 +55,13 @@ bool Daemon::start(QString *error)
         return false;
     }
 
-    if (!m_virtualInput.create(error))
-        return false;
-    m_output = std::make_unique<KeyOutput>(m_virtualInput);
+    if (options.output) {
+        m_output = std::make_unique<KeyOutput>(*options.output);
+    } else {
+        if (!m_virtualInput.create(error))
+            return false;
+        m_output = std::make_unique<KeyOutput>(m_virtualInput);
+    }
     m_state.load();
 
     m_macros = new MacroStore(ConfigPaths::macroDir(), this);
@@ -78,11 +82,13 @@ bool Daemon::start(QString *error)
         }
     });
 
-    m_monitor = new DeviceMonitor(this);
-    connect(m_monitor, &DeviceMonitor::inputAdded, this, &Daemon::onInputAdded);
-    connect(m_monitor, &DeviceMonitor::inputRemoved, this, &Daemon::onInputRemoved);
-    if (!m_monitor->start(error))
-        return false;
+    if (options.monitorDevices) {
+        m_monitor = new DeviceMonitor(this);
+        connect(m_monitor, &DeviceMonitor::inputAdded, this, &Daemon::onInputAdded);
+        connect(m_monitor, &DeviceMonitor::inputRemoved, this, &Daemon::onInputRemoved);
+        if (!m_monitor->start(error))
+            return false;
+    }
 
     qCInfo(lcDaemon) << "running," << m_registry.models().size() << "model(s) known,"
                      << m_macros->names().size() << "macro(s)";
