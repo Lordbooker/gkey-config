@@ -6,6 +6,38 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-23
+
+### Added
+
+- Logitech G510 (untested, no test hardware): 18 G keys, M1–M3 and MR, LCD keys, RGB backlight,
+  M LEDs and the LCD pages, with a simple device picture. The headphone and microphone mute keys
+  keep working while gkey-config uses the keyboard's gaming keys.
+- Logitech G15, first version (untested, no test hardware): 18 G keys, M1–M3 and MR, LCD keys,
+  M LEDs and the LCD pages. The backlight of the keys and of the LCD can be set per profile in
+  three steps (off, dim, bright).
+- Logitech G11 (untested, no test hardware): 18 G keys, M1–M3 and MR, M LEDs and the backlight
+  brightness per profile.
+- Logitech G15 v2 (untested, no test hardware): 6 G keys, M1–M3 and MR, LCD keys, M LEDs, the
+  LCD pages and the backlight brightness of keys and LCD per profile.
+- `gkey-config --screenshot … --show-model <id>` (documentation).
+- Documentation moved to the [wiki](https://github.com/Lordbooker/gkey-config/wiki), with one page
+  per device; the README is a short overview.
+
+### Changed
+
+- The round button BD next to the LCD keys always shows the next LCD page and can no longer be
+  bound; otherwise there was no way left to page through the LCD on the device. Existing bindings
+  of BD are ignored (with a note in the daemon log). L1–L4 remain freely bindable, e.g. for
+  "previous page" or a specific page.
+
+### Fixed
+
+- G13 stick in key mode: after a restart of the computer a key bound to the stick (e.g. A for
+  "left") stayed pressed and did not work on the normal keyboard until the daemon was restarted.
+  Before the G13 reports for the first time, the kernel shows the stick at 0/0 ("left" and "up");
+  the daemon no longer takes this as the stick position.
+
 ## [1.1.1] - 2026-10-22
 
 ### Fixed
@@ -53,7 +85,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/Lordbooker/gkey-config/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/Lordbooker/gkey-config/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Lordbooker/gkey-config/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Lordbooker/gkey-config/releases/tag/v1.0.0

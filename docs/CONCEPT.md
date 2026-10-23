@@ -20,12 +20,12 @@ real hardware with `evtest` before they are relied on.
 
 | Model | USB ID *(kernel)* | Kernel model | G-keys | M1–M3, MR | LCD keys | Stick | Backlight LED | LCD |
 |---|---|---|---|---|---|---|---|---|
-| G11 | 046d:c225 | treated as G15 | 18 | yes | codes registered by the kernel; physical keys *(verify)* | – | `g15::kbd_backlight` (0–2) | – |
+| G11 | 046d:c225 | treated as G15 | 18 | yes | codes registered by the kernel, no physical keys | – | `g15::kbd_backlight` (0–2) | – |
 | G13 | 046d:c21c | G13 | 22 | yes | 4 + round "next page" button | yes | `g13:rgb:kbd_backlight` (RGB) | 160×43, hidraw |
-| G15 (v1) | 046d:c222 | G15 | 18 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | later |
-| G15 v2 | 046d:c227 | G15 v2 | 6 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | later |
-| G510 | 046d:c22d | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | later |
-| G510 + USB audio | 046d:c22e | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | later |
+| G15 (v1) | 046d:c222 | G15 | 18 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | 160×43, hidraw |
+| G15 v2 | 046d:c227 | G15 v2 | 6 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | 160×43, hidraw |
+| G510 | 046d:c22d | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | 160×43, hidraw |
+| G510 + USB audio | 046d:c22e | G510 | 18 | yes | 5 | – | `g15::kbd_backlight` (RGB) | 160×43, hidraw |
 
 The Logitech Z-10 speakers are also handled by `hid-lg-g15`, but are out of scope.
 
@@ -68,7 +68,7 @@ until someone with the device confirms them.
 ### 1.4 Version 1 includes
 
 Keys, M1–M3 modes, MR, LEDs, profiles, macros, G13 stick modes, G13 LCD, per-application profiles,
-GUI, packages. LCD support for G15/G510 is a later stage (protocol not documented yet).
+GUI, packages. LCD support for G15/G510 was added later with the model files (13.0, 13.0a; untested).
 
 ---
 
@@ -211,7 +211,7 @@ the kernel uses the known event codes.
   "keys": [
     { "id": "G1",  "code": "KEY_MACRO1" },
     { "id": "L1",  "code": "KEY_KBD_LCD_MENU1" },
-    { "id": "BD",  "code": "KEY_KBD_LCD_MENU5" },
+    { "id": "BD",  "code": "KEY_KBD_LCD_MENU5", "role": "lcd" },
     { "id": "M1",  "code": "KEY_MACRO_PRESET1", "role": "mode1" },
     { "id": "MR",  "code": "KEY_MACRO_RECORD_START", "role": "record" },
     { "id": "STICK_PRESS", "code": "BTN_THUMB", "input": "stick" }
@@ -232,8 +232,13 @@ the kernel uses the known event codes.
 
 * `keys` maps kernel event codes to stable **key IDs** used in profiles (`G1`, `L1`, `BD`, `M1`,
   `STICK_PRESS`, …). Key IDs are the physical labels, not bit positions.
-* `role` marks keys with a fixed function (mode keys, record key). Everything else is bindable.
+* `role` marks keys with a fixed function (mode keys, record key, `lcd` for the key that pages
+  through the LCD, `hardware` for keys the device handles itself). Everything else is bindable;
+  bindings of fixed keys in a profile are ignored with a warning.
 * `image` and `areas` describe the clickable device picture in the GUI.
+* LED roles: `backlight`, `lcd-backlight` (G15 family), `mode1`–`mode3`, `record`. Types: `onoff`
+  (default), `rgb`, `level` with `"max"` = highest brightness (the GUI offers 0 … max; with max 2
+  *Off / Dim / Bright*).
 * `KEY_LIGHTS_TOGGLE` (G13) is not listed as bindable: the hardware switches the light itself.
 
 ---
@@ -316,6 +321,9 @@ Runtime state that is not configuration (active profile and mode per model) live
 }
 ```
 
+* `backlight` (RGB models) or `backlightLevel` and `lcdBacklightLevel` (models with brightness
+  levels, G15 family): set when the profile becomes active; missing means the LEDs are left as
+  they are. Levels above the LED's `max_brightness` are lowered to it.
 * `name` identifies the profile; the file name is only derived from it when the profile is created.
 * Key IDs are those of the model file; bindings for keys the model cannot bind are ignored with a
   warning in the log.
@@ -412,9 +420,10 @@ buttons are left to the system as well.
   (`{ "lcd": { "pages": ["status", "system", "clock", "text"] } }`), edited in the GUI's LCD tab.
   Without the file all pages are enabled in this order; a page added in a later version appears
   unchecked in existing settings.
-* The round button (BD) shows the next page by default: model files can give a key a `default`
-  action that applies while the key is unbound in the active layer. Any key can be bound to `lcd`
-  actions (`next`, `previous`, page name).
+* The round button (BD) always shows the next page *(fixed after 1.1.1, decided 2026-10-22: it is the
+  only way through the pages on the device)*; it has the role `lcd` and cannot be bound. Model
+  files can still give a bindable key a `default` action that applies while the key is unbound in
+  the active layer. Any bindable key can be bound to `lcd` actions (`next`, `previous`, page name).
 * `LcdText` with a duration shows the text page temporarily and returns to the previous page.
 * Output: output report 3 on the G13's hidraw node (report ID, 31 zero bytes, 160 × 48 pixels in
   bands of 8 rows). Rendering uses an own 1-bit frame and the 5×7 font from linux-g13-driver, so the
@@ -597,6 +606,88 @@ on the device).
 | 6 | Per-application profiles (KWin script, GNOME extension) | – |
 | 7 | G11/G15/G15 v2/G510 model files (untested) and image areas, diagnostics, import from linux-g13-driver | – (G13 only) |
 | 8 | Packages (Arch/AUR, Ubuntu, Fedora), autostart and LED setup in the GUI, release workflow, documentation | – |
+
+Done: 1–5 and 8 (releases 1.0.0–1.1.1). Postponed: 6. Milestone 7: model files for
+G510, G15, G11 and G15 v2 are done in 1.2.0 (untested, see 13.0–13.0c); the import from linux-g13-driver is
+open.
+
+### 13.0 G510 *(2026-10-22)*
+
+Taken from the kernel driver (`hid-lg-g15.c`) and libg15; no test hardware, so the model is marked
+untested:
+
+* USB 046d:c22d, and 046d:c22e while a headset uses the built-in audio. hid-lg-g15 drives the HID
+  interface with the gaming keys and the LCD; the normal keyboard is another interface (hid-generic)
+  and is never touched. Input device "Logitech Gaming Keyboard Gaming Keys".
+* G1–G18 = `KEY_MACRO1`–`18`, M1–M3/MR as on the G13. LCD keys: `KEY_KBD_LCD_MENU1` is the round
+  page button (BD, fixed role `lcd`; MENU5 on the G13), MENU2–5 are L1–L4 – assumed from the G15
+  comments in the driver, to be confirmed on hardware.
+* Headphone and microphone mute (`KEY_MUTE`, `KEY_F20`) arrive on the grabbed device; the role
+  `passthrough` sends them on unchanged.
+* LEDs `g15::kbd_backlight` (RGB, multicolor like the G13), `g15::macro_preset1`–`3`,
+  `g15::macro_record`; `g15::power_on_backlight_val` is not used.
+* LCD 160 × 43 with the same 992-byte frame as the G13 (libg15 uses one format for G13, G15 and
+  G510); LCD type `g15-hidraw`.
+* udev: unlike the G13, access is restricted to the hid-lg-g15 interface (`KERNELS` + `DRIVERS`
+  on the HID device), so the normal keyboard is not opened to the session user.
+* View: simple schematic (LCD with its keys, M row, 3 × 6 G keys).
+
+### 13.0a G15 *(2026-10-22)*
+
+Same scheme as the G510 (kernel driver, libg15; untested, no hardware), differences only:
+
+* USB 046d:c222, no audio interface; no mute keys.
+* LCD keys as stated in the driver for the G15: `KEY_KBD_LCD_MENU1` = round button left of the LCD
+  (BD, role `lcd`), MENU2–5 = the four keys below it (L1–L4).
+* Backlight of keys and LCD: `g15::kbd_backlight` and `g15::lcd_backlight`, brightness 0–2 each
+  (LED type `level`, roles `backlight` and `lcd-backlight`). The profile stores
+  `backlightLevel` and `lcdBacklightLevel`; the *Backlight* tab shows two selectors
+  *Off / Dim / Bright* instead of the colour. The backlight button of the keyboard changes the
+  brightness in the device itself; the profile sets it again when it becomes active.
+* LCD and its frame as on the G510 (`g15-hidraw`, 160 × 43).
+* udev: `KERNELS=="0003:046D:C222.*"` with `DRIVERS=="lg-g15"`, like the G510.
+
+### 13.0b G11 *(2026-10-22)*
+
+The kernel driver says: "The G11 is a G15 without the LCD, treat it as a G15" (same report
+handling, so it also registers the LCD key codes and `g15::lcd_backlight`). The model file
+(untested) therefore lists only what the keyboard physically has:
+
+* USB 046d:c225; G1–G18, M1–M3, MR; no LCD keys, no `lcd` section, no `lcd-backlight` LED.
+* Backlight `g15::kbd_backlight`, brightness 0–2 (type `level`), M LEDs as on the G15.
+* udev: only the input device of the hid-lg-g15 interface; the hidraw node stays closed.
+* View: M row and 3 × 6 G keys.
+
+### 13.0c G15 v2 *(2026-10-22)*
+
+Like the G15 (13.0a), untested; from the kernel driver (`lg_g15_v2_event`, `gkeys = 6`):
+
+* USB 046d:c227; G1–G6, M1–M3, MR; BD = `KEY_KBD_LCD_MENU1` (round button), L1–L4 = MENU2–5.
+* LEDs registered exactly as on the G15: `g15::kbd_backlight` and `g15::lcd_backlight` (0–2),
+  M LEDs.
+* LCD `g15-hidraw`, 160 × 43.
+* View: schematic (LCD with its keys, M row, G1–G6 in 3 × 2); not the physical arrangement.
+
+### 13.1 To do
+
+Agreed ideas that are not scheduled yet:
+
+* **NVIDIA GPUs on the LCD system page** *(discussed 2026-10-22, postponed)*. The proprietary
+  driver exposes neither load, VRAM nor a hwmon temperature in sysfs, so the values come from NVML
+  (`libnvidia-ml.so.1`, part of the driver, e.g. `nvidia-utils` on Arch; no special rights):
+  * loaded at runtime with `dlopen`, only when present; no build or package dependency, own
+    declarations of the few functions used (`nvmlInit_v2`, `nvmlShutdown`,
+    `nvmlDeviceGetCount_v2`, `nvmlDeviceGetHandleByIndex_v2`, `nvmlDeviceGetUtilizationRates`,
+    `nvmlDeviceGetMemoryInfo`, `nvmlDeviceGetTemperature` with the GPU sensor);
+  * same rows as for AMD (GPU load, GPU temperature, VRAM used/total); with AMD and NVIDIA in one
+    system the GPU with the most VRAM wins;
+  * hybrid laptops: if the NVIDIA PCI device is runtime-suspended
+    (`/sys/bus/pci/devices/…/power/runtime_status`), NVML is not touched so the GPU is not woken;
+    the row shows "--%";
+  * nouveau is not supported (no load values);
+  * tests with a fake NVML library; real hardware not available, so marked untested until
+    someone reports back;
+  * release as 1.2.0.
 
 ---
 

@@ -55,6 +55,7 @@ private slots:
     void keysWithDiagonal();
     void keysHysteresis();
     void keysUseRestPosition();
+    void connectBeforeFirstReport();
     void mouseMovement();
     void scrollDirection();
     void passthroughDoesNothing();
@@ -180,6 +181,32 @@ void TestStick::keysUseRestPosition()
     m_stick->setPosition(138, 139);
     m_stick->setPosition(160, 160);    // would be "right"+"down" with centre 128 (0.25 -> 160)
     QVERIFY(m_sink->events.isEmpty());
+}
+
+// After boot the stick input reads 0/0 until the G13 sends its first report.
+// Connecting then must not press "left" and "up" (bug: A held until restart).
+void TestStick::connectBeforeFirstReport()
+{
+    QVERIFY(!m_stick->isPlausibleRest(0, 0));
+    QVERIFY(m_stick->isPlausibleRest(138, 139));
+
+    StickSettings settings;
+    settings.mode = StickSettings::Mode::Keys;
+    // Order as in the daemon: either the settings first or the input first.
+    for (bool settingsFirst : {true, false}) {
+        if (settingsFirst)
+            m_stick->setSettings(settings);
+        m_stick->setCenter(128, 128);
+        m_stick->assumeRest();
+        if (!settingsFirst)
+            m_stick->setSettings(settings);
+        QVERIFY2(m_sink->events.isEmpty(), qPrintable(m_sink->events.join(u' ')));
+        m_stick->reset();
+    }
+
+    // The first real report counts.
+    m_stick->setPosition(0, 128);
+    QCOMPARE(m_sink->events, QStringList{down(KEY_A)});
 }
 
 void TestStick::mouseMovement()

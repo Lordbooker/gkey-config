@@ -212,10 +212,6 @@
 <context>
     <name>LcdPage</name>
     <message>
-        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page (unless it is bound to something else).</source>
-        <translation>Páginas que muestra la pantalla LCD, en este orden. El botón redondo junto a las teclas LCD pasa a la página siguiente (salvo que tenga otra asignación).</translation>
-    </message>
-    <message>
         <source>Show this page on the device</source>
         <translation>Mostrar esta página en el dispositivo</translation>
     </message>
@@ -246,6 +242,10 @@
     <message>
         <source>System (CPU, RAM, GPU, VRAM)</source>
         <translation>Sistema (CPU, RAM, GPU, VRAM)</translation>
+    </message>
+    <message>
+        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page.</source>
+        <translation>Páginas que muestra la pantalla LCD, en este orden. El botón redondo junto a las teclas LCD pasa a la página siguiente.</translation>
     </message>
 </context>
 <context>
@@ -731,6 +731,30 @@
         <translation>No se pudo abrir la carpeta. Se encuentra en:
 %1</translation>
     </message>
+    <message>
+        <source>This profile sets the backlight brightness</source>
+        <translation>Este perfil establece el brillo de la retroiluminación</translation>
+    </message>
+    <message>
+        <source>Keys:</source>
+        <translation>Teclas:</translation>
+    </message>
+    <message>
+        <source>LCD:</source>
+        <translation>LCD:</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Apagado</translation>
+    </message>
+    <message>
+        <source>Dim</source>
+        <translation>Baja</translation>
+    </message>
+    <message>
+        <source>Bright</source>
+        <translation>Alta</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>
@@ -859,6 +883,10 @@
     <message>
         <source>With --screenshot: use a dark colour scheme.</source>
         <translation>Con --screenshot: usar un esquema de colores oscuro.</translation>
+    </message>
+    <message>
+        <source>With --screenshot: show this device model.</source>
+        <translation>Con --screenshot: mostrar este modelo de dispositivo.</translation>
     </message>
 </context>
 </TS>

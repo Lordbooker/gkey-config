@@ -212,10 +212,6 @@
 <context>
     <name>LcdPage</name>
     <message>
-        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page (unless it is bound to something else).</source>
-        <translation>Seiten, die das LCD in dieser Reihenfolge zeigt. Die runde Taste neben den LCD-Tasten blättert zur nächsten Seite (sofern sie nicht anders belegt ist).</translation>
-    </message>
-    <message>
         <source>Show this page on the device</source>
         <translation>Diese Seite am Gerät anzeigen</translation>
     </message>
@@ -246,6 +242,10 @@
     <message>
         <source>System (CPU, RAM, GPU, VRAM)</source>
         <translation>System (CPU, RAM, GPU, VRAM)</translation>
+    </message>
+    <message>
+        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page.</source>
+        <translation>Seiten, die das LCD in dieser Reihenfolge zeigt. Die runde Taste neben den LCD-Tasten blättert zur nächsten Seite.</translation>
     </message>
 </context>
 <context>
@@ -731,6 +731,30 @@
         <translation>Der Ordner konnte nicht geöffnet werden. Er liegt hier:
 %1</translation>
     </message>
+    <message>
+        <source>This profile sets the backlight brightness</source>
+        <translation>Dieses Profil setzt die Helligkeit der Beleuchtung</translation>
+    </message>
+    <message>
+        <source>Keys:</source>
+        <translation>Tasten:</translation>
+    </message>
+    <message>
+        <source>LCD:</source>
+        <translation>LCD:</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Aus</translation>
+    </message>
+    <message>
+        <source>Dim</source>
+        <translation>Gedimmt</translation>
+    </message>
+    <message>
+        <source>Bright</source>
+        <translation>Hell</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>
@@ -859,6 +883,10 @@
     <message>
         <source>With --screenshot: use a dark colour scheme.</source>
         <translation>Mit --screenshot: ein dunkles Farbschema verwenden.</translation>
+    </message>
+    <message>
+        <source>With --screenshot: show this device model.</source>
+        <translation>Mit --screenshot: dieses Gerätemodell zeigen.</translation>
     </message>
 </context>
 </TS>

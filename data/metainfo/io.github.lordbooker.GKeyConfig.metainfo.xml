@@ -37,7 +37,7 @@
       <li>G13 LCD pages: status, clock and text from scripts</li>
       <li>D-Bus API for scripts</li>
     </ul>
-    <p>Supported: Logitech G13. Requires Linux 6.19 or newer.</p>
+    <p>Supported: Logitech G13 (Linux 6.19 or newer); Logitech G11, G15, G15 v2 and G510, untested.</p>
   </description>
 
   <launchable type="desktop-id">io.github.lordbooker.GKeyConfig.desktop</launchable>
@@ -73,6 +73,11 @@
     <binary>gkey-config</binary>
     <binary>gkeyd</binary>
     <modalias>usb:v046DpC21C*</modalias>
+    <modalias>usb:v046DpC222*</modalias>
+    <modalias>usb:v046DpC225*</modalias>
+    <modalias>usb:v046DpC227*</modalias>
+    <modalias>usb:v046DpC22D*</modalias>
+    <modalias>usb:v046DpC22E*</modalias>
   </provides>
 
   <supports>
@@ -83,6 +88,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.2.0" date="2026-10-23">
+      <description>
+        <p>Support for Logitech G510, G15, G15 v2 and G11 (untested). The round LCD button always shows the next page. A key bound to the G13 stick no longer stays pressed after a restart of the computer.</p>
+      </description>
+    </release>
     <release version="1.1.1" date="2026-10-22">
       <description>
         <p>The RAM row of the LCD system page shows its value again.</p>

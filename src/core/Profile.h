@@ -22,7 +22,9 @@ class DeviceModel;
 //
 //   {
 //     "name": "Default",
-//     "backlight": [51, 153, 255],
+//     "backlight": [51, 153, 255],      (RGB backlight, e.g. G13, G510)
+//     "backlightLevel": 2,              (level backlight, e.g. G15: 0 off .. max)
+//     "lcdBacklightLevel": 1,           (separate LCD backlight, G15)
 //     "modes": {
 //       "M1": { "G1": { "type": "key", "key": "KEY_1" } },
 //       "M2": {},
@@ -61,6 +63,12 @@ public:
     const std::optional<Rgb> &backlight() const { return m_backlight; }
     void setBacklight(const std::optional<Rgb> &rgb) { m_backlight = rgb; }
 
+    // Brightness levels for devices without colour (0 = off .. the LED's maximum).
+    const std::optional<int> &backlightLevel() const { return m_backlightLevel; }
+    void setBacklightLevel(const std::optional<int> &level) { m_backlightLevel = level; }
+    const std::optional<int> &lcdBacklightLevel() const { return m_lcdBacklightLevel; }
+    void setLcdBacklightLevel(const std::optional<int> &level) { m_lcdBacklightLevel = level; }
+
     // mode: 1..3
     const Bindings &bindings(int mode) const;
     void setBinding(int mode, const QString &keyId, const Action &action);
@@ -77,6 +85,8 @@ private:
 
     QString m_name;
     std::optional<Rgb> m_backlight;
+    std::optional<int> m_backlightLevel;
+    std::optional<int> m_lcdBacklightLevel;
     std::array<Bindings, ModeCount> m_modes;
     QJsonObject m_stick;
     QJsonObject m_unknown;

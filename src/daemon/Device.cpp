@@ -14,14 +14,6 @@
 
 Q_LOGGING_CATEGORY(lcDevice, "gkey.device")
 
-namespace {
-
-// A rest position further away from the middle than this is not trusted
-// (the stick was probably held while the device was plugged in).
-constexpr int PlausibleCenterOffset = 24;
-
-}
-
 Device::Device(const DeviceModel &model, const QString &hidSyspath, KeyOutput &output, QObject *parent)
     : QObject(parent), m_model(model), m_hidSyspath(hidSyspath)
 {
@@ -65,20 +57,27 @@ bool Device::addInput(const QString &role, const QString &devNode, QString *erro
         connect(input, &InputDevice::keyEvent, this, &Device::onStickKey);
         connect(input, &InputDevice::absEvent, this, &Device::onAbs);
         // Rest position: calibrated value, else the position right now if plausible.
+        // Right after boot the device has not reported yet and the axes read 0/0
+        // (hid-lg-g15 sets no initial position): not plausible, so the middle.
         const auto &stick = *m_model.stick();
         const int middle = (stick.minimum + stick.maximum + 1) / 2;
         const int x = input->absValue(stick.axisX);
         const int y = input->absValue(stick.axisY);
         if (m_stickCenter) {
             m_stick->setCenter(m_stickCenter->x(), m_stickCenter->y());
-        } else if (qAbs(x - middle) <= PlausibleCenterOffset && qAbs(y - middle) <= PlausibleCenterOffset) {
+        } else if (m_stick->isPlausibleRest(x, y)) {
             m_stick->setCenter(x, y);
         } else {
             m_stick->setCenter(middle, middle);
             qCInfo(lcDevice).noquote() << m_model.name()
-                                       << ": stick not at rest while connecting, using the middle as rest position";
+                                       << QStringLiteral(": no stick position yet (%1/%2), using the middle as rest position")
+                                              .arg(x)
+                                              .arg(y);
         }
-        m_stick->setPosition(x, y);
+        // The values read now are not used as a position: 0/0 before the first
+        // report would hold "left" and "up" (e.g. A and W) until the stick moves.
+        // Directions only follow real reports of the device.
+        m_stick->assumeRest();
     } else {
         connect(input, &InputDevice::keyEvent, m_engine, &BindingEngine::handleKey);
     }

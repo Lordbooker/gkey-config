@@ -20,6 +20,10 @@ private slots:
     void eventCodes();
     void allShippedModelsAreValid();
     void g13Model();
+    void g510Model();
+    void g15Model();
+    void g11Model();
+    void g15v2Model();
     void invalidModels_data();
     void invalidModels();
     void registryOverride();
@@ -73,9 +77,11 @@ void TestDeviceModel::g13Model()
     QCOMPARE(model->keyById(QStringLiteral("M1"))->role, DeviceModel::KeyRole::Mode1);
     QCOMPARE(model->keyById(QStringLiteral("MR"))->role, DeviceModel::KeyRole::Record);
     QCOMPARE(model->keyById(QStringLiteral("LIGHT"))->role, DeviceModel::KeyRole::Hardware);
+    QCOMPARE(model->keyById(QStringLiteral("BD"))->role, DeviceModel::KeyRole::LcdNext);
 
-    // 22 G keys + L1-L4 + BD + 3 stick buttons + 4 stick directions
-    QCOMPARE(model->bindableKeyIds().size(), 34);
+    // 22 G keys + L1-L4 + 3 stick buttons + 4 stick directions (BD is fixed)
+    QCOMPARE(model->bindableKeyIds().size(), 33);
+    QVERIFY(!model->bindableKeyIds().contains(QStringLiteral("BD")));
     QVERIFY(!model->bindableKeyIds().contains(QStringLiteral("M1")));
     QVERIFY(!model->bindableKeyIds().contains(QStringLiteral("LIGHT")));
     QVERIFY(model->bindableKeyIds().contains(QStringLiteral("STICK_UP")));
@@ -97,6 +103,87 @@ void TestDeviceModel::g13Model()
     for (const auto &key : model->keys())
         QVERIFY2(drawn.contains(key.id), qPrintable(key.id));
     QCOMPARE(drawn.size(), model->view().areas.size());
+}
+
+void TestDeviceModel::g510Model()
+{
+    ModelRegistry registry;
+    registry.load({QStringLiteral(GKEY_SOURCE_MODEL_DIR)});
+    const DeviceModel *model = registry.findByUsb(0x046d, 0xc22e);   // with headset
+    QVERIFY(model);
+    QCOMPARE(model->id(), QStringLiteral("g510"));
+    QVERIFY(registry.findByUsb(0x046d, 0xc22d) == model);
+    QVERIFY(!model->tested());
+    QCOMPARE(model->minKernel(), QStringLiteral("5.5"));
+    QCOMPARE(model->inputs().value(QStringLiteral("keys")), QStringLiteral("Logitech Gaming Keyboard Gaming Keys"));
+
+    QCOMPARE(model->keyForCode(QStringLiteral("keys"), KEY_KBD_LCD_MENU1)->id, QStringLiteral("BD"));
+    QCOMPARE(model->keyById(QStringLiteral("BD"))->role, DeviceModel::KeyRole::LcdNext);
+    QCOMPARE(model->keyForCode(QStringLiteral("keys"), KEY_KBD_LCD_MENU2)->id, QStringLiteral("L1"));
+    QCOMPARE(model->keyById(QStringLiteral("MUTE_HEADPHONE"))->role, DeviceModel::KeyRole::Passthrough);
+
+    // 18 G keys + L1-L4; no stick
+    QCOMPARE(model->bindableKeyIds().size(), 22);
+    QVERIFY(!model->bindableKeyIds().contains(QStringLiteral("MUTE_MIC")));
+    QVERIFY(!model->stick());
+    QCOMPARE(model->ledByRole(QStringLiteral("backlight"))->type, DeviceModel::LedType::Rgb);
+    QCOMPARE(model->ledByRole(QStringLiteral("mode1"))->suffix, QStringLiteral("macro_preset1"));
+    QVERIFY(model->lcd());
+    QCOMPARE(model->lcd()->type, QStringLiteral("g15-hidraw"));
+}
+
+void TestDeviceModel::g15Model()
+{
+    ModelRegistry registry;
+    registry.load({QStringLiteral(GKEY_SOURCE_MODEL_DIR)});
+    const DeviceModel *model = registry.findByUsb(0x046d, 0xc222);
+    QVERIFY(model);
+    QCOMPARE(model->id(), QStringLiteral("g15"));
+    QVERIFY(!model->tested());
+    QCOMPARE(model->inputs().value(QStringLiteral("keys")), QStringLiteral("Logitech Gaming Keyboard Gaming Keys"));
+    QCOMPARE(model->keyById(QStringLiteral("BD"))->role, DeviceModel::KeyRole::LcdNext);
+    QCOMPARE(model->keyForCode(QStringLiteral("keys"), KEY_KBD_LCD_MENU5)->id, QStringLiteral("L4"));
+    QCOMPARE(model->bindableKeyIds().size(), 22);   // 18 G keys + L1-L4
+
+    // Backlight of keys and LCD in three levels (0..2, hid-lg-g15)
+    const DeviceModel::Led *keys = model->ledByRole(QStringLiteral("backlight"));
+    QCOMPARE(keys->type, DeviceModel::LedType::Level);
+    QCOMPARE(keys->max, 2);
+    QCOMPARE(model->ledByRole(QStringLiteral("lcd-backlight"))->suffix, QStringLiteral("lcd_backlight"));
+    QCOMPARE(model->lcd()->type, QStringLiteral("g15-hidraw"));
+}
+
+void TestDeviceModel::g11Model()
+{
+    ModelRegistry registry;
+    registry.load({QStringLiteral(GKEY_SOURCE_MODEL_DIR)});
+    const DeviceModel *model = registry.findByUsb(0x046d, 0xc225);
+    QVERIFY(model);
+    QCOMPARE(model->id(), QStringLiteral("g11"));
+    QVERIFY(!model->tested());
+    // A G15 without LCD: 18 G keys, no LCD keys, no LCD and no LCD backlight
+    QCOMPARE(model->bindableKeyIds().size(), 18);
+    QVERIFY(!model->keyById(QStringLiteral("BD")));
+    QVERIFY(!model->lcd());
+    QVERIFY(!model->ledByRole(QStringLiteral("lcd-backlight")));
+    QCOMPARE(model->ledByRole(QStringLiteral("backlight"))->type, DeviceModel::LedType::Level);
+    QCOMPARE(model->keyById(QStringLiteral("MR"))->role, DeviceModel::KeyRole::Record);
+}
+
+void TestDeviceModel::g15v2Model()
+{
+    ModelRegistry registry;
+    registry.load({QStringLiteral(GKEY_SOURCE_MODEL_DIR)});
+    const DeviceModel *model = registry.findByUsb(0x046d, 0xc227);
+    QVERIFY(model);
+    QCOMPARE(model->id(), QStringLiteral("g15v2"));
+    QVERIFY(!model->tested());
+    // 6 G keys + L1-L4 (hid-lg-g15: gkeys = 6)
+    QCOMPARE(model->bindableKeyIds().size(), 10);
+    QVERIFY(!model->keyById(QStringLiteral("G7")));
+    QCOMPARE(model->keyForCode(QStringLiteral("keys"), KEY_KBD_LCD_MENU1)->id, QStringLiteral("BD"));
+    QCOMPARE(model->ledByRole(QStringLiteral("lcd-backlight"))->max, 2);
+    QCOMPARE(model->lcd()->type, QStringLiteral("g15-hidraw"));
 }
 
 void TestDeviceModel::invalidModels_data()

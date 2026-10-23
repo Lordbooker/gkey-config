@@ -72,6 +72,30 @@ void BindingEngine::handle(const QString &keyId, DeviceModel::KeyRole role, bool
         return;
     case DeviceModel::KeyRole::Hardware:
         return;
+    case DeviceModel::KeyRole::LcdNext:
+        // Fixed: the only way through the LCD pages on the device itself.
+        if (pressed)
+            emit lcdPageRequested(QStringLiteral("next"));
+        return;
+    case DeviceModel::KeyRole::Passthrough: {
+        // The device is grabbed, so keys meant for the system (G510 mute keys)
+        // are sent on through the virtual device as they are.
+        const DeviceModel::Key *key = m_model.keyById(keyId);
+        if (!key)
+            return;
+        if (pressed && !m_held.contains(keyId)) {
+            press(keyId, Action::key(key->code));
+        } else if (!pressed) {
+            const auto it = m_held.find(keyId);
+            if (it == m_held.end())
+                return;
+            const Action action = it.value();
+            m_held.erase(it);
+            release(action);
+        }
+        m_output.sync();
+        return;
+    }
     case DeviceModel::KeyRole::Bindable:
         break;
     }

@@ -49,6 +49,8 @@ public:
 
     // Selects a key and a tab (0 key, 1 backlight, 2 stick, 3 LCD, 4 macros), e.g. for screenshots.
     void showKey(const QString &keyId, int tab);
+    // Selects a device model by ID, e.g. for screenshots; false if unknown.
+    bool showModel(const QString &modelId);
 
     // Renders the window to an image file (documentation, tests).
     bool saveScreenshot(const QString &path);
@@ -79,6 +81,9 @@ private:
     void onStickCalibrate();
     void onBacklightToggled(bool enabled);
     void onChooseBacklight();
+    void updateLevelWidgets(const Profile *profile);
+    void onLevelToggled(bool enabled);
+    void onLevelChanged();
     void updateDaemonState();
     void runSystemctl(const QString &verb);
     void updateLedHint();
@@ -111,6 +116,11 @@ private:
     Settings *m_settings = nullptr;
     QCheckBox *m_backlightEnabled = nullptr;
     QPushButton *m_backlightButton = nullptr;
+    QWidget *m_colourWidget = nullptr;
+    QWidget *m_levelWidget = nullptr;
+    QCheckBox *m_levelEnabled = nullptr;
+    QComboBox *m_levelBox = nullptr;
+    QComboBox *m_lcdLevelBox = nullptr;
     QLabel *m_ledHint = nullptr;
     QPushButton *m_ledButton = nullptr;
     SessionSetup *m_session = nullptr;

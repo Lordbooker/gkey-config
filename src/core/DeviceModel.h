@@ -34,6 +34,8 @@ public:
         Mode3,
         Record,
         Hardware,   // handled by the device itself (e.g. G13 light button), never bound
+        LcdNext,    // shows the next LCD page (G13 BD button), never bound
+        Passthrough,   // sent on unchanged (e.g. G510 mute keys on the grabbed device), never bound
     };
 
     struct Key {
@@ -53,9 +55,10 @@ public:
     };
 
     struct Led {
-        QString role;     // "backlight", "mode1", "mode2", "mode3", "record"
+        QString role;     // "backlight", "mode1", "mode2", "mode3", "record", "lcd-backlight"
         QString suffix;   // end of the LED class name, e.g. "macro_preset_1"
         LedType type = LedType::OnOff;
+        int max = 1;        // highest brightness of a Level LED (shown in the GUI), from "max"
     };
 
     struct Stick {

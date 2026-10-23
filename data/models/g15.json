@@ -1,0 +1,91 @@
+{
+  "id": "g15",
+  "name": "Logitech G15",
+  "tested": false,
+  "minKernel": "5.5",
+  "usb": [
+    { "vendor": "046d", "product": "c222" }
+  ],
+  "inputs": {
+    "keys": "Logitech Gaming Keyboard Gaming Keys"
+  },
+  "keys": [
+    { "id": "G1", "code": "KEY_MACRO1" },
+    { "id": "G2", "code": "KEY_MACRO2" },
+    { "id": "G3", "code": "KEY_MACRO3" },
+    { "id": "G4", "code": "KEY_MACRO4" },
+    { "id": "G5", "code": "KEY_MACRO5" },
+    { "id": "G6", "code": "KEY_MACRO6" },
+    { "id": "G7", "code": "KEY_MACRO7" },
+    { "id": "G8", "code": "KEY_MACRO8" },
+    { "id": "G9", "code": "KEY_MACRO9" },
+    { "id": "G10", "code": "KEY_MACRO10" },
+    { "id": "G11", "code": "KEY_MACRO11" },
+    { "id": "G12", "code": "KEY_MACRO12" },
+    { "id": "G13", "code": "KEY_MACRO13" },
+    { "id": "G14", "code": "KEY_MACRO14" },
+    { "id": "G15", "code": "KEY_MACRO15" },
+    { "id": "G16", "code": "KEY_MACRO16" },
+    { "id": "G17", "code": "KEY_MACRO17" },
+    { "id": "G18", "code": "KEY_MACRO18" },
+    { "id": "BD", "code": "KEY_KBD_LCD_MENU1", "role": "lcd" },
+    { "id": "L1", "code": "KEY_KBD_LCD_MENU2" },
+    { "id": "L2", "code": "KEY_KBD_LCD_MENU3" },
+    { "id": "L3", "code": "KEY_KBD_LCD_MENU4" },
+    { "id": "L4", "code": "KEY_KBD_LCD_MENU5" },
+    { "id": "M1", "code": "KEY_MACRO_PRESET1", "role": "mode1" },
+    { "id": "M2", "code": "KEY_MACRO_PRESET2", "role": "mode2" },
+    { "id": "M3", "code": "KEY_MACRO_PRESET3", "role": "mode3" },
+    { "id": "MR", "code": "KEY_MACRO_RECORD_START", "role": "record" }
+  ],
+  "leds": {
+    "backlight": { "suffix": "kbd_backlight", "type": "level", "max": 2 },
+    "lcd-backlight": { "suffix": "lcd_backlight", "type": "level", "max": 2 },
+    "mode1": { "suffix": "macro_preset1" },
+    "mode2": { "suffix": "macro_preset2" },
+    "mode3": { "suffix": "macro_preset3" },
+    "record": { "suffix": "macro_record" }
+  },
+  "lcd": {
+    "type": "g15-hidraw",
+    "width": 160,
+    "height": 43
+  },
+  "view": {
+    "width": 420,
+    "height": 530,
+    "decorations": [
+      { "role": "body", "x": 20, "y": 20, "w": 380, "h": 490, "radius": 28 },
+      { "role": "lcd", "x": 110, "y": 38, "w": 200, "h": 62, "radius": 6 }
+    ],
+    "keys": [
+      { "key": "BD", "shape": "ellipse", "x": 92, "y": 112, "w": 20, "h": 20, "label": "" },
+      { "key": "L1", "x": 128, "y": 115, "w": 42, "h": 14, "radius": 4 },
+      { "key": "L2", "x": 178, "y": 115, "w": 42, "h": 14, "radius": 4 },
+      { "key": "L3", "x": 228, "y": 115, "w": 42, "h": 14, "radius": 4 },
+      { "key": "L4", "x": 278, "y": 115, "w": 42, "h": 14, "radius": 4 },
+      { "key": "M1", "x": 70, "y": 146, "w": 64, "h": 20 },
+      { "key": "M2", "x": 142, "y": 146, "w": 64, "h": 20 },
+      { "key": "M3", "x": 214, "y": 146, "w": 64, "h": 20 },
+      { "key": "MR", "x": 286, "y": 146, "w": 64, "h": 20 },
+      { "key": "G1", "x": 95, "y": 190, "w": 70, "h": 42 },
+      { "key": "G2", "x": 175, "y": 190, "w": 70, "h": 42 },
+      { "key": "G3", "x": 255, "y": 190, "w": 70, "h": 42 },
+      { "key": "G4", "x": 95, "y": 242, "w": 70, "h": 42 },
+      { "key": "G5", "x": 175, "y": 242, "w": 70, "h": 42 },
+      { "key": "G6", "x": 255, "y": 242, "w": 70, "h": 42 },
+      { "key": "G7", "x": 95, "y": 294, "w": 70, "h": 42 },
+      { "key": "G8", "x": 175, "y": 294, "w": 70, "h": 42 },
+      { "key": "G9", "x": 255, "y": 294, "w": 70, "h": 42 },
+      { "key": "G10", "x": 95, "y": 346, "w": 70, "h": 42 },
+      { "key": "G11", "x": 175, "y": 346, "w": 70, "h": 42 },
+      { "key": "G12", "x": 255, "y": 346, "w": 70, "h": 42 },
+      { "key": "G13", "x": 95, "y": 398, "w": 70, "h": 42 },
+      { "key": "G14", "x": 175, "y": 398, "w": 70, "h": 42 },
+      { "key": "G15", "x": 255, "y": 398, "w": 70, "h": 42 },
+      { "key": "G16", "x": 95, "y": 450, "w": 70, "h": 42 },
+      { "key": "G17", "x": 175, "y": 450, "w": 70, "h": 42 },
+      { "key": "G18", "x": 255, "y": 450, "w": 70, "h": 42 }
+    ]
+  }
+}

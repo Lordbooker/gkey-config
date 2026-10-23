@@ -7,13 +7,23 @@
 # (systemd-logind). The tag is evaluated by 73-seat-late.rules, so this file must
 # sort BEFORE 73.
 #
-# Supported models: G13 (046d:c21c).
+# Supported models: G11 (046d:c225), G13 (046d:c21c), G15 (046d:c222), G15 v2
+# (046d:c227), G510 (046d:c22d, c22e with headset).
 
-# Gaming-keys and thumbstick input devices.
+# G13: gaming-keys and thumbstick input devices, hidraw node (LCD). The G13 has
+# no other function, so the USB IDs are enough.
 SUBSYSTEM=="input", KERNEL=="event*", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c21c", TAG+="uaccess"
-
-# hidraw node (G13 LCD).
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c21c", TAG+="uaccess"
+
+# G11, G15, G15 v2, G510: the normal keyboard is another interface of the same USB
+# device and must stay closed. Only the HID interface driven by hid-lg-g15 (gaming
+# keys, LCD) is opened: KERNELS and DRIVERS match the same parent, the HID device
+# "0003:046D:C22D.nnnn".
+SUBSYSTEM=="input", KERNEL=="event*", KERNELS=="0003:046D:C22[257].*", DRIVERS=="lg-g15", TAG+="uaccess"
+# The G11 has no LCD, so its hidraw node stays closed.
+SUBSYSTEM=="hidraw", KERNELS=="0003:046D:C22[27].*", DRIVERS=="lg-g15", TAG+="uaccess"
+SUBSYSTEM=="input", KERNEL=="event*", KERNELS=="0003:046D:C22[DE].*", DRIVERS=="lg-g15", TAG+="uaccess"
+SUBSYSTEM=="hidraw", KERNELS=="0003:046D:C22[DE].*", DRIVERS=="lg-g15", TAG+="uaccess"
 
 # Virtual input device for the key output.
 KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess"
@@ -22,5 +32,5 @@ KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uacces
 # by sysusers.d/gkey-config.conf) may change brightness and colour of the LEDs
 # that belong to a supported device. Users are added by the administrator:
 #   sudo usermod -aG gkey $USER
-ACTION=="add", SUBSYSTEM=="leds", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c21c", \
+ACTION=="add", SUBSYSTEM=="leds", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c21c|c222|c225|c227|c22d|c22e", \
     RUN+="/bin/sh -c 'for f in /sys%p/brightness /sys%p/multi_intensity; do [ -e $$f ] && chgrp gkey $$f && chmod 0664 $$f; done; exit 0'"
