@@ -46,7 +46,7 @@ void SessionSetup::runSystemctl(const QStringList &arguments, const std::functio
     process->start(QStringLiteral("systemctl"), QStringList{QStringLiteral("--user")} + arguments);
 }
 
-void SessionSetup::runDaemonCommand(const QString &verb, std::function<void(int, const QString &)> done)
+void SessionSetup::runDaemonCommand(const QString &verb, const std::function<void(int, const QString &)> &done)
 {
     runSystemctl({verb, Unit}, done);
 }

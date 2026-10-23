@@ -152,7 +152,7 @@ Device *Daemon::createDevice(const DeviceModel &model, const QString &hidSyspath
 {
     ModelContext *ctx = context(model.id());
     auto *device = new Device(model, hidSyspath, *m_output, this);
-    const QString modelId = model.id();
+    const QString &modelId = model.id();
     BindingEngine *engine = device->engine();
     engine->setMacroStore(m_macros);
     engine->setProfile(ctx->profile);

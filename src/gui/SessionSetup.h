@@ -38,7 +38,7 @@ public:
 
     // Runs "systemctl --user <verb> gkeyd.service" (start, stop, restart);
     // done gets the exit code (-1 if systemctl could not run) and its output.
-    void runDaemonCommand(const QString &verb, std::function<void(int, const QString &)> done);
+    void runDaemonCommand(const QString &verb, const std::function<void(int, const QString &)> &done);
 
 signals:
     void daemonAutostartChanged(SessionSetup::DaemonAutostart state);
