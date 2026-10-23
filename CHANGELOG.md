@@ -6,6 +6,11 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Fixed
+
+- Logitech G11: the minimum kernel is Linux 5.7, not 5.5 (the G11 was added to `hid-lg-g15` after
+  the G15 and G510). The status bar now reports Linux 5.5 and 5.6 as too old for the G11.
+
 ## [1.2.0] - 2026-10-23
 
 ### Added

@@ -161,6 +161,7 @@ void TestDeviceModel::g11Model()
     QVERIFY(model);
     QCOMPARE(model->id(), QStringLiteral("g11"));
     QVERIFY(!model->tested());
+    QCOMPARE(model->minKernel(), QStringLiteral("5.7"));   // commit b1bd0f75288f, first in Linux 5.7
     // A G15 without LCD: 18 G keys, no LCD keys, no LCD and no LCD backlight
     QCOMPARE(model->bindableKeyIds().size(), 18);
     QVERIFY(!model->keyById(QStringLiteral("BD")));

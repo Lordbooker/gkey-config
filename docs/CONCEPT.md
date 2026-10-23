@@ -538,7 +538,7 @@ session; the systemd unit is `Type=dbus`.
 | Method | `Reload()` | re-reads profiles and macros (normally automatic) |
 | Method | `RunMacro(s name) → b` / `StopMacros()` | |
 | Method | `SetRecording(b)` | MR LED and `RecordingChanged` |
-| Method | `LcdText(s text, i seconds)` | text page; `\n` separates lines; seconds 0 = until the page is changed |
+| Method | `LcdText(s text, i seconds)` | text page; lines are separated by newline characters (a literal backslash-n is not interpreted); seconds 0 = until the page is changed |
 | Method | `LcdPage(s page)` | `next`, `previous`, `status`, `system`, `clock`, `text` |
 | Method | `CalibrateStick(s model) → b` | current stick position becomes the rest position |
 | Property | `Recording` (b) | |
@@ -654,6 +654,9 @@ handling, so it also registers the LCD key codes and `g15::lcd_backlight`). The 
 (untested) therefore lists only what the keyboard physically has:
 
 * USB 046d:c225; G1–G18, M1–M3, MR; no LCD keys, no `lcd` section, no `lcd-backlight` LED.
+* Kernel: added by commit `b1bd0f75288f` ("HID: logitech: Add support for Logitech G11 extra
+  keys"), first in **Linux 5.7** (not 5.5 like G15, G15 v2 and G510); `minKernel` "5.7"
+  *(corrected after 1.2.0)*.
 * Backlight `g15::kbd_backlight`, brightness 0–2 (type `level`), M LEDs as on the G15.
 * udev: only the input device of the hid-lg-g15 interface; the hidraw node stays closed.
 * View: M row and 3 × 6 G keys.
@@ -671,6 +674,12 @@ Like the G15 (13.0a), untested; from the kernel driver (`lg_g15_v2_event`, `gkey
 ### 13.1 To do
 
 Agreed ideas that are not scheduled yet:
+
+* **Logitech G710 / G710+** *(noted 2026-10-23, watch)*. A patch adds them to `hid-lg-g15`
+  (USB 046d:c24d; "[PATCH] HID: lg-g15: Add support for the Logitech G710/G710+ gaming
+  keyboards", Xavier Bestel, posted 2026-04 and again 2026-05-18). Not in the kernel as of
+  2026-10-22 (master during the 7.4 merge window). Once merged: model file after the same scheme
+  as G510/G15 (untested), `minKernel` = the first release containing it.
 
 * **NVIDIA GPUs on the LCD system page** *(discussed 2026-10-22, postponed)*. The proprietary
   driver exposes neither load, VRAM nor a hwmon temperature in sysfs, so the values come from NVML
