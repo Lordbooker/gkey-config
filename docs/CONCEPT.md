@@ -332,7 +332,10 @@ Runtime state that is not configuration (active profile and mode per model) live
 * `repeat` (macros): `once`, `while_held`, `toggle`, `count` (with `"count": n`).
 * `profile`: a profile name, `next` or `previous`.
 * An invalid binding only disables that binding, not the profile; an invalid file is skipped.
-* Members the daemon does not know are kept when the file is written again.
+* Members the daemon does not know are kept when the file is written again: unknown top-level
+  members, unknown modes, and bindings that are invalid or not bindable on the model (they stay
+  inactive until the key is bound again in the GUI) *(fixed after 1.2.0; before, saving from the
+  GUI dropped them)*.
 
 ### 5.4 Import from linux-g13-driver
 
