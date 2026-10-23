@@ -6,6 +6,12 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Security
+
+- The configuration tool's single-instance socket is now in the user's runtime directory
+  (`$XDG_RUNTIME_DIR`) and only accessible by the user. Before, it was in `/tmp`, where another
+  local user could block the configuration tool from starting.
+
 ### Fixed
 
 - Saving a profile from the configuration tool no longer drops bindings that this version cannot
