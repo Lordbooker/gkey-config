@@ -88,6 +88,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.2.1" date="2026-10-23">
+      <description>
+        <p>Profiles keep bindings that this version cannot use. The LCD is written in the background, so a hanging device no longer stops the keys. The daemon waits for its permissions after login. Hardened daemon service and safer single-instance check of the configuration tool. Logitech G11 needs Linux 5.7.</p>
+      </description>
+    </release>
     <release version="1.2.0" date="2026-10-23">
       <description>
         <p>Support for Logitech G510, G15, G15 v2 and G11 (untested). The round LCD button always shows the next page. A key bound to the G13 stick no longer stays pressed after a restart of the computer.</p>

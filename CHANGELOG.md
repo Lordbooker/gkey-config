@@ -6,6 +6,8 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-23
+
 ### Changed
 
 - `scripts/probe-g13.sh` is now `scripts/probe-device.sh` and covers all supported devices,
@@ -119,7 +121,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/Lordbooker/gkey-config/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/Lordbooker/gkey-config/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/Lordbooker/gkey-config/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Lordbooker/gkey-config/compare/v1.0.0...v1.1.0
