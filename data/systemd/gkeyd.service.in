@@ -13,5 +13,20 @@ ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/gkeyd
 Restart=on-failure
 RestartSec=5
 
+# Hardening that works in a user service (seccomp based, no namespaces).
+# gkeyd needs: AF_UNIX (D-Bus, signal pipe), AF_NETLINK (udev events),
+# ioctl (evdev grab, uinput) and file access to its configuration, /dev and /sys.
+UMask=0077
+NoNewPrivileges=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+# An unexpected system call fails with EPERM instead of killing the daemon.
+SystemCallErrorNumber=EPERM
+
 [Install]
 WantedBy=default.target

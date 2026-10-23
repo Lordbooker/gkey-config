@@ -8,6 +8,8 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ### Security
 
+- The systemd user unit of the daemon is hardened (system call filter, only the socket types
+  the daemon needs, no new privileges, files created by the daemon only readable by the user).
 - The configuration tool's single-instance socket is now in the user's runtime directory
   (`$XDG_RUNTIME_DIR`) and only accessible by the user. Before, it was in `/tmp`, where another
   local user could block the configuration tool from starting.
