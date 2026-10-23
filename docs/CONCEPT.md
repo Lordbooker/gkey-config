@@ -20,7 +20,7 @@ real hardware with `evtest` before they are relied on.
 
 | Model | USB ID *(kernel)* | Kernel model | G-keys | M1–M3, MR | LCD keys | Stick | Backlight LED | LCD |
 |---|---|---|---|---|---|---|---|---|
-| G11 | 046d:c225 | treated as G15 | 18 | yes | codes registered by the kernel; physical keys *(verify)* | – | `g15::kbd_backlight` (0–2) | – |
+| G11 | 046d:c225 | treated as G15 | 18 | yes | codes registered by the kernel, no physical keys | – | `g15::kbd_backlight` (0–2) | – |
 | G13 | 046d:c21c | G13 | 22 | yes | 4 + round "next page" button | yes | `g13:rgb:kbd_backlight` (RGB) | 160×43, hidraw |
 | G15 (v1) | 046d:c222 | G15 | 18 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | 160×43, hidraw |
 | G15 v2 | 046d:c227 | G15 v2 | 6 | yes | 4 + round button | – | `g15::kbd_backlight` (0–2) | later |
@@ -608,7 +608,7 @@ on the device).
 | 8 | Packages (Arch/AUR, Ubuntu, Fedora), autostart and LED setup in the GUI, release workflow, documentation | – |
 
 Done: 1–5 and 8 (releases 1.0.0–1.1.1). Postponed: 6. Milestone 7 started with the G510
-(branch `feature/g510`, see 13.0), followed by the G15 (`feature/g15`, 13.0a); G11/G15 v2 and the
+(branch `feature/g510`, see 13.0), followed by the G15 (`feature/g15`, 13.0a) and the G11 (`feature/g11`, 13.0b); G15 v2 and the
 import from linux-g13-driver are open.
 
 ### 13.0 G510 *(2026-10-22)*
@@ -646,6 +646,17 @@ Same scheme as the G510 (kernel driver, libg15; untested, no hardware), differen
   brightness in the device itself; the profile sets it again when it becomes active.
 * LCD and its frame as on the G510 (`g15-hidraw`, 160 × 43).
 * udev: `KERNELS=="0003:046D:C222.*"` with `DRIVERS=="lg-g15"`, like the G510.
+
+### 13.0b G11 *(2026-10-22)*
+
+The kernel driver says: "The G11 is a G15 without the LCD, treat it as a G15" (same report
+handling, so it also registers the LCD key codes and `g15::lcd_backlight`). The model file
+(untested) therefore lists only what the keyboard physically has:
+
+* USB 046d:c225; G1–G18, M1–M3, MR; no LCD keys, no `lcd` section, no `lcd-backlight` LED.
+* Backlight `g15::kbd_backlight`, brightness 0–2 (type `level`), M LEDs as on the G15.
+* udev: only the input device of the hid-lg-g15 interface; the hidraw node stays closed.
+* View: M row and 3 × 6 G keys.
 
 ### 13.1 To do
 

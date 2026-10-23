@@ -22,6 +22,7 @@ private slots:
     void g13Model();
     void g510Model();
     void g15Model();
+    void g11Model();
     void invalidModels_data();
     void invalidModels();
     void registryOverride();
@@ -149,6 +150,23 @@ void TestDeviceModel::g15Model()
     QCOMPARE(keys->max, 2);
     QCOMPARE(model->ledByRole(QStringLiteral("lcd-backlight"))->suffix, QStringLiteral("lcd_backlight"));
     QCOMPARE(model->lcd()->type, QStringLiteral("g15-hidraw"));
+}
+
+void TestDeviceModel::g11Model()
+{
+    ModelRegistry registry;
+    registry.load({QStringLiteral(GKEY_SOURCE_MODEL_DIR)});
+    const DeviceModel *model = registry.findByUsb(0x046d, 0xc225);
+    QVERIFY(model);
+    QCOMPARE(model->id(), QStringLiteral("g11"));
+    QVERIFY(!model->tested());
+    // A G15 without LCD: 18 G keys, no LCD keys, no LCD and no LCD backlight
+    QCOMPARE(model->bindableKeyIds().size(), 18);
+    QVERIFY(!model->keyById(QStringLiteral("BD")));
+    QVERIFY(!model->lcd());
+    QVERIFY(!model->ledByRole(QStringLiteral("lcd-backlight")));
+    QCOMPARE(model->ledByRole(QStringLiteral("backlight"))->type, DeviceModel::LedType::Level);
+    QCOMPARE(model->keyById(QStringLiteral("MR"))->role, DeviceModel::KeyRole::Record);
 }
 
 void TestDeviceModel::invalidModels_data()

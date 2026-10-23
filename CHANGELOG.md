@@ -14,6 +14,8 @@ All notable changes to gkey-config are documented in this file. The format follo
 - Logitech G15, first version (untested, no test hardware): 18 G keys, M1–M3 and MR, LCD keys,
   M LEDs and the LCD pages. The backlight of the keys and of the LCD can be set per profile in
   three steps (off, dim, bright).
+- Logitech G11 (untested, no test hardware): 18 G keys, M1–M3 and MR, M LEDs and the backlight
+  brightness per profile.
 - `gkey-config --screenshot … --show-model <id>` (documentation).
 
 ### Changed

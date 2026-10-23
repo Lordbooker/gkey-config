@@ -1,0 +1,74 @@
+{
+  "id": "g11",
+  "name": "Logitech G11",
+  "tested": false,
+  "minKernel": "5.5",
+  "usb": [
+    { "vendor": "046d", "product": "c225" }
+  ],
+  "inputs": {
+    "keys": "Logitech Gaming Keyboard Gaming Keys"
+  },
+  "keys": [
+    { "id": "G1", "code": "KEY_MACRO1" },
+    { "id": "G2", "code": "KEY_MACRO2" },
+    { "id": "G3", "code": "KEY_MACRO3" },
+    { "id": "G4", "code": "KEY_MACRO4" },
+    { "id": "G5", "code": "KEY_MACRO5" },
+    { "id": "G6", "code": "KEY_MACRO6" },
+    { "id": "G7", "code": "KEY_MACRO7" },
+    { "id": "G8", "code": "KEY_MACRO8" },
+    { "id": "G9", "code": "KEY_MACRO9" },
+    { "id": "G10", "code": "KEY_MACRO10" },
+    { "id": "G11", "code": "KEY_MACRO11" },
+    { "id": "G12", "code": "KEY_MACRO12" },
+    { "id": "G13", "code": "KEY_MACRO13" },
+    { "id": "G14", "code": "KEY_MACRO14" },
+    { "id": "G15", "code": "KEY_MACRO15" },
+    { "id": "G16", "code": "KEY_MACRO16" },
+    { "id": "G17", "code": "KEY_MACRO17" },
+    { "id": "G18", "code": "KEY_MACRO18" },
+    { "id": "M1", "code": "KEY_MACRO_PRESET1", "role": "mode1" },
+    { "id": "M2", "code": "KEY_MACRO_PRESET2", "role": "mode2" },
+    { "id": "M3", "code": "KEY_MACRO_PRESET3", "role": "mode3" },
+    { "id": "MR", "code": "KEY_MACRO_RECORD_START", "role": "record" }
+  ],
+  "leds": {
+    "backlight": { "suffix": "kbd_backlight", "type": "level", "max": 2 },
+    "mode1": { "suffix": "macro_preset1" },
+    "mode2": { "suffix": "macro_preset2" },
+    "mode3": { "suffix": "macro_preset3" },
+    "record": { "suffix": "macro_record" }
+  },
+  "view": {
+    "width": 420,
+    "height": 434,
+    "decorations": [
+      { "role": "body", "x": 20, "y": 20, "w": 380, "h": 394, "radius": 28 }
+    ],
+    "keys": [
+      { "key": "M1", "x": 70, "y": 50, "w": 64, "h": 20 },
+      { "key": "M2", "x": 142, "y": 50, "w": 64, "h": 20 },
+      { "key": "M3", "x": 214, "y": 50, "w": 64, "h": 20 },
+      { "key": "MR", "x": 286, "y": 50, "w": 64, "h": 20 },
+      { "key": "G1", "x": 95, "y": 94, "w": 70, "h": 42 },
+      { "key": "G2", "x": 175, "y": 94, "w": 70, "h": 42 },
+      { "key": "G3", "x": 255, "y": 94, "w": 70, "h": 42 },
+      { "key": "G4", "x": 95, "y": 146, "w": 70, "h": 42 },
+      { "key": "G5", "x": 175, "y": 146, "w": 70, "h": 42 },
+      { "key": "G6", "x": 255, "y": 146, "w": 70, "h": 42 },
+      { "key": "G7", "x": 95, "y": 198, "w": 70, "h": 42 },
+      { "key": "G8", "x": 175, "y": 198, "w": 70, "h": 42 },
+      { "key": "G9", "x": 255, "y": 198, "w": 70, "h": 42 },
+      { "key": "G10", "x": 95, "y": 250, "w": 70, "h": 42 },
+      { "key": "G11", "x": 175, "y": 250, "w": 70, "h": 42 },
+      { "key": "G12", "x": 255, "y": 250, "w": 70, "h": 42 },
+      { "key": "G13", "x": 95, "y": 302, "w": 70, "h": 42 },
+      { "key": "G14", "x": 175, "y": 302, "w": 70, "h": 42 },
+      { "key": "G15", "x": 255, "y": 302, "w": 70, "h": 42 },
+      { "key": "G16", "x": 95, "y": 354, "w": 70, "h": 42 },
+      { "key": "G17", "x": 175, "y": 354, "w": 70, "h": 42 },
+      { "key": "G18", "x": 255, "y": 354, "w": 70, "h": 42 }
+    ]
+  }
+}
