@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 #include "LcdFrame.h"
+#include "LcdIntro.h"
+#include "LcdIntroImages.h"
 #include "LcdPages.h"
 
 #include <QTest>
@@ -15,6 +17,8 @@ private slots:
     void ascii();
     void elide();
     void pages();
+    void introAnimation();
+    void introStartsDarkWithoutFirmwareLogo();
 };
 
 namespace {
@@ -104,6 +108,59 @@ void TestLcd::pages()
     QVERIFY(litPixels(frame) > 20);
     LcdPages::renderText(frame, {});
     QCOMPARE(litPixels(frame), 0);
+}
+
+// The start animation from linux-g13-driver: about 9 s at 20 frames per second;
+// the G13 starts with its firmware logo and ends with its final image.
+void TestLcd::introAnimation()
+{
+    QCOMPARE(LcdIntro::frameCount(), 176);
+    QVERIFY(LcdPages::allPages().startsWith(LcdPages::IntroPage));
+    QVERIFY(!LcdPages::rotation(LcdPages::allPages()).contains(LcdPages::IntroPage));
+
+    const auto bit = [](const auto &bitmap, int x, int y) { return ((bitmap[y][x >> 3] >> (7 - (x & 7))) & 1) != 0; };
+    LcdIntro intro(QStringLiteral("g13"));
+    LcdFrame frame(160, 43);
+    intro.step();
+    intro.render(frame);
+    for (int y = 0; y < 43; ++y)
+        for (int x = 0; x < 160; ++x)
+            QCOMPARE(frame.pixel(x, y), bit(LcdIntroImages::g13Firmware, x, y));
+
+    LcdIntro again(QStringLiteral("g13"));   // same seed: the same frames
+    LcdFrame other(160, 43);
+    while (!intro.finished()) {
+        intro.step();
+        again.step();
+        if (intro.frame() == 100) {
+            intro.render(frame);
+            again.render(other);
+            QCOMPARE(frame.toG13Report(), other.toG13Report());
+        }
+    }
+    intro.render(frame);
+    for (int y = 0; y < 43; ++y)
+        for (int x = 0; x < 160; ++x)
+            QCOMPARE(frame.pixel(x, y), bit(LcdIntroImages::g13Final, x, y));
+}
+
+void TestLcd::introStartsDarkWithoutFirmwareLogo()
+{
+    const auto bit = [](const auto &bitmap, int x, int y) { return ((bitmap[y][x >> 3] >> (7 - (x & 7))) & 1) != 0; };
+    LcdIntro intro(QStringLiteral("g510"));
+    LcdFrame frame(160, 43);
+    intro.step();
+    intro.render(frame);
+    QCOMPARE(litPixels(frame), 160 * 43);   // dark display
+    while (!intro.finished())
+        intro.step();
+    intro.render(frame);
+    QCOMPARE(frame.pixel(100, 20), bit(LcdIntroImages::g510Final, 100, 20));
+    bool sameAsG510 = true;
+    for (int y = 0; y < 43; ++y)
+        for (int x = 0; x < 160; ++x)
+            sameAsG510 = sameAsG510 && frame.pixel(x, y) == bit(LcdIntroImages::g510Final, x, y);
+    QVERIFY(sameAsG510);
 }
 
 QTEST_GUILESS_MAIN(TestLcd)

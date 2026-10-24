@@ -28,6 +28,9 @@ add_library(gkey-core STATIC
     LcdFont.cpp
     LcdFont.h
     LcdFrame.cpp
+    LcdIntro.cpp
+    LcdIntro.h
+    LcdIntroImages.h
     LcdFrame.h
     LcdPages.cpp
     LcdPages.h

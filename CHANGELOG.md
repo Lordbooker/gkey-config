@@ -6,6 +6,14 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Added
+
+- LCD start animation from linux-g13-driver: a flame wall burns the start image and reveals Tux
+  and the device name. On the G13 it starts with the firmware logo, on G15, G15 v2 and G510 with a
+  dark display. It is the first entry in the LCD tab and can be switched off there; when enabled
+  it plays every time the device connects and stays until the next page is chosen. Enabled by
+  default for new installations; existing settings list it unchecked.
+
 ## [1.2.1] - 2026-10-23
 
 ### Changed

@@ -321,6 +321,7 @@ void MainWindow::selectModel(const QString &modelId)
     m_modelCombo->setCurrentIndex(m_modelCombo->findData(modelId));
     m_view->setModel(m_model);
     m_backlightPage->setModel(m_model);
+    m_lcdPage->setModelId(m_model.id());
 
     delete m_store;
     m_store = new ProfileStore(m_model, ConfigPaths::profileDir(modelId), this);
