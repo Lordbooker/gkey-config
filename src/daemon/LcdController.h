@@ -5,6 +5,7 @@
 
 #include "DeviceModel.h"
 #include "LcdFrame.h"
+#include "LcdIntro.h"
 #include "LcdPages.h"
 #include "LcdWriter.h"
 #include "SystemStats.h"
@@ -32,9 +33,13 @@ public:
     bool available() const { return m_available; }
 
     void setPages(const QStringList &pages);
+    // First content after the device connected: the start animation if it is
+    // enabled (its final image stays until the page is changed), else the
+    // first page. Call after setPages().
+    void start();
     void setStatus(const LcdPages::Status &status);
 
-    // "next", "previous" or a page name.
+    // "next", "previous" or a page name; "intro" plays the start animation again.
     void showPage(const QString &page);
     const QString &currentPage() const { return m_page; }
 
@@ -48,6 +53,8 @@ public:
 
 private:
     void write();
+    void playIntro();
+    void returnFromText();
 
     DeviceModel m_model;
     bool m_available = false;
@@ -61,4 +68,6 @@ private:
     SystemStats m_stats;
     QTimer *m_clockTimer = nullptr;   // ticks while the clock or the system page is shown
     QTimer *m_textTimer = nullptr;
+    std::unique_ptr<LcdIntro> m_intro;   // start animation (kept for its final image)
+    QTimer *m_introTimer = nullptr;      // next animation frame
 };

@@ -15,8 +15,16 @@ class LcdFrame;
 // to the device) and the GUI (preview).
 namespace LcdPages {
 
+// The start animation (LcdIntro): shown first when a device connects, if it is
+// enabled; not part of the pages the device pages through.
+inline const QString IntroPage = QStringLiteral("intro");
+
 // Page names in their default order.
 const QStringList &allPages();
+
+// The pages that "next" and "previous" go through: the enabled pages without
+// the start animation.
+QStringList rotation(const QStringList &pages);
 
 struct Status {
     QString deviceName;

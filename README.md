@@ -28,7 +28,7 @@ or keyd.
 - Three layers (M1–M3) per profile, any number of profiles
 - Macros with recording, run once, while held, as a toggle or several times
 - Backlight colour or brightness per profile
-- LCD pages: status, system load with temperatures, clock, text from scripts
+- LCD: flame start animation, status, system load with temperatures, clock, text from scripts
 - G13 stick as keys, mouse pointer, scroll wheel or joystick
 - D-Bus API for scripts, tray icon, interface in six languages
 

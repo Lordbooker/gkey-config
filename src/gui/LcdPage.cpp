@@ -25,20 +25,17 @@ LcdPage::LcdPage(QWidget *parent) : QWidget(parent)
 {
     auto *layout = new QVBoxLayout(this);
     auto *hint = new QLabel(tr("Pages shown on the LCD, in this order. The round button next to the LCD keys "
-                               "switches to the next page."),
+                               "switches to the next page. The start animation plays when the device connects "
+                               "and stays until you switch to the next page."),
                             this);
     hint->setWordWrap(true);
     layout->addWidget(hint);
 
     m_list = new QListWidget(this);
     m_list->setDragDropMode(QAbstractItemView::InternalMove);
-    m_list->setMaximumHeight(110);
-    for (const QString &page : LcdPages::allPages()) {
-        auto *item = new QListWidgetItem(title(page), m_list);
-        item->setData(Qt::UserRole, page);
-        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-        item->setCheckState(Qt::Checked);
-    }
+    m_list->setMaximumHeight(130);
+    for (const QString &page : LcdPages::allPages())
+        addItem(page, true);
     layout->addWidget(m_list);
 
     m_preview = new QLabel(this);
@@ -60,22 +57,40 @@ LcdPage::LcdPage(QWidget *parent) : QWidget(parent)
     m_clock = new QTimer(this);
     m_clock->setInterval(1000);
     connect(m_clock, &QTimer::timeout, this, &LcdPage::updatePreview);
+    m_introTimer = new QTimer(this);
+    m_introTimer->setInterval(LcdIntro::FrameMs);
+    connect(m_introTimer, &QTimer::timeout, this, [this] {
+        if (m_intro)
+            m_intro->step();
+        updatePreview();
+    });
 
-    connect(m_list, &QListWidget::currentItemChanged, this, &LcdPage::updatePreview);
+    connect(m_list, &QListWidget::currentItemChanged, this, [this] {
+        m_intro.reset();   // selecting the start animation plays it from the beginning
+        updatePreview();
+    });
     connect(m_list, &QListWidget::itemChanged, this, [this] {
         if (m_updating)
             return;
-        // At least one page stays enabled.
-        if (enabledPages().isEmpty()) {
+        // At least one page besides the start animation stays enabled, so the
+        // round button always has a page to go to.
+        if (LcdPages::rotation(enabledPages()).isEmpty()) {
             m_updating = true;
-            m_list->item(0)->setCheckState(Qt::Checked);
+            for (int i = 0; i < m_list->count(); ++i) {
+                if (m_list->item(i)->data(Qt::UserRole).toString() != LcdPages::IntroPage) {
+                    m_list->item(i)->setCheckState(Qt::Checked);
+                    break;
+                }
+            }
             m_updating = false;
         }
         emit pagesChanged(enabledPages());
     });
     connect(m_list->model(), &QAbstractItemModel::rowsMoved, this, [this] {
-        if (!m_updating)
-            emit pagesChanged(enabledPages());
+        if (m_updating)
+            return;
+        keepIntroFirst();
+        emit pagesChanged(enabledPages());
     });
     connect(m_show, &QPushButton::clicked, this, [this] {
         if (QListWidgetItem *item = m_list->currentItem())
@@ -85,8 +100,35 @@ LcdPage::LcdPage(QWidget *parent) : QWidget(parent)
     m_list->setCurrentRow(0);
 }
 
+QListWidgetItem *LcdPage::addItem(const QString &page, bool enabled)
+{
+    auto *item = new QListWidgetItem(title(page), m_list);
+    item->setData(Qt::UserRole, page);
+    item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+    if (page == LcdPages::IntroPage)
+        item->setFlags(item->flags() & ~Qt::ItemIsDragEnabled);   // always first
+    item->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
+    return item;
+}
+
+// A page dropped above the start animation: move the animation back to the top.
+void LcdPage::keepIntroFirst()
+{
+    for (int i = 1; i < m_list->count(); ++i) {
+        if (m_list->item(i)->data(Qt::UserRole).toString() == LcdPages::IntroPage) {
+            const bool wasUpdating = m_updating;
+            m_updating = true;
+            m_list->insertItem(0, m_list->takeItem(i));
+            m_updating = wasUpdating;
+            return;
+        }
+    }
+}
+
 QString LcdPage::title(const QString &page)
 {
+    if (page == LcdPages::IntroPage)
+        return tr("Start animation (flames, when the device connects)");
     if (page == u"status")
         return tr("Status (profile and layer)");
     if (page == u"system")
@@ -103,16 +145,14 @@ void LcdPage::setPages(const QStringList &enabled)
     m_updating = true;
     const QString current = m_list->currentItem() ? m_list->currentItem()->data(Qt::UserRole).toString() : QString();
     m_list->clear();
-    QStringList order = enabled;
-    for (const QString &page : LcdPages::allPages()) {
+    // The start animation first, then the enabled pages in their order, then the others.
+    QStringList order = {LcdPages::IntroPage};
+    for (const QString &page : enabled + LcdPages::allPages()) {
         if (!order.contains(page))
             order.append(page);
     }
     for (const QString &page : order) {
-        auto *item = new QListWidgetItem(title(page), m_list);
-        item->setData(Qt::UserRole, page);
-        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-        item->setCheckState(enabled.contains(page) ? Qt::Checked : Qt::Unchecked);
+        QListWidgetItem *item = addItem(page, enabled.contains(page));
         if (page == current)
             m_list->setCurrentItem(item);
     }
@@ -138,12 +178,25 @@ void LcdPage::setStatus(const LcdPages::Status &status)
     updatePreview();
 }
 
+void LcdPage::setModelId(const QString &modelId)
+{
+    if (modelId == m_modelId)
+        return;
+    m_modelId = modelId;
+    m_intro.reset();
+    updatePreview();
+}
+
 void LcdPage::updatePreview()
 {
     const QString page = m_list->currentItem() ? m_list->currentItem()->data(Qt::UserRole).toString()
                                                : QStringLiteral("status");
     LcdFrame frame(160, 43);
-    if (page == u"clock")
+    if (page == LcdPages::IntroPage) {
+        if (!m_intro)
+            m_intro = std::make_unique<LcdIntro>(m_modelId);
+        m_intro->render(frame);
+    } else if (page == u"clock")
         LcdPages::renderClock(frame, QDateTime::currentDateTime());
     else if (page == u"system")
         LcdPages::renderSystem(frame, m_stats.sample());
@@ -156,6 +209,12 @@ void LcdPage::updatePreview()
         m_clock->start();
     else
         m_clock->stop();
+    if (page == LcdPages::IntroPage && m_intro && !m_intro->finished() && isVisible()) {
+        if (!m_introTimer->isActive())
+            m_introTimer->start();
+    } else {
+        m_introTimer->stop();
+    }
 
     QImage image(frame.width() * PreviewScale + 8, frame.height() * PreviewScale + 8, QImage::Format_RGB32);
     image.fill(QColor(0x2b, 0x2d, 0x31));

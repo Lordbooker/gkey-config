@@ -23,9 +23,16 @@ int centeredX(const LcdFrame &frame, const QString &text, int scale)
 
 const QStringList &allPages()
 {
-    static const QStringList pages = {QStringLiteral("status"), QStringLiteral("system"), QStringLiteral("clock"),
-                                      QStringLiteral("text")};
+    static const QStringList pages = {IntroPage, QStringLiteral("status"), QStringLiteral("system"),
+                                      QStringLiteral("clock"), QStringLiteral("text")};
     return pages;
+}
+
+QStringList rotation(const QStringList &pages)
+{
+    QStringList result = pages;
+    result.removeAll(IntroPage);
+    return result;
 }
 
 void renderStatus(LcdFrame &frame, const Status &status)

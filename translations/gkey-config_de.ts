@@ -291,8 +291,12 @@
         <translation>System (CPU, RAM, GPU, VRAM)</translation>
     </message>
     <message>
-        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page.</source>
-        <translation>Seiten, die das LCD in dieser Reihenfolge zeigt. Die runde Taste neben den LCD-Tasten blättert zur nächsten Seite.</translation>
+        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page. The start animation plays when the device connects and stays until you switch to the next page.</source>
+        <translation>Seiten auf dem LCD in dieser Reihenfolge. Die runde Taste neben den LCD-Tasten blättert zur nächsten Seite. Die Startanimation läuft, wenn das Gerät verbunden wird, und bleibt stehen, bis Sie weiterblättern.</translation>
+    </message>
+    <message>
+        <source>Start animation (flames, when the device connects)</source>
+        <translation>Startanimation (Flammen, beim Verbinden des Geräts)</translation>
     </message>
 </context>
 <context>

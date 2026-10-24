@@ -197,8 +197,10 @@ Device *Daemon::createDevice(const DeviceModel &model, const QString &hidSyspath
     device->leds().applyProfile(ctx->profile);
     device->leds().setMode(ctx->mode);
     device->leds().setRecording(m_recording);
-    if (device->lcd())
+    if (device->lcd()) {
         device->lcd()->setPages(m_settings ? m_settings->lcdPages() : QStringList());
+        device->lcd()->start();   // start animation (if enabled) on every connect
+    }
     updateLcdStatus(device);
     return device;
 }

@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
+"""Generates src/core/LcdIntroImages.h, the bitmaps of the LCD start animation.
+
+The G13 images are taken over unchanged from linux-g13-driver (firmware logo
+from a photo of the G13 display; final image Tux + "G13"). The final images of
+the other devices use the same layout: Tux and the speed lines from the G13
+image, the device name in the font Black Ops One (SIL Open Font License),
+italic (shear 0.22), 40 px - the values that reproduce the G13 lettering; a
+name that is too wide gets a smaller size.
+
+Usage (needs Pillow and the font file, e.g. from github.com/google/fonts,
+ofl/blackopsone/BlackOpsOne-Regular.ttf):
+
+    tools/make-lcd-intro-images.py --font BlackOpsOne-Regular.ttf \\
+        --g13-images path/to/linux-g13-driver/g13-driver/src/driver/IntroImages.h \\
+        > src/core/LcdIntroImages.h
+"""
+
+import argparse
+import re
+
+from PIL import Image, ImageDraw, ImageFont
+
+WIDTH, HEIGHT = 160, 43
+ROW_BYTES = WIDTH // 8
+SHEAR = 0.22
+MAX_SIZE = 40
+TEXT_LEFT = 61        # first column of the name (as in the G13 image)
+TEXT_RIGHT = 158      # last column the name may use
+TEXT_CENTER_Y = 21.5  # vertical centre of the G13 lettering (rows 9-34)
+TUX_COLUMNS = 40      # columns 0-39: Tux
+LINES = [(16, 50), (22, 44), (27, 51)]  # speed lines: row, first column (end: text left - 2)
+
+# Devices with an LCD: model id -> (name, small suffix)
+DEVICES = {
+    "g15": ("G15", ""),
+    "g15v2": ("G15", "v2"),
+    "g510": ("G510", ""),
+}
+
+
+def load_bitmap(source, name):
+    block = source[source.index(name):]
+    block = block[block.index("{") + 1:block.index("};")]
+    rows = re.findall(r"\{([^}]*)\}", block)
+    if len(rows) != HEIGHT:
+        raise SystemExit(f"{name}: {len(rows)} rows, expected {HEIGHT}")
+    return [[(int(row.split(",")[x >> 3], 16) >> (7 - (x & 7))) & 1 for x in range(WIDTH)] for row in rows]
+
+
+def render(font_path, text, size, oversample=4):
+    """Pixels (set of (x, y)) of the italic text, cropped to its bounding box."""
+    font = ImageFont.truetype(font_path, size * oversample)
+    left, top, right, bottom = font.getbbox(text)
+    height = bottom - top
+    image = Image.new("L", (right - left + height, height), 0)
+    ImageDraw.Draw(image).text((-left + int(height * SHEAR), -top), text, font=font, fill=255)
+    image = image.transform(image.size, Image.AFFINE, (1, SHEAR, 0, 0, 1, 0), Image.BICUBIC)
+    image = image.resize((image.size[0] // oversample, image.size[1] // oversample), Image.LANCZOS)
+    image = image.crop(image.point(lambda v: 255 if v >= 128 else 0).getbbox())
+    pixels = {(x, y) for y in range(image.size[1]) for x in range(image.size[0]) if image.getpixel((x, y)) >= 128}
+    return pixels, image.size
+
+
+def final_image(g13_final, font_path, name, suffix):
+    # Background on (dark), drawing off (bright), as in the G13 image.
+    bitmap = [[1] * WIDTH for _ in range(HEIGHT)]
+    for y in range(HEIGHT):
+        for x in range(TUX_COLUMNS):
+            bitmap[y][x] = g13_final[y][x]
+
+    suffix_pixels, suffix_size = render(font_path, suffix, 15) if suffix else (set(), (0, 0))
+    room = TEXT_RIGHT - TEXT_LEFT + 1 - (suffix_size[0] + 2 if suffix else 0)
+    size = MAX_SIZE
+    pixels, (width, height) = render(font_path, name, size)
+    while width > room:
+        size -= 1
+        pixels, (width, height) = render(font_path, name, size)
+    top = round(TEXT_CENTER_Y - height / 2)
+    for x, y in pixels:
+        bitmap[top + y][TEXT_LEFT + x] = 0
+    if suffix:
+        sx = TEXT_LEFT + width + 2
+        sy = top + height - suffix_size[1]   # on the baseline of the name
+        for x, y in suffix_pixels:
+            bitmap[sy + y][sx + x] = 0
+
+    for row, first in LINES:
+        for x in range(first, TEXT_LEFT - 1):
+            bitmap[row][x] = 0
+    return bitmap
+
+
+def array(name, bitmap):
+    lines = [f"inline constexpr std::uint8_t {name}[Height][RowBytes] = {{"]
+    for row in bitmap:
+        values = []
+        for byte in range(ROW_BYTES):
+            value = 0
+            for bit in range(8):
+                value = (value << 1) | row[byte * 8 + bit]
+            values.append(f"0x{value:02x}")
+        lines.append("    {" + ", ".join(values) + "},")
+    lines.append("};")
+    return "\n".join(lines)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--font", required=True, help="BlackOpsOne-Regular.ttf")
+    parser.add_argument("--g13-images", required=True, help="IntroImages.h of linux-g13-driver")
+    args = parser.parse_args()
+
+    source = open(args.g13_images, encoding="utf-8").read()
+    firmware = load_bitmap(source, "intro_firmware_logo")
+    g13_final = load_bitmap(source, "intro_final_logo")
+
+    print("""// SPDX-FileCopyrightText: 2026 Lordbooker
+// SPDX-License-Identifier: GPL-2.0-only
+
+// Bitmaps of the LCD start animation (160 x 43, 1 bit), generated by
+// tools/make-lcd-intro-images.py - do not edit by hand.
+// 160 pixels per row in 20 bytes, most significant bit = left pixel;
+// 1 = pixel on (dark). Background dark, drawing bright.
+//
+// G13: from linux-g13-driver (firmware logo taken from a photo of the G13
+// display). Other devices: device name in Black Ops One (SIL Open Font License).
+// Tux: Larry Ewing (lewing@isc.tamu.edu), created with The GIMP.
+#pragma once
+
+#include <cstdint>
+
+namespace LcdIntroImages {
+
+inline constexpr int Width = 160;
+inline constexpr int Height = 43;
+inline constexpr int RowBytes = Width / 8;
+""")
+    print("// Logo shown by the G13 firmware without a driver.")
+    print(array("g13Firmware", firmware))
+    print()
+    print("// Final images: Tux and the device name.")
+    print(array("g13Final", g13_final))
+    for model, (name, suffix) in DEVICES.items():
+        print()
+        print(array(f"{model}Final", final_image(g13_final, args.font, name, suffix)))
+    print()
+    print("}")
+
+
+if __name__ == "__main__":
+    main()

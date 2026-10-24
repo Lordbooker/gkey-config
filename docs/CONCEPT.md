@@ -417,6 +417,17 @@ buttons are left to the system as well.
 
 ### 7.2 LCD (version 1)
 
+* Start animation *(added after 1.2.1, decided 2026-10-24)*: the flame intro of linux-g13-driver
+  (`LcdIntro`, frames identical to the original): a flame wall rises, burns the start image, covers
+  the display and recedes, revealing Tux and the device name; about 9 s at 20 frames per second.
+  Start image: the G13 firmware logo; on G15, G15 v2 and G510 a dark display (their firmware logos
+  are not known). Final images: G13 from linux-g13-driver; the others generated in the same style
+  (`tools/make-lcd-intro-images.py`). It is the page `intro` in the page list: always first in the
+  LCD tab and not movable; enabled by default for new installations, unchecked in existing
+  settings. When enabled it plays every time a device connects (daemon start, replug, wake-up);
+  its final image stays until the page is changed. It is not part of the rotation of "next" and
+  "previous". A text sent over D-Bus interrupts it; after a temporary text the animation continues
+  where it was. `LcdPage intro` plays it again. At least one other page always stays enabled.
 * Pages: status (device, profile, layer M1–M3, "REC" while recording), system (see below), clock
   (time, seconds, day and date in the user's locale), text (set via D-Bus `LcdText`, up to five
   lines).
@@ -556,7 +567,7 @@ session; the systemd unit is `Type=dbus`.
 | Method | `RunMacro(s name) → b` / `StopMacros()` | |
 | Method | `SetRecording(b)` | MR LED and `RecordingChanged` |
 | Method | `LcdText(s text, i seconds)` | text page; lines are separated by newline characters (a literal backslash-n is not interpreted); seconds 0 = until the page is changed |
-| Method | `LcdPage(s page)` | `next`, `previous`, `status`, `system`, `clock`, `text` |
+| Method | `LcdPage(s page)` | `next`, `previous`, `status`, `system`, `clock`, `text`, `intro` (plays the start animation) |
 | Method | `CalibrateStick(s model) → b` | current stick position becomes the rest position |
 | Property | `Recording` (b) | |
 | Signals | `DeviceAdded(s model, s syspath)`, `DeviceRemoved(s, s)`, `ProfileChanged(s model, s name)`, `ModeChanged(s model, i mode)`, `KeyEvent(s model, s key, b pressed)`, `RecordingChanged(b)` | |
@@ -608,6 +619,9 @@ on the device).
 | linux-g13-driver (GPL-2.0-only, own project) | macro engine, actions, stick zone logic, GUI parts (binding editor, colour selector, macro recorder, key capture, key names, tray, single instance, translations), CMake/CPack/release workflow | copied and adapted |
 | g13d (MIT, Raphaël Lang) | hardware facts (LCD frame format, LED names), concepts (profile → M modes, focus helper via D-Bus, stick modes) | facts and ideas; if code is ever taken over, its MIT notice is kept |
 | Linux kernel `hid-lg-g15` | event codes, device names, LED names, USB IDs | facts only |
+| linux-g13-driver: start animation | flame algorithm, G13 firmware logo and final image (`IntroAnimation`) | ported unchanged (frames bit-identical) to `LcdIntro` |
+| Tux (Larry Ewing, lewing@isc.tamu.edu, created with The GIMP) | penguin in the final images | as in linux-g13-driver; credited in `LcdIntroImages.h` |
+| Black Ops One (SIL Open Font License 1.1) | lettering of the final images | rendered to bitmaps by `tools/make-lcd-intro-images.py`; the font itself is not part of the repository |
 
 ---
 

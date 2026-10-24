@@ -6,6 +6,16 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-24
+
+### Added
+
+- LCD start animation from linux-g13-driver: a flame wall burns the start image and reveals Tux
+  and the device name. On the G13 it starts with the firmware logo, on G15, G15 v2 and G510 with a
+  dark display. It is the first entry in the LCD tab and can be switched off there; when enabled
+  it plays every time the device connects and stays until the next page is chosen. Enabled by
+  default for new installations; existing settings list it unchecked.
+
 ## [1.2.1] - 2026-10-23
 
 ### Changed
@@ -121,7 +131,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/Lordbooker/gkey-config/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/Lordbooker/gkey-config/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/Lordbooker/gkey-config/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/Lordbooker/gkey-config/compare/v1.1.0...v1.1.1
