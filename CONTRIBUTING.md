@@ -46,7 +46,8 @@ any.
 
 ## Checks
 
-CI runs these on every push and pull request; each one fails the build:
+CI runs these on every push and pull request; each one fails the build. On `dev` and for release
+tags the workflow *Release packages* runs them first and builds packages only when all pass:
 
 | Check | Where | Run it locally |
 |---|---|---|
@@ -154,8 +155,8 @@ workflow builds it from the pushed commit as a test.
    The last line only fast-forwards `dev` to the merge commit, so that development builds show
    versions like `x.y.z-3-gabc1234`.
 
-4. The workflow *Release packages* checks that the tag matches the project version, builds the
-   packages, creates the GitHub release and publishes the AUR package `gkey-config`. Publishing to the AUR needs the repository secret `AUR_SSH_PRIVATE_KEY`:
+4. The workflow *Release packages* runs all checks (see above), checks that the tag matches the
+   project version, builds the packages, creates the GitHub release and publishes the AUR package `gkey-config`. Publishing to the AUR needs the repository secret `AUR_SSH_PRIVATE_KEY`:
    *Settings → Secrets and variables → Actions → Repository secrets*, the complete private SSH key
    of the AUR account without passphrase, including the `-----BEGIN`/`-----END` lines. Without it
    the AUR step only shows a notice and the files are attached to the run as artifact `aur`; after
