@@ -26,6 +26,7 @@ private slots:
     void amdGpuAndTemperatures();
     void withoutGpu();
     void cpuDetail();
+    void amdGpuDetail();
     void formatSize();
     void degreeSign();
     void renderFourRows();
@@ -153,6 +154,40 @@ void TestSystemStats::cpuDetail()
     QCOMPARE(detail.temperatures.at(1).label, QStringLiteral("Tccd1"));
     QCOMPARE(detail.temperatures.at(1).celsius, 31.75);
     QVERIFY(!detail.percent);   // first call
+}
+
+// Values as on an RX 7900 XTX (amdgpu hwmon: clocks in Hz, power in µW).
+void TestSystemStats::amdGpuDetail()
+{
+    SystemStats none(proc(), sys());
+    QVERIFY(!none.amdGpuDetail());
+
+    addAmdGpu();
+    const QString hwmon = sys() + QStringLiteral("/class/drm/card1/device/hwmon/hwmon1");
+    write(sys() + QStringLiteral("/class/drm/card1/device/mem_busy_percent"), "12\n");
+    write(hwmon + QStringLiteral("/temp3_label"), "mem\n");
+    write(hwmon + QStringLiteral("/temp3_input"), "84000\n");
+    write(hwmon + QStringLiteral("/freq1_label"), "sclk\n");
+    write(hwmon + QStringLiteral("/freq1_input"), "2650000000\n");
+    write(hwmon + QStringLiteral("/freq2_label"), "mclk\n");
+    write(hwmon + QStringLiteral("/freq2_input"), "1249000000\n");
+    write(hwmon + QStringLiteral("/power1_label"), "PPT\n");
+    write(hwmon + QStringLiteral("/power1_average"), "312000000\n");
+    write(hwmon + QStringLiteral("/fan1_input"), "1450\n");
+
+    SystemStats stats(proc(), sys());
+    const auto detail = stats.amdGpuDetail();
+    QVERIFY(detail);
+    QCOMPARE(detail->busyPercent, std::optional<int>(84));
+    QCOMPARE(detail->memBusyPercent, std::optional<int>(12));
+    QCOMPARE(detail->coreMHz, std::optional<int>(2650));
+    QCOMPARE(detail->memMHz, std::optional<int>(1249));
+    QCOMPARE(detail->temperatures.size(), 3);
+    QCOMPARE(detail->temperatures.at(1).label, QStringLiteral("junction"));
+    QCOMPARE(detail->temperatures.at(2).celsius, 84.0);
+    QCOMPARE(detail->powerWatts, std::optional<double>(312.0));
+    QCOMPARE(detail->fanRpm, std::optional<int>(1450));
+    QVERIFY(detail->vram);
 }
 
 void TestSystemStats::formatSize()

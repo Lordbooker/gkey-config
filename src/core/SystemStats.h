@@ -40,6 +40,19 @@ public:
         int maxMHz = 0;
     };
 
+    // Details for the LCD pages "amdgpu" and "nvidia".
+    struct GpuDetail {
+        std::optional<int> busyPercent;
+        std::optional<int> memBusyPercent;   // memory controller load
+        std::optional<int> coreMHz;
+        std::optional<int> memMHz;
+        QList<Temperature> temperatures;     // AMD: edge, junction, mem
+        std::optional<Memory> vram;
+        std::optional<double> powerWatts;
+        std::optional<int> fanRpm;
+        std::optional<int> fanPercent;       // NVIDIA reports the fan in percent
+    };
+
     struct Sample {
         std::optional<int> cpuPercent;       // needs two samples (load since the last one)
         std::optional<double> cpuTemperature;
@@ -59,6 +72,9 @@ public:
     // threads of a core share it; the highest of them is taken).
     CpuDetail cpuDetail();
 
+    // The AMD GPU (amdgpu) with the most VRAM; nullopt without one.
+    std::optional<GpuDetail> amdGpuDetail();
+
 private:
     void findSensors();
     std::optional<int> cpuPercent();
@@ -71,6 +87,7 @@ private:
     QList<QStringList> m_cores;   // per physical core: cpufreq directories of its threads
     QString m_gpuDevice;     // /sys/class/drm/cardN/device
     QString m_gpuTempFile;
+    QString m_gpuHwmon;      // hwmon directory of that GPU
     qint64 m_lastIdle = -1;
     qint64 m_lastTotal = -1;
 };

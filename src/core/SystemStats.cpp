@@ -141,8 +141,10 @@ void SystemStats::findSensors()
     if (!m_gpuDevice.isEmpty()) {
         const QDir hwmon(m_gpuDevice + QStringLiteral("/hwmon"));
         const QStringList entries = hwmon.entryList({QStringLiteral("hwmon*")}, QDir::Dirs | QDir::System);
-        if (!entries.isEmpty())
-            m_gpuTempFile = temperatureFile(hwmon.filePath(entries.first()), {QStringLiteral("edge")});
+        if (!entries.isEmpty()) {
+            m_gpuHwmon = hwmon.filePath(entries.first());
+            m_gpuTempFile = temperatureFile(m_gpuHwmon, {QStringLiteral("edge")});
+        }
     }
 }
 
@@ -230,6 +232,52 @@ SystemStats::CpuDetail SystemStats::cpuDetail()
         const QString &first = m_cores.first().first();
         detail.minMHz = static_cast<int>(readNumber(first + QStringLiteral("/cpuinfo_min_freq")).value_or(0) / 1000);
         detail.maxMHz = static_cast<int>(readNumber(first + QStringLiteral("/cpuinfo_max_freq")).value_or(0) / 1000);
+    }
+    return detail;
+}
+
+std::optional<SystemStats::GpuDetail> SystemStats::amdGpuDetail()
+{
+    if (!m_sensorsSearched)
+        findSensors();
+    if (m_gpuDevice.isEmpty())
+        return std::nullopt;
+
+    GpuDetail detail;
+    const auto percent = [](const std::optional<qint64> &value) -> std::optional<int> {
+        if (!value)
+            return std::nullopt;
+        return static_cast<int>(std::clamp<qint64>(*value, 0, 100));
+    };
+    detail.busyPercent = percent(readNumber(m_gpuDevice + QStringLiteral("/gpu_busy_percent")));
+    detail.memBusyPercent = percent(readNumber(m_gpuDevice + QStringLiteral("/mem_busy_percent")));
+    const auto used = readNumber(m_gpuDevice + QStringLiteral("/mem_info_vram_used"));
+    const auto total = readNumber(m_gpuDevice + QStringLiteral("/mem_info_vram_total"));
+    if (used && total && *total > 0)
+        detail.vram = Memory{*used, *total};
+
+    if (!m_gpuHwmon.isEmpty()) {
+        const QDir hwmon(m_gpuHwmon);
+        detail.temperatures = temperatures(m_gpuHwmon);
+        // Clocks in Hz: freq1 "sclk" (GPU), freq2 "mclk" (memory)
+        for (const QString &label : hwmon.entryList({QStringLiteral("freq*_label")}, QDir::Files)) {
+            const QString name = readLine(hwmon.filePath(label));
+            const auto hz = readNumber(hwmon.filePath(label.chopped(6) + QStringLiteral("_input")));
+            if (!hz)
+                continue;
+            if (name == u"sclk")
+                detail.coreMHz = static_cast<int>(*hz / 1000000);
+            else if (name == u"mclk")
+                detail.memMHz = static_cast<int>(*hz / 1000000);
+        }
+        // Power in microwatts: average where available (RDNA2/3), else the current value
+        auto microwatts = readNumber(hwmon.filePath(QStringLiteral("power1_average")));
+        if (!microwatts)
+            microwatts = readNumber(hwmon.filePath(QStringLiteral("power1_input")));
+        if (microwatts)
+            detail.powerWatts = static_cast<double>(*microwatts) / 1e6;
+        if (const auto rpm = readNumber(hwmon.filePath(QStringLiteral("fan1_input"))))
+            detail.fanRpm = static_cast<int>(*rpm);
     }
     return detail;
 }
