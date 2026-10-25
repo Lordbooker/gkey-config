@@ -190,6 +190,18 @@
         <source>System</source>
         <translation>Système</translation>
     </message>
+    <message>
+        <source>CPU</source>
+        <translation>CPU</translation>
+    </message>
+    <message>
+        <source>AMD GPU</source>
+        <translation>GPU AMD</translation>
+    </message>
+    <message>
+        <source>NVIDIA GPU</source>
+        <translation>GPU NVIDIA</translation>
+    </message>
 </context>
 <context>
     <name>DeviceView</name>
@@ -292,11 +304,23 @@
     </message>
     <message>
         <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page. The start animation plays when the device connects and stays until you switch to the next page.</source>
-        <translation>Pages affichées sur l'écran LCD, dans cet ordre. Le bouton rond à côté des touches LCD passe à la page suivante. L'animation de démarrage s'affiche à la connexion de l'appareil et reste jusqu'au passage à la page suivante.</translation>
+        <translation>Pages affichées sur l&apos;écran LCD, dans cet ordre. Le bouton rond à côté des touches LCD passe à la page suivante. L&apos;animation de démarrage s&apos;affiche à la connexion de l&apos;appareil et reste jusqu&apos;au passage à la page suivante.</translation>
     </message>
     <message>
         <source>Start animation (flames, when the device connects)</source>
-        <translation>Animation de démarrage (flammes, à la connexion de l'appareil)</translation>
+        <translation>Animation de démarrage (flammes, à la connexion de l&apos;appareil)</translation>
+    </message>
+    <message>
+        <source>CPU (load, temperatures, clock of each core)</source>
+        <translation>CPU (charge, températures, fréquence de chaque cœur)</translation>
+    </message>
+    <message>
+        <source>AMD GPU (load, clocks, temperatures, VRAM, power, fan)</source>
+        <translation>GPU AMD (charge, fréquences, températures, VRAM, puissance, ventilateur)</translation>
+    </message>
+    <message>
+        <source>NVIDIA GPU (load, clocks, temperature, VRAM, power, fan)</source>
+        <translation>GPU NVIDIA (charge, fréquences, température, VRAM, puissance, ventilateur)</translation>
     </message>
 </context>
 <context>

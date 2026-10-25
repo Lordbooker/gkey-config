@@ -33,7 +33,7 @@ LcdPage::LcdPage(QWidget *parent) : QWidget(parent)
 
     m_list = new QListWidget(this);
     m_list->setDragDropMode(QAbstractItemView::InternalMove);
-    m_list->setMaximumHeight(130);
+    m_list->setMaximumHeight(190);
     for (const QString &page : LcdPages::allPages())
         addItem(page, true);
     layout->addWidget(m_list);
@@ -133,6 +133,12 @@ QString LcdPage::title(const QString &page)
         return tr("Status (profile and layer)");
     if (page == u"system")
         return tr("System (CPU, RAM, GPU, VRAM)");
+    if (page == u"cpu")
+        return tr("CPU (load, temperatures, clock of each core)");
+    if (page == u"amdgpu")
+        return tr("AMD GPU (load, clocks, temperatures, VRAM, power, fan)");
+    if (page == u"nvidia")
+        return tr("NVIDIA GPU (load, clocks, temperature, VRAM, power, fan)");
     if (page == u"clock")
         return tr("Clock");
     if (page == u"text")
@@ -200,12 +206,21 @@ void LcdPage::updatePreview()
         LcdPages::renderClock(frame, QDateTime::currentDateTime());
     else if (page == u"system")
         LcdPages::renderSystem(frame, m_stats.sample());
-    else if (page == u"text")
+    else if (page == u"cpu")
+        LcdPages::renderCpu(frame, m_stats.cpuDetail());
+    else if (page == u"amdgpu")
+        LcdPages::renderGpu(frame, QStringLiteral("AMD"), m_stats.amdGpuDetail(), QStringLiteral("no AMD GPU (amdgpu)"));
+    else if (page == u"nvidia") {
+        const auto gpu = m_nvidia.sample();
+        LcdPages::renderGpu(frame, QStringLiteral("NV"), gpu, m_nvidia.problem());
+    } else if (page == u"text")
         LcdPages::renderText(frame, {tr("Text from scripts"), tr("appears here.")});
     else
         LcdPages::renderStatus(frame, m_status);
 
-    if ((page == u"clock" || page == u"system") && isVisible())
+    static const QStringList livePages = {QStringLiteral("clock"), QStringLiteral("system"), QStringLiteral("cpu"),
+                                          QStringLiteral("amdgpu"), QStringLiteral("nvidia")};
+    if (livePages.contains(page) && isVisible())
         m_clock->start();
     else
         m_clock->stop();

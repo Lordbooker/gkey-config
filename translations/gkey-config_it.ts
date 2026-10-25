@@ -190,6 +190,18 @@
         <source>System</source>
         <translation>Sistema</translation>
     </message>
+    <message>
+        <source>CPU</source>
+        <translation>CPU</translation>
+    </message>
+    <message>
+        <source>AMD GPU</source>
+        <translation>GPU AMD</translation>
+    </message>
+    <message>
+        <source>NVIDIA GPU</source>
+        <translation>GPU NVIDIA</translation>
+    </message>
 </context>
 <context>
     <name>DeviceView</name>
@@ -292,11 +304,23 @@
     </message>
     <message>
         <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page. The start animation plays when the device connects and stays until you switch to the next page.</source>
-        <translation>Pagine mostrate sul display LCD, in quest'ordine. Il tasto rotondo accanto ai tasti LCD passa alla pagina successiva. L'animazione iniziale viene riprodotta quando il dispositivo si connette e rimane finché non si passa alla pagina successiva.</translation>
+        <translation>Pagine mostrate sul display LCD, in quest&apos;ordine. Il tasto rotondo accanto ai tasti LCD passa alla pagina successiva. L&apos;animazione iniziale viene riprodotta quando il dispositivo si connette e rimane finché non si passa alla pagina successiva.</translation>
     </message>
     <message>
         <source>Start animation (flames, when the device connects)</source>
         <translation>Animazione iniziale (fiamme, alla connessione del dispositivo)</translation>
+    </message>
+    <message>
+        <source>CPU (load, temperatures, clock of each core)</source>
+        <translation>CPU (carico, temperature, frequenza di ogni core)</translation>
+    </message>
+    <message>
+        <source>AMD GPU (load, clocks, temperatures, VRAM, power, fan)</source>
+        <translation>GPU AMD (carico, frequenze, temperature, VRAM, potenza, ventola)</translation>
+    </message>
+    <message>
+        <source>NVIDIA GPU (load, clocks, temperature, VRAM, power, fan)</source>
+        <translation>GPU NVIDIA (carico, frequenze, temperatura, VRAM, potenza, ventola)</translation>
     </message>
 </context>
 <context>

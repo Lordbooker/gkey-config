@@ -9,6 +9,7 @@
 #include <QStringList>
 #include <QWidget>
 
+#include "NvidiaStats.h"
 #include "SystemStats.h"
 
 #include <memory>
@@ -52,8 +53,9 @@ private:
     QListWidget *m_list;
     QLabel *m_preview;
     QPushButton *m_show;
-    QTimer *m_clock;   // redraws the clock and system preview every second
-    SystemStats m_stats;   // live values for the system preview
+    QTimer *m_clock;   // redraws the preview of the clock and the system values every second
+    SystemStats m_stats;   // live values for the system, CPU and AMD GPU preview
+    NvidiaStats m_nvidia;  // live values for the NVIDIA GPU preview
     QString m_modelId;
     std::unique_ptr<LcdIntro> m_intro;   // preview of the start animation
     QTimer *m_introTimer;
