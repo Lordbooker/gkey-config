@@ -34,6 +34,29 @@ std::optional<double> readMilliCelsius(const QString &path)
     return value ? std::optional<double>(static_cast<double>(*value) / 1000.0) : std::nullopt;
 }
 
+// All temperatures of a hwmon directory in sensor order; unlabelled sensors are
+// named "temp<n>".
+QList<SystemStats::Temperature> temperatures(const QString &hwmon)
+{
+    QList<SystemStats::Temperature> list;
+    const QDir dir(hwmon);
+    QStringList inputs = dir.entryList({QStringLiteral("temp*_input")}, QDir::Files);
+    std::sort(inputs.begin(), inputs.end(), [](const QString &a, const QString &b) {
+        return a.mid(4).section(u'_', 0, 0).toInt() < b.mid(4).section(u'_', 0, 0).toInt();
+    });
+    for (const QString &input : inputs) {
+        const auto value = readNumber(dir.filePath(input));
+        if (!value)
+            continue;
+        const QString base = input.chopped(6);   // "temp3"
+        QString label = readLine(dir.filePath(base + QStringLiteral("_label")));
+        if (label.isEmpty())
+            label = base;
+        list.append({label, static_cast<double>(*value) / 1000.0});
+    }
+    return list;
+}
+
 // temp*_input of a hwmon directory whose label is one of the preferred ones,
 // else temp1_input.
 QString temperatureFile(const QString &hwmon, const QStringList &preferredLabels)
@@ -72,8 +95,10 @@ void SystemStats::findSensors()
         const auto sensor = cpuSensors.constFind(readLine(path + QStringLiteral("/name")));
         if (sensor != cpuSensors.constEnd()) {
             m_cpuTempFile = temperatureFile(path, sensor.value());
-            if (!m_cpuTempFile.isEmpty())
+            if (!m_cpuTempFile.isEmpty()) {
+                m_cpuHwmon = path;
                 break;
+            }
         }
     }
 
@@ -93,6 +118,26 @@ void SystemStats::findSensors()
             m_gpuDevice = device;
         }
     }
+    // Physical cores: threads with the same package and core id.
+    const QDir cpuDir(m_sysRoot + QStringLiteral("/devices/system/cpu"));
+    QStringList cpus = cpuDir.entryList({QStringLiteral("cpu[0-9]*")}, QDir::Dirs | QDir::System);
+    std::sort(cpus.begin(), cpus.end(), [](const QString &a, const QString &b) { return a.mid(3).toInt() < b.mid(3).toInt(); });
+    QList<QString> coreKeys;
+    for (const QString &cpu : cpus) {
+        const QString path = cpuDir.filePath(cpu);
+        if (!QFile::exists(path + QStringLiteral("/cpufreq/scaling_cur_freq")))
+            continue;   // offline or without cpufreq
+        const QString key = readLine(path + QStringLiteral("/topology/physical_package_id")) + u':'
+                            + readLine(path + QStringLiteral("/topology/core_id"));
+        qsizetype index = coreKeys.indexOf(key);
+        if (index < 0) {
+            coreKeys.append(key);
+            m_cores.append(QStringList());
+            index = m_cores.size() - 1;
+        }
+        m_cores[index].append(path + QStringLiteral("/cpufreq"));
+    }
+
     if (!m_gpuDevice.isEmpty()) {
         const QDir hwmon(m_gpuDevice + QStringLiteral("/hwmon"));
         const QStringList entries = hwmon.entryList({QStringLiteral("hwmon*")}, QDir::Dirs | QDir::System);
@@ -164,4 +209,27 @@ SystemStats::Sample SystemStats::sample()
         sample.gpu = gpu;
     }
     return sample;
+}
+
+SystemStats::CpuDetail SystemStats::cpuDetail()
+{
+    if (!m_sensorsSearched)
+        findSensors();
+
+    CpuDetail detail;
+    detail.percent = cpuPercent();
+    if (!m_cpuHwmon.isEmpty())
+        detail.temperatures = temperatures(m_cpuHwmon);
+    for (const QStringList &threads : std::as_const(m_cores)) {
+        qint64 kHz = 0;
+        for (const QString &cpufreq : threads)
+            kHz = std::max(kHz, readNumber(cpufreq + QStringLiteral("/scaling_cur_freq")).value_or(0));
+        detail.coreMHz.append(static_cast<int>(kHz / 1000));
+    }
+    if (!m_cores.isEmpty()) {
+        const QString &first = m_cores.first().first();
+        detail.minMHz = static_cast<int>(readNumber(first + QStringLiteral("/cpuinfo_min_freq")).value_or(0) / 1000);
+        detail.maxMHz = static_cast<int>(readNumber(first + QStringLiteral("/cpuinfo_max_freq")).value_or(0) / 1000);
+    }
+    return detail;
 }

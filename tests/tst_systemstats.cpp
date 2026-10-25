@@ -25,6 +25,7 @@ private slots:
     void memory();
     void amdGpuAndTemperatures();
     void withoutGpu();
+    void cpuDetail();
     void formatSize();
     void degreeSign();
     void renderFourRows();
@@ -124,6 +125,34 @@ void TestSystemStats::withoutGpu()
 {
     SystemStats stats(proc(), sys());
     QVERIFY(!stats.sample().gpu);
+}
+
+// 9800X3D-like: 2 physical cores with 2 threads each in the fake tree; the
+// clock of a core is the highest of its threads (cpufreq in kHz).
+void TestSystemStats::cpuDetail()
+{
+    const QString cpu = sys() + QStringLiteral("/devices/system/cpu/cpu%1");
+    const int coreIds[] = {0, 1, 0, 1};
+    const char *freqs[] = {"4111719\n", "603379\n", "5100000\n", "1200000\n"};
+    for (int i = 0; i < 4; ++i) {
+        write(cpu.arg(i) + QStringLiteral("/topology/physical_package_id"), "0\n");
+        write(cpu.arg(i) + QStringLiteral("/topology/core_id"), QByteArray::number(coreIds[i]) + '\n');
+        write(cpu.arg(i) + QStringLiteral("/cpufreq/scaling_cur_freq"), freqs[i]);
+        write(cpu.arg(i) + QStringLiteral("/cpufreq/cpuinfo_min_freq"), "603379\n");
+        write(cpu.arg(i) + QStringLiteral("/cpufreq/cpuinfo_max_freq"), "5271622\n");
+    }
+    QVERIFY(QDir().mkpath(sys() + QStringLiteral("/devices/system/cpu/cpufreq")));   // not a CPU
+
+    SystemStats stats(proc(), sys());
+    const SystemStats::CpuDetail detail = stats.cpuDetail();
+    QCOMPARE(detail.coreMHz, (QList<int>{5100, 1200}));
+    QCOMPARE(detail.minMHz, 603);
+    QCOMPARE(detail.maxMHz, 5271);
+    QCOMPARE(detail.temperatures.size(), 2);
+    QCOMPARE(detail.temperatures.at(0).label, QStringLiteral("Tctl"));
+    QCOMPARE(detail.temperatures.at(1).label, QStringLiteral("Tccd1"));
+    QCOMPARE(detail.temperatures.at(1).celsius, 31.75);
+    QVERIFY(!detail.percent);   // first call
 }
 
 void TestSystemStats::formatSize()

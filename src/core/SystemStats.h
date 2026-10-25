@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <QList>
 #include <QString>
 #include <QtGlobal>
 
@@ -25,6 +26,20 @@ public:
         std::optional<Memory> vram;
     };
 
+    struct Temperature {
+        QString label;          // as the sensor names it, e.g. "Tctl", "junction"
+        double celsius = 0;
+    };
+
+    // Details for the LCD page "cpu".
+    struct CpuDetail {
+        std::optional<int> percent;        // load since the previous call
+        QList<Temperature> temperatures;   // all of the CPU sensor, e.g. Tctl, Tccd1
+        QList<int> coreMHz;                // current clock per physical core
+        int minMHz = 0;                    // clock range of the CPU (cpufreq)
+        int maxMHz = 0;
+    };
+
     struct Sample {
         std::optional<int> cpuPercent;       // needs two samples (load since the last one)
         std::optional<double> cpuTemperature;
@@ -40,6 +55,10 @@ public:
     // Reads all values. The CPU load is the load since the previous call.
     Sample sample();
 
+    // CPU load, temperatures and the clock of each physical core (the
+    // threads of a core share it; the highest of them is taken).
+    CpuDetail cpuDetail();
+
 private:
     void findSensors();
     std::optional<int> cpuPercent();
@@ -48,6 +67,8 @@ private:
     QString m_sysRoot;
     bool m_sensorsSearched = false;
     QString m_cpuTempFile;   // hwmon temp*_input of the CPU package
+    QString m_cpuHwmon;      // hwmon directory of the CPU sensor
+    QList<QStringList> m_cores;   // per physical core: cpufreq directories of its threads
     QString m_gpuDevice;     // /sys/class/drm/cardN/device
     QString m_gpuTempFile;
     qint64 m_lastIdle = -1;
