@@ -34,6 +34,29 @@ std::optional<double> readMilliCelsius(const QString &path)
     return value ? std::optional<double>(static_cast<double>(*value) / 1000.0) : std::nullopt;
 }
 
+// All temperatures of a hwmon directory in sensor order; unlabelled sensors are
+// named "temp<n>".
+QList<SystemStats::Temperature> temperatures(const QString &hwmon)
+{
+    QList<SystemStats::Temperature> list;
+    const QDir dir(hwmon);
+    QStringList inputs = dir.entryList({QStringLiteral("temp*_input")}, QDir::Files);
+    std::ranges::sort(inputs, [](const QString &a, const QString &b) {
+        return a.mid(4).section(u'_', 0, 0).toInt() < b.mid(4).section(u'_', 0, 0).toInt();
+    });
+    for (const QString &input : inputs) {
+        const auto value = readNumber(dir.filePath(input));
+        if (!value)
+            continue;
+        const QString base = input.chopped(6);   // "temp3"
+        QString label = readLine(dir.filePath(base + QStringLiteral("_label")));
+        if (label.isEmpty())
+            label = base;
+        list.append({label, static_cast<double>(*value) / 1000.0});
+    }
+    return list;
+}
+
 // temp*_input of a hwmon directory whose label is one of the preferred ones,
 // else temp1_input.
 QString temperatureFile(const QString &hwmon, const QStringList &preferredLabels)
@@ -51,10 +74,7 @@ QString temperatureFile(const QString &hwmon, const QStringList &preferredLabels
 
 }
 
-SystemStats::SystemStats(const QString &procRoot, const QString &sysRoot)
-    : m_procRoot(procRoot), m_sysRoot(sysRoot)
-{
-}
+SystemStats::SystemStats(const QString &procRoot, const QString &sysRoot) : m_procRoot(procRoot), m_sysRoot(sysRoot) {}
 
 void SystemStats::findSensors()
 {
@@ -72,8 +92,10 @@ void SystemStats::findSensors()
         const auto sensor = cpuSensors.constFind(readLine(path + QStringLiteral("/name")));
         if (sensor != cpuSensors.constEnd()) {
             m_cpuTempFile = temperatureFile(path, sensor.value());
-            if (!m_cpuTempFile.isEmpty())
+            if (!m_cpuTempFile.isEmpty()) {
+                m_cpuHwmon = path;
                 break;
+            }
         }
     }
 
@@ -93,11 +115,23 @@ void SystemStats::findSensors()
             m_gpuDevice = device;
         }
     }
+    // Logical CPUs (each thread of a core) in the order of their numbers.
+    const QDir cpuDir(m_sysRoot + QStringLiteral("/devices/system/cpu"));
+    QStringList cpus = cpuDir.entryList({QStringLiteral("cpu[0-9]*")}, QDir::Dirs | QDir::System);
+    std::ranges::sort(cpus, [](const QString &a, const QString &b) { return a.mid(3).toInt() < b.mid(3).toInt(); });
+    for (const QString &cpu : cpus) {
+        const QString cpufreq = cpuDir.filePath(cpu) + QStringLiteral("/cpufreq");
+        if (QFile::exists(cpufreq + QStringLiteral("/scaling_cur_freq")))   // else offline or without cpufreq
+            m_cpufreq.append(cpufreq);
+    }
+
     if (!m_gpuDevice.isEmpty()) {
         const QDir hwmon(m_gpuDevice + QStringLiteral("/hwmon"));
         const QStringList entries = hwmon.entryList({QStringLiteral("hwmon*")}, QDir::Dirs | QDir::System);
-        if (!entries.isEmpty())
-            m_gpuTempFile = temperatureFile(hwmon.filePath(entries.first()), {QStringLiteral("edge")});
+        if (!entries.isEmpty()) {
+            m_gpuHwmon = hwmon.filePath(entries.first());
+            m_gpuTempFile = temperatureFile(m_gpuHwmon, {QStringLiteral("edge")});
+        }
     }
 }
 
@@ -115,7 +149,8 @@ std::optional<int> SystemStats::cpuPercent()
     std::optional<int> percent;
     if (m_lastTotal >= 0 && total > m_lastTotal) {
         const qint64 busy = (total - m_lastTotal) - (idle - m_lastIdle);
-        percent = int(std::clamp<qint64>((busy * 100 + (total - m_lastTotal) / 2) / (total - m_lastTotal), 0, 100));
+        percent = static_cast<int>(
+            std::clamp<qint64>((busy * 100 + (total - m_lastTotal) / 2) / (total - m_lastTotal), 0, 100));
     }
     m_lastTotal = total;
     m_lastIdle = idle;
@@ -155,7 +190,7 @@ SystemStats::Sample SystemStats::sample()
     if (!m_gpuDevice.isEmpty()) {
         Gpu gpu;
         if (const auto busy = readNumber(m_gpuDevice + QStringLiteral("/gpu_busy_percent")))
-            gpu.busyPercent = int(std::clamp<qint64>(*busy, 0, 100));
+            gpu.busyPercent = static_cast<int>(std::clamp<qint64>(*busy, 0, 100));
         gpu.temperature = readMilliCelsius(m_gpuTempFile);
         const auto used = readNumber(m_gpuDevice + QStringLiteral("/mem_info_vram_used"));
         const auto total = readNumber(m_gpuDevice + QStringLiteral("/mem_info_vram_total"));
@@ -164,4 +199,69 @@ SystemStats::Sample SystemStats::sample()
         sample.gpu = gpu;
     }
     return sample;
+}
+
+SystemStats::CpuDetail SystemStats::cpuDetail()
+{
+    if (!m_sensorsSearched)
+        findSensors();
+
+    CpuDetail detail;
+    detail.percent = cpuPercent();
+    if (!m_cpuHwmon.isEmpty())
+        detail.temperatures = temperatures(m_cpuHwmon);
+    for (const QString &cpufreq : std::as_const(m_cpufreq))
+        detail.cpuMHz.append(
+            static_cast<int>(readNumber(cpufreq + QStringLiteral("/scaling_cur_freq")).value_or(0) / 1000));
+    if (!m_cpufreq.isEmpty()) {
+        const QString &first = m_cpufreq.first();
+        detail.maxMHz = static_cast<int>(readNumber(first + QStringLiteral("/cpuinfo_max_freq")).value_or(0) / 1000);
+    }
+    return detail;
+}
+
+std::optional<SystemStats::GpuDetail> SystemStats::amdGpuDetail()
+{
+    if (!m_sensorsSearched)
+        findSensors();
+    if (m_gpuDevice.isEmpty())
+        return std::nullopt;
+
+    GpuDetail detail;
+    const auto percent = [](const std::optional<qint64> &value) -> std::optional<int> {
+        if (!value)
+            return std::nullopt;
+        return static_cast<int>(std::clamp<qint64>(*value, 0, 100));
+    };
+    detail.busyPercent = percent(readNumber(m_gpuDevice + QStringLiteral("/gpu_busy_percent")));
+    detail.memBusyPercent = percent(readNumber(m_gpuDevice + QStringLiteral("/mem_busy_percent")));
+    const auto used = readNumber(m_gpuDevice + QStringLiteral("/mem_info_vram_used"));
+    const auto total = readNumber(m_gpuDevice + QStringLiteral("/mem_info_vram_total"));
+    if (used && total && *total > 0)
+        detail.vram = Memory{*used, *total};
+
+    if (!m_gpuHwmon.isEmpty()) {
+        const QDir hwmon(m_gpuHwmon);
+        detail.temperatures = temperatures(m_gpuHwmon);
+        // Clocks in Hz: freq1 "sclk" (GPU), freq2 "mclk" (memory)
+        for (const QString &label : hwmon.entryList({QStringLiteral("freq*_label")}, QDir::Files)) {
+            const QString name = readLine(hwmon.filePath(label));
+            const auto hz = readNumber(hwmon.filePath(label.chopped(6) + QStringLiteral("_input")));
+            if (!hz)
+                continue;
+            if (name == u"sclk")
+                detail.coreMHz = static_cast<int>(*hz / 1000000);
+            else if (name == u"mclk")
+                detail.memMHz = static_cast<int>(*hz / 1000000);
+        }
+        // Power in microwatts: average where available (RDNA2/3), else the current value
+        auto microwatts = readNumber(hwmon.filePath(QStringLiteral("power1_average")));
+        if (!microwatts)
+            microwatts = readNumber(hwmon.filePath(QStringLiteral("power1_input")));
+        if (microwatts)
+            detail.powerWatts = static_cast<double>(*microwatts) / 1e6;
+        if (const auto rpm = readNumber(hwmon.filePath(QStringLiteral("fan1_input"))))
+            detail.fanRpm = static_cast<int>(*rpm);
+    }
+    return detail;
 }

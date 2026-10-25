@@ -27,15 +27,15 @@ bool DBusService::registerOnSessionBus(QString *error)
         return false;
     }
     if (!bus.registerObject(QLatin1String(ObjectPath), this,
-                            QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals
-                                | QDBusConnection::ExportAllProperties)) {
+                            QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals |
+                                QDBusConnection::ExportAllProperties)) {
         *error = QStringLiteral("cannot register the D-Bus object: %1").arg(bus.lastError().message());
         return false;
     }
     // DoNotQueue: a second daemon must fail instead of waiting for the name.
-    const auto reply = bus.interface()->registerService(QLatin1String(ServiceName),
-                                                        QDBusConnectionInterface::DontQueueService,
-                                                        QDBusConnectionInterface::DontAllowReplacement);
+    const auto reply =
+        bus.interface()->registerService(QLatin1String(ServiceName), QDBusConnectionInterface::DontQueueService,
+                                         QDBusConnectionInterface::DontAllowReplacement);
     if (!reply.isValid() || reply.value() != QDBusConnectionInterface::ServiceRegistered) {
         *error = QStringLiteral("the D-Bus name %1 is already taken - is gkeyd already running?")
                      .arg(QLatin1String(ServiceName));

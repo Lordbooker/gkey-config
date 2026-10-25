@@ -9,6 +9,8 @@
 #include <QPainterPath>
 #include <QToolTip>
 
+#include <ranges>
+
 DeviceView::DeviceView(QWidget *parent) : QWidget(parent)
 {
     setMouseTracking(true);
@@ -63,7 +65,7 @@ QSize DeviceView::sizeHint() const
     const auto &view = m_model.view();
     if (view.width <= 0)
         return {400, 500};
-    return QSize(qRound(view.width), qRound(view.height));
+    return {qRound(view.width), qRound(view.height)};
 }
 
 int DeviceView::heightForWidth(int width) const
@@ -104,9 +106,9 @@ QString DeviceView::keyAt(const QPointF &widgetPos) const
     const QPointF pos = viewToWidget().inverted().map(widgetPos);
     const auto &areas = m_model.view().areas;
     // Last drawn is on top (e.g. the stick press over the stick directions).
-    for (auto it = areas.crbegin(); it != areas.crend(); ++it) {
-        if (pathFor(*it).contains(pos))
-            return it->key;
+    for (const auto &area : std::views::reverse(areas)) {
+        if (pathFor(area).contains(pos))
+            return area.key;
     }
     return {};
 }

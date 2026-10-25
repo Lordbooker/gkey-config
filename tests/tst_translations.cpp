@@ -35,7 +35,9 @@ QHash<QString, Message> readTs(const QString &path, QString *error)
         return messages;
     }
     QXmlStreamReader xml(&file);
-    QString context, source, comment;
+    QString context;
+    QString source;
+    QString comment;
     Message message;
     while (!xml.atEnd()) {
         xml.readNext();
@@ -85,7 +87,7 @@ int accelerators(const QString &text)
     static const QRegularExpression pattern(QStringLiteral("&(?![a-zA-Z#][a-zA-Z0-9]*;)(?!&)"));
     QString plain = text;
     plain.replace(QStringLiteral("&&"), QString());
-    return int(plain.count(pattern));
+    return static_cast<int>(plain.count(pattern));
 }
 
 QString shortKey(const QString &key)
@@ -120,8 +122,8 @@ void TestTranslations::initTestCase()
     const QByteArray output = lupdate.readAll();
     // lupdate itself cannot start (e.g. on Arch without qt6-declarative):
     // that is a missing tool, not a translation problem.
-    if (lupdate.exitStatus() != QProcess::NormalExit || lupdate.exitCode() == 127
-        || output.contains("error while loading shared libraries"))
+    if (lupdate.exitStatus() != QProcess::NormalExit || lupdate.exitCode() == 127 ||
+        output.contains("error while loading shared libraries"))
         QSKIP(qPrintable(QStringLiteral("lupdate cannot run: ") + QString::fromLocal8Bit(output).trimmed()));
     QVERIFY2(lupdate.exitCode() == 0, output.constData());
     QString error;

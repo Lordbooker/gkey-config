@@ -12,7 +12,11 @@
 #include <QLoggingCategory>
 #include <QPoint>
 
+#include <algorithm>
+
+namespace {
 Q_LOGGING_CATEGORY(lcDevice, "gkey.device")
+}
 
 Device::Device(const DeviceModel &model, const QString &hidSyspath, KeyOutput &output, QObject *parent)
     : QObject(parent), m_model(model), m_hidSyspath(hidSyspath)
@@ -46,20 +50,23 @@ bool Device::addInput(const QString &role, const QString &devNode, QString *erro
 {
     if (hasInput(devNode))
         return true;
-    const bool isStick = m_stick && m_model.stick() && role == m_model.stick()->input;
+    // The stick's model data if this input is the stick.
+    const DeviceModel::Stick *stickModel = nullptr;
+    if (m_stick && m_model.stick() && role == m_model.stick()->input)
+        stickModel = &*m_model.stick();
     auto *input = new InputDevice(devNode, role, this);
-    const bool grab = !isStick || m_stickSettings.mode != StickSettings::Mode::Passthrough;
+    const bool grab = !stickModel || m_stickSettings.mode != StickSettings::Mode::Passthrough;
     if (!input->open(error, grab)) {
         delete input;
         return false;
     }
-    if (isStick) {
+    if (stickModel) {
         connect(input, &InputDevice::keyEvent, this, &Device::onStickKey);
         connect(input, &InputDevice::absEvent, this, &Device::onAbs);
         // Rest position: calibrated value, else the position right now if plausible.
         // Right after boot the device has not reported yet and the axes read 0/0
         // (hid-lg-g15 sets no initial position): not plausible, so the middle.
-        const auto &stick = *m_model.stick();
+        const auto &stick = *stickModel;
         const int middle = (stick.minimum + stick.maximum + 1) / 2;
         const int x = input->absValue(stick.axisX);
         const int y = input->absValue(stick.axisY);
@@ -69,10 +76,9 @@ bool Device::addInput(const QString &role, const QString &devNode, QString *erro
             m_stick->setCenter(x, y);
         } else {
             m_stick->setCenter(middle, middle);
-            qCInfo(lcDevice).noquote() << m_model.name()
-                                       << QStringLiteral(": no stick position yet (%1/%2), using the middle as rest position")
-                                              .arg(x)
-                                              .arg(y);
+            qCInfo(lcDevice).noquote()
+                << m_model.name()
+                << QStringLiteral(": no stick position yet (%1/%2), using the middle as rest position").arg(x).arg(y);
         }
         // The values read now are not used as a position: 0/0 before the first
         // report would hold "left" and "up" (e.g. A and W) until the stick moves.
@@ -104,11 +110,7 @@ bool Device::removeInput(const QString &devNode)
 
 bool Device::hasInput(const QString &devNode) const
 {
-    for (const InputDevice *input : m_inputs) {
-        if (input->devNode() == devNode)
-            return true;
-    }
-    return false;
+    return std::ranges::any_of(m_inputs, [&devNode](const InputDevice *input) { return input->devNode() == devNode; });
 }
 
 void Device::setStickSettings(const StickSettings &settings)
@@ -150,7 +152,7 @@ std::optional<QPoint> Device::calibrateStick()
 
 void Device::onAbs(const QString &, int code, int value)
 {
-    if (!m_stick)
+    if (!m_stick || !m_model.stick())
         return;
     const auto &stick = *m_model.stick();
     if (code == stick.axisX)

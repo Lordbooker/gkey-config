@@ -19,6 +19,8 @@ private slots:
     void introDisabled();
     void introRemovedWhileShown();
     void textInterruptsIntro();
+    void hardwarePages();
+    void defaultPages();
 
 private:
     std::unique_ptr<LcdController> controller(const QStringList &pages);
@@ -86,6 +88,45 @@ void TestLcdController::textInterruptsIntro()
     QCOMPARE(lcd->currentPage(), QStringLiteral("text"));
     // After the temporary text: back to the animation, not to the next page.
     QTRY_COMPARE_WITH_TIMEOUT(lcd->currentPage(), QStringLiteral("intro"), 3000);
+}
+
+// CPU and GPU pages are in the rotation and show their title; the GPU pages
+// show it with and without that GPU (the test machine may have neither).
+void TestLcdController::hardwarePages()
+{
+    auto lcd = controller({QStringLiteral("cpu"), QStringLiteral("amdgpu"), QStringLiteral("nvidia")});
+    const auto titleShown = [&lcd](const QString &title) {
+        LcdFrame expected(160, 43);
+        expected.drawText(1, 1, title);
+        for (int y = 1; y < 8; ++y)
+            for (int x = 0; x < LcdFrame::textWidth(title) + 2; ++x)
+                if (lcd->frame().pixel(x, y) != expected.pixel(x, y))
+                    return false;
+        return true;
+    };
+    QCOMPARE(lcd->currentPage(), QStringLiteral("cpu"));
+    QVERIFY(titleShown(QStringLiteral("CPU")));
+    lcd->showPage(QStringLiteral("next"));
+    QCOMPARE(lcd->currentPage(), QStringLiteral("amdgpu"));
+    QVERIFY(titleShown(QStringLiteral("AMD")));
+    lcd->showPage(QStringLiteral("next"));
+    QCOMPARE(lcd->currentPage(), QStringLiteral("nvidia"));
+    QVERIFY(titleShown(QStringLiteral("NV")));
+}
+
+// Without settings the hardware pages are off: they are only useful with that
+// hardware.
+void TestLcdController::defaultPages()
+{
+    for (const QString &page : {QStringLiteral("cpu"), QStringLiteral("amdgpu"), QStringLiteral("nvidia")}) {
+        QVERIFY(LcdPages::allPages().contains(page));
+        QVERIFY(!LcdPages::defaultPages().contains(page));
+    }
+    auto lcd = controller({});
+    for (int i = 0; i < LcdPages::allPages().size(); ++i) {
+        QVERIFY(LcdPages::defaultPages().contains(lcd->currentPage()));
+        lcd->showPage(QStringLiteral("next"));
+    }
 }
 
 QTEST_GUILESS_MAIN(TestLcdController)

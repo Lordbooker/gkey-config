@@ -16,9 +16,8 @@ struct TypeName {
 };
 
 constexpr TypeName typeNames[] = {
-    {Action::Type::Key, "key"},       {Action::Type::Combo, "combo"},
-    {Action::Type::Mouse, "mouse"},   {Action::Type::Macro, "macro"},
-    {Action::Type::Mode, "mode"},     {Action::Type::Profile, "profile"},
+    {Action::Type::Key, "key"},     {Action::Type::Combo, "combo"}, {Action::Type::Mouse, "mouse"},
+    {Action::Type::Macro, "macro"}, {Action::Type::Mode, "mode"},   {Action::Type::Profile, "profile"},
     {Action::Type::Lcd, "lcd"},
 };
 

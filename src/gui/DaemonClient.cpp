@@ -11,6 +11,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 
+#include <algorithm>
+
 namespace {
 
 const QString Service = QStringLiteral("io.github.lordbooker.GKeyConfig");
@@ -24,10 +26,8 @@ DaemonClient::DaemonClient(QObject *parent) : QObject(parent)
 {
     QDBusConnection bus = QDBusConnection::sessionBus();
 
-    m_watcher = new QDBusServiceWatcher(Service, bus,
-                                        QDBusServiceWatcher::WatchForRegistration
-                                            | QDBusServiceWatcher::WatchForUnregistration,
-                                        this);
+    m_watcher = new QDBusServiceWatcher(
+        Service, bus, QDBusServiceWatcher::WatchForRegistration | QDBusServiceWatcher::WatchForUnregistration, this);
     connect(m_watcher, &QDBusServiceWatcher::serviceRegistered, this, [this] {
         setAvailable(true);
         refreshStatus();
@@ -94,12 +94,10 @@ int DaemonClient::activeMode(const QString &modelId) const
 
 bool DaemonClient::ledPermission(const QString &modelId) const
 {
-    for (const auto &device : m_status.value(u"devices").toArray()) {
+    return std::ranges::none_of(m_status.value(u"devices").toArray(), [&modelId](const QJsonValue &device) {
         const QJsonObject object = device.toObject();
-        if (object.value(u"model").toString() == modelId && !object.value(u"ledPermission").toBool(true))
-            return false;
-    }
-    return true;
+        return object.value(u"model").toString() == modelId && !object.value(u"ledPermission").toBool(true);
+    });
 }
 
 QString DaemonClient::stickCenter(const QString &modelId) const

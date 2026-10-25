@@ -11,6 +11,7 @@
 #include <QSet>
 
 #include <algorithm>
+#include <utility>
 
 namespace {
 
@@ -26,9 +27,8 @@ std::expected<Profile, QString> Profile::fromJson(const QByteArray &json)
     QJsonParseError parseError;
     const QJsonDocument document = QJsonDocument::fromJson(json, &parseError);
     if (parseError.error != QJsonParseError::NoError)
-        return std::unexpected(QStringLiteral("invalid JSON at offset %1: %2")
-                                   .arg(parseError.offset)
-                                   .arg(parseError.errorString()));
+        return std::unexpected(
+            QStringLiteral("invalid JSON at offset %1: %2").arg(parseError.offset).arg(parseError.errorString()));
     if (!document.isObject())
         return std::unexpected(QStringLiteral("top level must be an object"));
     QJsonObject root = document.object();
@@ -41,9 +41,9 @@ std::expected<Profile, QString> Profile::fromJson(const QByteArray &json)
     const QJsonValue backlight = root.take(QStringLiteral("backlight"));
     if (!backlight.isUndefined()) {
         const QJsonArray rgb = backlight.toArray();
-        const bool valid = rgb.size() == 3 && std::all_of(rgb.begin(), rgb.end(), [](const QJsonValue &v) {
-            return v.isDouble() && v.toInt(-1) >= 0 && v.toInt(-1) <= 255;
-        });
+        const bool valid = rgb.size() == 3 && std::ranges::all_of(rgb, [](const QJsonValue &v) {
+                               return v.isDouble() && v.toInt(-1) >= 0 && v.toInt(-1) <= 255;
+                           });
         if (valid)
             profile.m_backlight = Rgb{rgb.at(0).toInt(), rgb.at(1).toInt(), rgb.at(2).toInt()};
         else
@@ -78,8 +78,8 @@ std::expected<Profile, QString> Profile::fromJson(const QByteArray &json)
         for (auto binding = bindings.begin(); binding != bindings.end(); ++binding) {
             const auto action = Action::fromJson(binding.value().toObject());
             if (!action) {
-                profile.m_warnings.append(QStringLiteral("%1/%2: %3; binding ignored")
-                                              .arg(it.key(), binding.key(), action.error()));
+                profile.m_warnings.append(
+                    QStringLiteral("%1/%2: %3; binding ignored").arg(it.key(), binding.key(), action.error()));
                 profile.m_inactive[modeIndex(mode)].insert(binding.key(), binding.value());
                 continue;
             }
@@ -89,7 +89,7 @@ std::expected<Profile, QString> Profile::fromJson(const QByteArray &json)
 
     profile.m_stick = root.take(QStringLiteral("stick")).toObject();
     StickSettings::fromJson(profile.m_stick, &profile.m_warnings);   // report invalid values
-    profile.m_unknown = root;
+    profile.m_unknown = std::move(root);
     return profile;
 }
 

@@ -68,7 +68,8 @@ namespace Autostart {
 Paths defaultPaths()
 {
     Paths paths;
-    paths.userDir = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/autostart");
+    paths.userDir =
+        QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/autostart");
     QString configDirs = qEnvironmentVariable("XDG_CONFIG_DIRS");
     if (configDirs.isEmpty())
         configDirs = QStringLiteral("/etc/xdg");

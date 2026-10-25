@@ -33,10 +33,10 @@ void installSignalHandlers(QCoreApplication &app)
     if (::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, signalPipe) != 0)
         return;
     auto *notifier = new QSocketNotifier(signalPipe[0], QSocketNotifier::Read, &app);
-    QObject::connect(notifier, &QSocketNotifier::activated, &app, [&app] {
+    QObject::connect(notifier, &QSocketNotifier::activated, &app, [] {
         char byte;
         [[maybe_unused]] const ssize_t got = ::read(signalPipe[0], &byte, 1);
-        app.quit();
+        QCoreApplication::quit();
     });
     struct sigaction action = {};
     action.sa_handler = onSignal;
@@ -54,10 +54,10 @@ int listModels()
     for (const DeviceModel &model : registry.models()) {
         QStringList ids;
         for (const DeviceModel::UsbId &usb : model.usbIds())
-            ids.append(QStringLiteral("%1:%2").arg(usb.vendor, 4, 16, QChar(u'0'))
-                                              .arg(usb.product, 4, 16, QChar(u'0')));
-        out << model.id() << '\t' << model.name() << '\t' << ids.join(u',')
-            << (model.tested() ? "" : "\t(untested)") << '\n';
+            ids.append(
+                QStringLiteral("%1:%2").arg(usb.vendor, 4, 16, QChar(u'0')).arg(usb.product, 4, 16, QChar(u'0')));
+        out << model.id() << '\t' << model.name() << '\t' << ids.join(u',') << (model.tested() ? "" : "\t(untested)")
+            << '\n';
     }
     for (const QString &error : registry.errors())
         out << "invalid model file: " << error << '\n';
@@ -101,5 +101,5 @@ int main(int argc, char *argv[])
         qCritical("%s", qPrintable(error));
         return 1;
     }
-    return app.exec();
+    return QCoreApplication::exec();
 }

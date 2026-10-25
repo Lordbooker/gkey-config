@@ -9,6 +9,9 @@
 # - Push to dev or manually ("Run workflow"): build only; the packages are
 #   available as artifacts of the run for testing.
 #
+# In both cases the checks (build.yml) run first; packages are only built,
+# released and published when all of them pass.
+#
 # .deb/.rpm are built with packaging/build-package.sh inside a container of the
 # respective distribution (same script as for local builds). Only
 # distributions with kernel >= 6.19 (G13 support in hid-lg-g15) are built.
@@ -26,8 +29,13 @@ permissions:
   contents: read
 
 jobs:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/build.yml
+
   packages:
     name: Build ${{ matrix.name }}
+    needs: checks
     runs-on: ubuntu-latest
     # A normal build takes 2-5 minutes; a hanging mirror must not block for 6 hours.
     timeout-minutes: 30
@@ -95,6 +103,7 @@ jobs:
 
   arch:
     name: Build Arch Linux (AUR)
+    needs: checks
     runs-on: ubuntu-latest
     timeout-minutes: 30
     container: archlinux:latest

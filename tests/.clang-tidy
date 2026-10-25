@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Tests: Qt Test classes are found through moc (internal linkage does not
+# apply), and QVERIFY() ends a test function, which the optional check does not
+# see (it reports every access after QVERIFY(value)).
+InheritParentConfig: true
+Checks: >
+  -bugprone-unchecked-optional-access,
+  -misc-use-internal-linkage

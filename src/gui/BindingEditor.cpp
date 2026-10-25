@@ -126,6 +126,9 @@ BindingEditor::BindingEditor(QWidget *parent) : QWidget(parent)
     m_lcd->addItem(tr("Previous page"), QStringLiteral("previous"));
     m_lcd->addItem(tr("Status"), QStringLiteral("status"));
     m_lcd->addItem(tr("System"), QStringLiteral("system"));
+    m_lcd->addItem(tr("CPU"), QStringLiteral("cpu"));
+    m_lcd->addItem(tr("AMD GPU"), QStringLiteral("amdgpu"));
+    m_lcd->addItem(tr("NVIDIA GPU"), QStringLiteral("nvidia"));
     m_lcd->addItem(tr("Clock"), QStringLiteral("clock"));
     m_lcd->addItem(tr("Text"), QStringLiteral("text"));
     addPage(nullptr)->addRow(tr("Page:"), m_lcd);

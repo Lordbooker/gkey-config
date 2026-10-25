@@ -79,7 +79,7 @@ void TestLeds::findsLeds()
 {
     LedController leds(*m_registry.findById(QStringLiteral("g13")), m_hid);
     QList<QString> roles = leds.roles();
-    std::sort(roles.begin(), roles.end());
+    std::ranges::sort(roles);
     QCOMPARE(roles, (QList<QString>{QStringLiteral("backlight"), QStringLiteral("mode1"), QStringLiteral("mode2"),
                                     QStringLiteral("mode3"), QStringLiteral("record")}));
 }

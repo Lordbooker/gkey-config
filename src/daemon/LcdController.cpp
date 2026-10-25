@@ -6,11 +6,13 @@
 #include <QDateTime>
 #include <QTimer>
 
+#include <utility>
+
 LcdController::LcdController(const DeviceModel &model, const QString &hidSyspath, QObject *parent)
     : QObject(parent), m_model(model),
       m_frame(model.lcd() ? model.lcd()->width : 1, model.lcd() ? model.lcd()->height : 1)
 {
-    m_pages = LcdPages::allPages();
+    m_pages = LcdPages::defaultPages();
     m_page = LcdPages::rotation(m_pages).first();
 
     // G13, G15 and G510 take the same 992-byte frame (output report 3) on their
@@ -50,7 +52,7 @@ LcdController::~LcdController()
 
 void LcdController::setPages(const QStringList &pages)
 {
-    m_pages = pages.isEmpty() ? LcdPages::allPages() : pages;
+    m_pages = pages.isEmpty() ? LcdPages::defaultPages() : pages;
     const QStringList rotation = LcdPages::rotation(m_pages);
     const bool temporaryText = m_page == u"text" && m_textTimer && m_textTimer->isActive();
     if (!m_pages.contains(m_page) && !temporaryText)
@@ -108,7 +110,7 @@ void LcdController::showPage(const QString &page)
         return;
     if (m_textTimer)
         m_textTimer->stop();
-    m_page = target;
+    m_page = std::move(target);
     refresh();
 }
 
@@ -149,13 +151,24 @@ void LcdController::refresh()
         LcdPages::renderClock(m_frame, QDateTime::currentDateTime());
     else if (m_page == u"system")
         LcdPages::renderSystem(m_frame, m_stats.sample());
-    else if (m_page == u"text")
+    else if (m_page == u"cpu")
+        LcdPages::renderCpu(m_frame, m_stats.cpuDetail());
+    else if (m_page == u"amdgpu")
+        LcdPages::renderGpu(m_frame, QStringLiteral("AMD"), m_stats.amdGpuDetail(),
+                            QStringLiteral("no AMD GPU (amdgpu)"));
+    else if (m_page == u"nvidia") {
+        const auto gpu = m_nvidia.sample();
+        LcdPages::renderGpu(m_frame, QStringLiteral("NV"), gpu, m_nvidia.problem());
+    } else if (m_page == u"text")
         LcdPages::renderText(m_frame, m_textLines);
     else
         LcdPages::renderStatus(m_frame, m_status);
 
     if (m_clockTimer) {
-        const bool ticking = m_page == u"clock" || m_page == u"system";
+        static const QStringList tickingPages = {QStringLiteral("clock"), QStringLiteral("system"),
+                                                 QStringLiteral("cpu"), QStringLiteral("amdgpu"),
+                                                 QStringLiteral("nvidia")};
+        const bool ticking = tickingPages.contains(m_page);
         if (ticking && !m_clockTimer->isActive())
             m_clockTimer->start(1000 - QTime::currentTime().msec());
         else if (!ticking)

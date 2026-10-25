@@ -15,6 +15,7 @@ namespace {
 // Names by US key position (linux/input-event-codes.h).
 const QHash<int, QString> &baseNames()
 {
+    // clang-format off: a table, aligned in columns
     static const QHash<int, QString> names = {
         {1, "Esc"},        {2, "1"},          {3, "2"},          {4, "3"},
         {5, "4"},          {6, "5"},          {7, "6"},          {8, "7"},
@@ -49,6 +50,7 @@ const QHash<int, QString> &baseNames()
         {190, "F20"},      {191, "F21"},      {192, "F22"},      {193, "F23"},
         {194, "F24"},
     };
+    // clang-format on
     return names;
 }
 
@@ -76,6 +78,7 @@ QHash<int, QString> &learnedLabels()
 // Labels for dead keys (they produce no text on their own, e.g. ^ and ´).
 QString deadKeyLabel(int qtKey)
 {
+    // clang-format off: a table, aligned in columns
     switch (qtKey) {
     case Qt::Key_Dead_Grave:      return QStringLiteral("`");
     case Qt::Key_Dead_Acute:      return QStringLiteral("´");
@@ -84,6 +87,7 @@ QString deadKeyLabel(int qtKey)
     case Qt::Key_Dead_Diaeresis:  return QStringLiteral("¨");
     default:                      return {};
     }
+    // clang-format on
 }
 
 }
@@ -92,10 +96,10 @@ QString nameFor(int code)
 {
     // Mouse buttons (translated)
     static const char *const mouse[] = {
-        QT_TRANSLATE_NOOP("KeyNames", "Mouse left"),    QT_TRANSLATE_NOOP("KeyNames", "Mouse right"),
-        QT_TRANSLATE_NOOP("KeyNames", "Mouse middle"),  QT_TRANSLATE_NOOP("KeyNames", "Mouse side"),
-        QT_TRANSLATE_NOOP("KeyNames", "Mouse extra"),   QT_TRANSLATE_NOOP("KeyNames", "Mouse forward"),
-        QT_TRANSLATE_NOOP("KeyNames", "Mouse back"),    QT_TRANSLATE_NOOP("KeyNames", "Mouse task"),
+        QT_TRANSLATE_NOOP("KeyNames", "Mouse left"),   QT_TRANSLATE_NOOP("KeyNames", "Mouse right"),
+        QT_TRANSLATE_NOOP("KeyNames", "Mouse middle"), QT_TRANSLATE_NOOP("KeyNames", "Mouse side"),
+        QT_TRANSLATE_NOOP("KeyNames", "Mouse extra"),  QT_TRANSLATE_NOOP("KeyNames", "Mouse forward"),
+        QT_TRANSLATE_NOOP("KeyNames", "Mouse back"),   QT_TRANSLATE_NOOP("KeyNames", "Mouse task"),
     };
     if (code >= 0x110 && code <= 0x117)
         return QCoreApplication::translate("KeyNames", mouse[code - 0x110]);

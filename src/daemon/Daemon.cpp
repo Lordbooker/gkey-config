@@ -20,9 +20,9 @@
 #include <QLoggingCategory>
 #include <QThread>
 
-Q_LOGGING_CATEGORY(lcDaemon, "gkey.daemon")
-
 namespace {
+
+Q_LOGGING_CATEGORY(lcDaemon, "gkey.daemon")
 
 // Input roles handled by the daemon.
 bool roleHandled(const QString &role)
@@ -32,10 +32,7 @@ bool roleHandled(const QString &role)
 
 }
 
-Daemon::Daemon(QObject *parent)
-    : QObject(parent), m_state(ConfigPaths::stateDir() + QStringLiteral("/state.json"))
-{
-}
+Daemon::Daemon(QObject *parent) : QObject(parent), m_state(ConfigPaths::stateDir() + QStringLiteral("/state.json")) {}
 
 Daemon::~Daemon()
 {
@@ -105,8 +102,8 @@ bool Daemon::start(QString *error, const DaemonStartOptions &options)
             return false;
     }
 
-    qCInfo(lcDaemon) << "running," << m_registry.models().size() << "model(s) known,"
-                     << m_macros->names().size() << "macro(s)";
+    qCInfo(lcDaemon) << "running," << m_registry.models().size() << "model(s) known," << m_macros->names().size()
+                     << "macro(s)";
     return true;
 }
 
@@ -248,14 +245,15 @@ Daemon::ModelContext *Daemon::context(const QString &modelId)
 
 void Daemon::selectProfile(ModelContext &ctx, const QString &requested)
 {
-    const QStringList names = ctx.store->names();
-    QString name;
-    if (ctx.store->profile(requested))
-        name = requested;
-    else if (!names.isEmpty())
-        name = names.first();
+    // The requested profile, else the first one; the pointer is only used after the check.
+    const Profile *profile = ctx.store->profile(requested);
+    if (!profile) {
+        const QStringList names = ctx.store->names();
+        if (!names.isEmpty())
+            profile = ctx.store->profile(names.first());
+    }
 
-    ctx.profile = name.isEmpty() ? Profile() : *ctx.store->profile(name);
+    ctx.profile = profile ? *profile : Profile();
     m_state.setProfile(ctx.model.id(), ctx.profile.name());
     saveState();
 }
@@ -352,8 +350,8 @@ void Daemon::onProfileRequested(const QString &modelId, const QString &target)
         }
     }
     if (name.isEmpty()) {
-        qCWarning(lcDaemon).noquote() << QStringLiteral("%1: profile \"%2\" does not exist")
-                                             .arg(ctx->model.name(), target);
+        qCWarning(lcDaemon).noquote()
+            << QStringLiteral("%1: profile \"%2\" does not exist").arg(ctx->model.name(), target);
         return;
     }
     setProfile(modelId, name);

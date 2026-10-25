@@ -3,10 +3,11 @@
 
 #include "LcdWriter.h"
 
+#include "SystemError.h"
+
 #include <QDir>
 
 #include <cerrno>
-#include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -20,7 +21,7 @@ LcdWriter::LcdWriter(const QString &deviceName, const QString &hidSyspath, const
 LcdWriter::~LcdWriter()
 {
     {
-        const std::lock_guard lock(m_mutex);
+        const std::scoped_lock lock(m_mutex);
         m_stop = true;
     }
     m_wake.notify_one();
@@ -32,7 +33,7 @@ LcdWriter::~LcdWriter()
 void LcdWriter::submit(const QByteArray &report)
 {
     {
-        const std::lock_guard lock(m_mutex);
+        const std::scoped_lock lock(m_mutex);
         m_pending = report;
     }
     m_wake.notify_one();
@@ -72,7 +73,7 @@ bool LcdWriter::open()
         if (!m_errorLogged) {
             m_errorLogged = true;
             qCWarning(lcLcd).noquote() << QStringLiteral("%1: cannot open %2 for the LCD: %3%4")
-                                              .arg(m_deviceName, node, QString::fromLocal8Bit(std::strerror(err)),
+                                              .arg(m_deviceName, node, SystemError::text(err),
                                                    err == EACCES ? QStringLiteral(" - is the udev rule installed?")
                                                                  : QString());
         }
@@ -92,8 +93,8 @@ void LcdWriter::write(const QByteArray &report)
     const int err = errno;
     if (!m_errorLogged) {
         m_errorLogged = true;
-        qCWarning(lcLcd).noquote() << QStringLiteral("%1: LCD write failed: %2")
-                                          .arg(m_deviceName, QString::fromLocal8Bit(std::strerror(err)));
+        qCWarning(lcLcd).noquote()
+            << QStringLiteral("%1: LCD write failed: %2").arg(m_deviceName, SystemError::text(err));
     }
     ::close(m_fd);   // reopen for the next report
     m_fd = -1;

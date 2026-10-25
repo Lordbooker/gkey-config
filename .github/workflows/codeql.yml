@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: 2026 Lordbooker
+# SPDX-License-Identifier: GPL-2.0-only
+
+# Security analysis of the C++ code with GitHub CodeQL; results appear under
+# Security > Code scanning in the repository.
+name: CodeQL
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+  schedule:
+    - cron: '17 4 * * 1'   # weekly, for new queries
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: CodeQL (C++)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container: debian:testing
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Install dependencies
+        run: >-
+          apt-get update &&
+          DEBIAN_FRONTEND=noninteractive apt-get install -y
+          build-essential cmake git pkg-config qt6-base-dev qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools
+          libevdev-dev libudev-dev
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          languages: c-cpp
+          build-mode: manual
+          queries: security-and-quality
+
+      # Two jobs: with the CodeQL tracer on every compiler call, a fully
+      # parallel build ran out of memory (killed, exit code 137).
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build --parallel 2
+
+      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          category: /language:c-cpp

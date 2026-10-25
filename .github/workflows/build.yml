@@ -1,13 +1,18 @@
 # SPDX-FileCopyrightText: 2026 Lordbooker
 # SPDX-License-Identifier: GPL-2.0-only
 
+# Checks: builds and tests with GCC and Clang, clang-tidy, sanitizers,
+# formatting, udev/desktop/AppStream files and REUSE. Runs on its own for main
+# and pull requests; on dev and for release tags "Release packages" runs it
+# first and builds packages only when it passes (no double run on dev).
 name: Build
 
 on:
   push:
-    branches: [dev, main]
+    branches: [main]
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -25,6 +30,32 @@ jobs:
         include:
           - distro: Arch Linux
             image: archlinux:latest
+            install: >-
+              pacman -Syu --noconfirm --needed
+              base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
+          # Release: the optimiser finds warnings a debug build does not show
+          # (e.g. -Wnull-dereference after inlining); Arch has the newest GCC.
+          - distro: Arch Linux (Release)
+            image: archlinux:latest
+            build_type: Release
+            install: >-
+              pacman -Syu --noconfirm --needed
+              base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
+          # Second compiler, and the static analysis with clang-tidy
+          # (.clang-tidy, scripts/clang-tidy.sh).
+          - distro: Arch Linux (Clang, clang-tidy)
+            image: archlinux:latest
+            options: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+            tidy: true
+            install: >-
+              pacman -Syu --noconfirm --needed
+              base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
+              clang python
+          # Tests with AddressSanitizer (memory errors, leaks) and
+          # UndefinedBehaviorSanitizer.
+          - distro: Arch Linux (ASan, UBSan)
+            image: archlinux:latest
+            options: -DENABLE_SANITIZERS=ON
             install: >-
               pacman -Syu --noconfirm --needed
               base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
@@ -49,13 +80,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DCMAKE_INSTALL_PREFIX=/usr
+        run: >-
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type || 'Debug' }} -DBUILD_TESTS=ON
+          -DENABLE_WERROR=ON -DCMAKE_INSTALL_PREFIX=/usr ${{ matrix.options }}
 
       - name: Build
         run: cmake --build build --parallel
 
       - name: Test
+        env:
+          ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+          UBSAN_OPTIONS: print_stacktrace=1
         run: ctest --test-dir build --output-on-failure
+
+      - name: clang-tidy
+        if: matrix.tidy
+        run: scripts/clang-tidy.sh build
 
       - name: Verify udev rule
         run: |
@@ -76,6 +116,18 @@ jobs:
 
       - name: Install into staging directory
         run: DESTDIR="$PWD/stage" cmake --install build
+
+  format:
+    name: clang-format
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # A fixed version: clang-format releases format some constructs differently.
+      - name: Check formatting
+        run: >-
+          git ls-files '*.cpp' '*.h' |
+          xargs pipx run --spec clang-format==23.1.3 clang-format --dry-run --Werror
 
   reuse:
     name: REUSE compliance

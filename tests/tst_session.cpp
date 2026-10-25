@@ -5,13 +5,17 @@
 
 #include "Autostart.h"
 #include "GroupAccess.h"
+#include "SystemError.h"
 
 #include <QDir>
 #include <QFile>
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <cerrno>
+#include <cstddef>
 #include <memory>
+#include <vector>
 
 #include <grp.h>
 #include <unistd.h>
@@ -44,6 +48,7 @@ private slots:
     void noSystemEntry();
     void gnomeDisabledEntry();
     void groupStates();
+    void errorText();
 
 private:
     std::unique_ptr<QTemporaryDir> m_dir;
@@ -74,8 +79,8 @@ void TestSession::systemEntry()
     QVERIFY(read(QDir(m_paths.userDir).filePath(FileName)).contains("Hidden=true"));
 
     // On again: the user file is removed, the system-wide entry applies.
-    QVERIFY(Autostart::setEnabled(FileName, true, QStringLiteral("Tray"), QStringLiteral("gkey-config --tray"),
-                                  m_paths, &error));
+    QVERIFY(Autostart::setEnabled(FileName, true, QStringLiteral("Tray"), QStringLiteral("gkey-config --tray"), m_paths,
+                                  &error));
     QVERIFY(Autostart::isEnabled(FileName, m_paths));
     QVERIFY(!QFile::exists(QDir(m_paths.userDir).filePath(FileName)));
 }
@@ -105,11 +110,22 @@ void TestSession::gnomeDisabledEntry()
 void TestSession::groupStates()
 {
     QCOMPARE(GroupAccess::state(QStringLiteral("gkey-no-such-group-4711")), GroupAccess::State::Missing);
-    const group *own = getgrgid(getegid());
-    if (!own)
+    group entry{};
+    group *own = nullptr;
+    std::vector<char> buffer(std::size_t{64} * 1024);
+    if (getgrgid_r(getegid(), &entry, buffer.data(), buffer.size(), &own) != 0 || !own)
         QSKIP("own group not in the group database");
-    QCOMPARE(GroupAccess::state(QString::fromLocal8Bit(own->gr_name)), GroupAccess::State::Active);
+    QCOMPARE(GroupAccess::state(QString::fromLocal8Bit(entry.gr_name)), GroupAccess::State::Active);
     QVERIFY(!GroupAccess::userName().isEmpty());
+}
+
+// The errno description from strerror_r() (text depends on the locale).
+void TestSession::errorText()
+{
+    const QString denied = SystemError::text(EACCES);
+    QVERIFY(!denied.isEmpty());
+    QVERIFY(denied != SystemError::text(ENOENT));
+    QVERIFY(!SystemError::text(99999).isEmpty());   // unknown number
 }
 
 QTEST_GUILESS_MAIN(TestSession)

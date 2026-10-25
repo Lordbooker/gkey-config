@@ -190,6 +190,18 @@
         <source>System</source>
         <translation>Sistema</translation>
     </message>
+    <message>
+        <source>CPU</source>
+        <translation>CPU</translation>
+    </message>
+    <message>
+        <source>AMD GPU</source>
+        <translation>GPU AMD</translation>
+    </message>
+    <message>
+        <source>NVIDIA GPU</source>
+        <translation>GPU NVIDIA</translation>
+    </message>
 </context>
 <context>
     <name>DeviceView</name>
@@ -297,6 +309,18 @@
     <message>
         <source>Start animation (flames, when the device connects)</source>
         <translation>Animação inicial (chamas, ao conectar o dispositivo)</translation>
+    </message>
+    <message>
+        <source>CPU (load, temperatures, clock of each core)</source>
+        <translation>CPU (carga, temperaturas, frequência de cada núcleo)</translation>
+    </message>
+    <message>
+        <source>AMD GPU (load, clocks, temperatures, VRAM, power, fan)</source>
+        <translation>GPU AMD (carga, frequências, temperaturas, VRAM, potência, ventoinha)</translation>
+    </message>
+    <message>
+        <source>NVIDIA GPU (load, clocks, temperature, VRAM, power, fan)</source>
+        <translation>GPU NVIDIA (carga, frequências, temperatura, VRAM, potência, ventoinha)</translation>
     </message>
 </context>
 <context>

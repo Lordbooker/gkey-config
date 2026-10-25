@@ -62,11 +62,11 @@ void TestDBus::initTestCase()
 
 QStringList call(const QString &method, const QStringList &args = {})
 {
-    return QStringList{QStringLiteral("call"), QStringLiteral("--session"), QStringLiteral("--dest"),
-                       QLatin1String(DBusService::ServiceName), QStringLiteral("--object-path"),
-                       QLatin1String(DBusService::ObjectPath), QStringLiteral("--method"),
-                       QStringLiteral("io.github.lordbooker.GKeyConfig1.") + method}
-           + args;
+    return QStringList{QStringLiteral("call"),          QStringLiteral("--session"),
+                       QStringLiteral("--dest"),        QLatin1String(DBusService::ServiceName),
+                       QStringLiteral("--object-path"), QLatin1String(DBusService::ObjectPath),
+                       QStringLiteral("--method"),      QStringLiteral("io.github.lordbooker.GKeyConfig1.") + method} +
+           args;
 }
 
 void TestDBus::introspection()
@@ -74,10 +74,10 @@ void TestDBus::introspection()
     const QString xml = gdbus({QStringLiteral("introspect"), QStringLiteral("--session"), QStringLiteral("--dest"),
                                QLatin1String(DBusService::ServiceName), QStringLiteral("--object-path"),
                                QLatin1String(DBusService::ObjectPath)});
-    for (const char *member : {"Status", "SetProfile", "SetMode", "SetBacklight", "ResetBacklight", "Reload",
-                               "RunMacro", "StopMacros", "SetRecording", "LcdText", "LcdPage", "CalibrateStick",
-                               "DeviceAdded", "DeviceRemoved",
-                               "ProfileChanged", "ModeChanged", "KeyEvent", "RecordingChanged", "Recording"}) {
+    for (const char *member :
+         {"Status", "SetProfile", "SetMode", "SetBacklight", "ResetBacklight", "Reload", "RunMacro", "StopMacros",
+          "SetRecording", "LcdText", "LcdPage", "CalibrateStick", "DeviceAdded", "DeviceRemoved", "ProfileChanged",
+          "ModeChanged", "KeyEvent", "RecordingChanged", "Recording"}) {
         QVERIFY2(xml.contains(QLatin1String(member)), member);
     }
 }

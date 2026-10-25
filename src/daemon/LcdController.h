@@ -8,6 +8,7 @@
 #include "LcdIntro.h"
 #include "LcdPages.h"
 #include "LcdWriter.h"
+#include "NvidiaStats.h"
 #include "SystemStats.h"
 
 #include <QObject>
@@ -19,9 +20,10 @@ class QTimer;
 
 // The LCD of one device (written through its hidraw node by an LcdWriter in a
 // thread of its own). Shows one of
-// the enabled pages (status, system, clock, text); text sent over D-Bus is
-// shown on the text page, optionally only for some seconds. Clock and system
-// page are redrawn every second while they are shown.
+// the enabled pages (status, system, cpu, amdgpu, nvidia, clock, text); text
+// sent over D-Bus is shown on the text page, optionally only for some seconds.
+// The clock and the pages with system values are redrawn every second while
+// they are shown.
 class LcdController : public QObject {
     Q_OBJECT
 public:
@@ -66,7 +68,8 @@ private:
     LcdPages::Status m_status;
     QStringList m_textLines;
     SystemStats m_stats;
-    QTimer *m_clockTimer = nullptr;   // ticks while the clock or the system page is shown
+    NvidiaStats m_nvidia;
+    QTimer *m_clockTimer = nullptr;   // ticks while the clock or a page with system values is shown
     QTimer *m_textTimer = nullptr;
     std::unique_ptr<LcdIntro> m_intro;   // start animation (kept for its final image)
     QTimer *m_introTimer = nullptr;      // next animation frame

@@ -11,24 +11,24 @@
 #include "DeviceDiagnosis.h"
 #include "DeviceView.h"
 #include "LcdPage.h"
-#include "Settings.h"
-#include "StickPage.h"
 #include "MacroEditor.h"
 #include "MacroStore.h"
 #include "ProfileStore.h"
 #include "SessionSetup.h"
+#include "Settings.h"
+#include "StickPage.h"
 
 #include <QAction>
 #include <QApplication>
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QCloseEvent>
-#include <QDesktopServices>
-#include <QDir>
-#include <QDialog>
-#include <QDialogButtonBox>
 #include <QColorDialog>
 #include <QComboBox>
+#include <QDesktopServices>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QDir>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QInputDialog>
@@ -87,7 +87,8 @@ QIcon MainWindow::appIcon()
         font.setPixelSize(qMax(8, static_cast<int>(size * 0.42)));
         painter.setFont(font);
         painter.setPen(Qt::white);
-        painter.drawText(QRectF(size * 0.2, size * 0.16, size * 0.6, size * 0.56), Qt::AlignCenter, QStringLiteral("G"));
+        painter.drawText(QRectF(size * 0.2, size * 0.16, size * 0.6, size * 0.56), Qt::AlignCenter,
+                         QStringLiteral("G"));
         drawn.addPixmap(pixmap);
     }
     return drawn;
@@ -302,11 +303,12 @@ void MainWindow::setupUi()
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(tr("About"), this, [this] {
-        QMessageBox::about(this, tr("About gkey-config"),
-                           tr("<b>gkey-config</b> %1<br>Configuration of the gaming keys of Logitech G keyboards "
-                              "driven by the Linux kernel driver hid-lg-g15.<br><br>License: GPL-2.0-only<br>"
-                              "<a href=\"https://github.com/Lordbooker/gkey-config\">github.com/Lordbooker/gkey-config</a>")
-                               .arg(QStringLiteral(GKEY_VERSION)));
+        QMessageBox::about(
+            this, tr("About gkey-config"),
+            tr("<b>gkey-config</b> %1<br>Configuration of the gaming keys of Logitech G keyboards "
+               "driven by the Linux kernel driver hid-lg-g15.<br><br>License: GPL-2.0-only<br>"
+               "<a href=\"https://github.com/Lordbooker/gkey-config\">github.com/Lordbooker/gkey-config</a>")
+                .arg(QStringLiteral(GKEY_VERSION)));
     });
 }
 
@@ -399,8 +401,7 @@ void MainWindow::selectKey(const QString &keyId)
         if (bindings.contains(keyId))
             action = bindings.value(keyId);
     }
-    const QString title = keyId.isEmpty() ? QString()
-                                          : tr("%1 — layer M%2").arg(keyTitle(m_model, keyId)).arg(m_mode);
+    const QString title = keyId.isEmpty() ? QString() : tr("%1 — layer M%2").arg(keyTitle(m_model, keyId)).arg(m_mode);
     m_bindingEditor->setKey(keyId, title, action);
 }
 
@@ -449,7 +450,8 @@ void MainWindow::onBindingChanged(const QString &keyId, const std::optional<Acti
 void MainWindow::onNewProfile()
 {
     bool ok = false;
-    const QString name = QInputDialog::getText(this, tr("New profile"), tr("Name:"), QLineEdit::Normal, {}, &ok).trimmed();
+    const QString name =
+        QInputDialog::getText(this, tr("New profile"), tr("Name:"), QLineEdit::Normal, {}, &ok).trimmed();
     if (!ok || name.isEmpty())
         return;
     if (m_store->profile(name)) {
@@ -498,9 +500,8 @@ void MainWindow::onRenameProfile()
         return;
     const QString oldName = current->name();
     bool ok = false;
-    const QString name = QInputDialog::getText(this, tr("Rename profile"), tr("New name:"), QLineEdit::Normal,
-                                               oldName, &ok)
-                             .trimmed();
+    const QString name =
+        QInputDialog::getText(this, tr("Rename profile"), tr("New name:"), QLineEdit::Normal, oldName, &ok).trimmed();
     if (!ok || name.isEmpty() || name == oldName)
         return;
     QString error;
@@ -524,8 +525,8 @@ void MainWindow::onDeleteProfile()
         return;
     }
     const QString name = current->name();
-    if (QMessageBox::question(this, tr("Delete profile"), tr("Delete the profile \"%1\"?").arg(name))
-        != QMessageBox::Yes)
+    if (QMessageBox::question(this, tr("Delete profile"), tr("Delete the profile \"%1\"?").arg(name)) !=
+        QMessageBox::Yes)
         return;
     QString error;
     if (!m_store->remove(name, &error)) {
@@ -710,11 +711,12 @@ void MainWindow::onLedAccessFinished(bool success, const QString &message)
 void MainWindow::onDaemonAutostartChanged()
 {
     const SessionSetup::DaemonAutostart state = m_session->daemonAutostart();
-    const bool installed = state != SessionSetup::DaemonAutostart::NotInstalled
-                           && state != SessionSetup::DaemonAutostart::Unknown;
+    const bool installed =
+        state != SessionSetup::DaemonAutostart::NotInstalled && state != SessionSetup::DaemonAutostart::Unknown;
     m_daemonAutostartAction->setEnabled(installed);
     m_daemonAutostartAction->setChecked(state == SessionSetup::DaemonAutostart::Enabled);
-    m_daemonAutostartAction->setToolTip(installed ? QString() : tr("The systemd user unit gkeyd.service is not installed."));
+    m_daemonAutostartAction->setToolTip(installed ? QString()
+                                                  : tr("The systemd user unit gkeyd.service is not installed."));
     if (m_firstRunPending && isVisible())
         QTimer::singleShot(300, this, &MainWindow::askFirstRunSetup);
 }
@@ -745,7 +747,8 @@ void MainWindow::askFirstRunSetup()
     daemonBox->setChecked(true);
     daemonBox->setVisible(offerDaemon);
     layout->addWidget(daemonBox);
-    auto *ledBox = new QCheckBox(tr("Allow LED control (group \"gkey\"; asks for the administrator password)"), &dialog);
+    auto *ledBox =
+        new QCheckBox(tr("Allow LED control (group \"gkey\"; asks for the administrator password)"), &dialog);
     ledBox->setChecked(true);
     ledBox->setVisible(offerLed);
     layout->addWidget(ledBox);

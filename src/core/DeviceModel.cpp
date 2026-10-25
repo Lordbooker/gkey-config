@@ -12,6 +12,8 @@
 #include <QRegularExpression>
 #include <QSet>
 
+#include <algorithm>
+
 namespace {
 
 // Error collector: the first error ends parsing; it is reported with the file name.
@@ -72,8 +74,8 @@ std::optional<DeviceModel::LedType> parseLedType(const QString &text)
 const QSet<QString> &knownLedRoles()
 {
     static const QSet<QString> roles = {
-        QStringLiteral("backlight"), QStringLiteral("mode1"), QStringLiteral("mode2"),
-        QStringLiteral("mode3"), QStringLiteral("record"), QStringLiteral("lcd-backlight"),
+        QStringLiteral("backlight"), QStringLiteral("mode1"),  QStringLiteral("mode2"),
+        QStringLiteral("mode3"),     QStringLiteral("record"), QStringLiteral("lcd-backlight"),
     };
     return roles;
 }
@@ -83,23 +85,23 @@ const QSet<QString> &knownLedRoles()
 const QList<QString> &DeviceModel::stickDirectionKeys()
 {
     static const QList<QString> keys = {
-        QStringLiteral("STICK_UP"), QStringLiteral("STICK_DOWN"),
-        QStringLiteral("STICK_LEFT"), QStringLiteral("STICK_RIGHT"),
+        QStringLiteral("STICK_UP"),
+        QStringLiteral("STICK_DOWN"),
+        QStringLiteral("STICK_LEFT"),
+        QStringLiteral("STICK_RIGHT"),
     };
     return keys;
 }
 
-std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json,
-                                                          const QString &sourceName)
+std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json, const QString &sourceName)
 {
     const ModelError error(sourceName);
 
     QJsonParseError parseError;
     const QJsonDocument document = QJsonDocument::fromJson(json, &parseError);
     if (parseError.error != QJsonParseError::NoError)
-        return error(QStringLiteral("invalid JSON at offset %1: %2")
-                         .arg(parseError.offset)
-                         .arg(parseError.errorString()));
+        return error(
+            QStringLiteral("invalid JSON at offset %1: %2").arg(parseError.offset).arg(parseError.errorString()));
     if (!document.isObject())
         return error(QStringLiteral("top level must be an object"));
     const QJsonObject root = document.object();
@@ -171,8 +173,8 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
                              .arg(key.id, key.codeName, key.input));
         const auto role = parseKeyRole(object.value(u"role").toString());
         if (!role)
-            return error(QStringLiteral("key \"%1\": unknown role \"%2\"")
-                             .arg(key.id, object.value(u"role").toString()));
+            return error(
+                QStringLiteral("key \"%1\": unknown role \"%2\"").arg(key.id, object.value(u"role").toString()));
         key.role = *role;
         if (object.contains(u"default")) {
             const auto action = Action::fromJson(object.value(u"default").toObject());
@@ -199,8 +201,8 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
             return error(QStringLiteral("LED \"%1\" needs a \"suffix\"").arg(led.role));
         const auto type = parseLedType(object.value(u"type").toString());
         if (!type)
-            return error(QStringLiteral("LED \"%1\": unknown type \"%2\"")
-                             .arg(led.role, object.value(u"type").toString()));
+            return error(
+                QStringLiteral("LED \"%1\": unknown type \"%2\"").arg(led.role, object.value(u"type").toString()));
         led.type = *type;
         led.max = object.value(u"max").toInt(led.type == LedType::Rgb ? 255 : 1);
         if (led.type == LedType::Level && led.max < 1)
@@ -296,11 +298,7 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
 
 bool DeviceModel::matchesUsb(quint16 vendor, quint16 product) const
 {
-    for (const UsbId &id : m_usbIds) {
-        if (id.vendor == vendor && id.product == product)
-            return true;
-    }
-    return false;
+    return std::ranges::any_of(m_usbIds, [&](const UsbId &id) { return id.vendor == vendor && id.product == product; });
 }
 
 const DeviceModel::Key *DeviceModel::keyForCode(const QString &inputRole, int code) const

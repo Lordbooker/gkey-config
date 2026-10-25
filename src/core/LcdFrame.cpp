@@ -7,6 +7,8 @@
 
 #include <QHash>
 
+#include <algorithm>
+
 LcdFrame::LcdFrame(int width, int height)
     : m_width(width), m_height(height), m_pixels(static_cast<size_t>(width) * static_cast<size_t>(height), 0)
 {
@@ -14,7 +16,7 @@ LcdFrame::LcdFrame(int width, int height)
 
 void LcdFrame::clear()
 {
-    std::fill(m_pixels.begin(), m_pixels.end(), 0);
+    std::ranges::fill(m_pixels, 0);
 }
 
 void LcdFrame::setPixel(int x, int y, bool on)
@@ -55,14 +57,18 @@ void LcdFrame::drawRect(int x, int y, int width, int height)
 QString LcdFrame::toAscii(const QString &text)
 {
     static const QHash<QChar, QString> replacements = {
-        {QChar(0xe4), QStringLiteral("ae")}, {QChar(0xf6), QStringLiteral("oe")}, {QChar(0xfc), QStringLiteral("ue")},
-        {QChar(0xc4), QStringLiteral("Ae")}, {QChar(0xd6), QStringLiteral("Oe")}, {QChar(0xdc), QStringLiteral("Ue")},
-        {QChar(0xdf), QStringLiteral("ss")}, {QChar(0x2013), QStringLiteral("-")}, {QChar(0x2014), QStringLiteral("-")},
-        {QChar(0x201e), QStringLiteral("\"")}, {QChar(0x201c), QStringLiteral("\"")}, {QChar(0x201d), QStringLiteral("\"")},
-        {QChar(0xab), QStringLiteral("\"")}, {QChar(0xbb), QStringLiteral("\"")}, {QChar(0x2018), QStringLiteral("'")},
-        {QChar(0x2019), QStringLiteral("'")}, {QChar(0x2026), QStringLiteral("...")}, {QChar(0xa0), QStringLiteral(" ")},
-        {QChar(0x202f), QStringLiteral(" ")}, {QChar(0xc6), QStringLiteral("AE")}, {QChar(0xe6), QStringLiteral("ae")},
-        {QChar(0x152), QStringLiteral("OE")}, {QChar(0x153), QStringLiteral("oe")}, {QChar(0xaa), QStringLiteral("a")},
+        {QChar(0xe4), QStringLiteral("ae")},    {QChar(0xf6), QStringLiteral("oe")},
+        {QChar(0xfc), QStringLiteral("ue")},    {QChar(0xc4), QStringLiteral("Ae")},
+        {QChar(0xd6), QStringLiteral("Oe")},    {QChar(0xdc), QStringLiteral("Ue")},
+        {QChar(0xdf), QStringLiteral("ss")},    {QChar(0x2013), QStringLiteral("-")},
+        {QChar(0x2014), QStringLiteral("-")},   {QChar(0x201e), QStringLiteral("\"")},
+        {QChar(0x201c), QStringLiteral("\"")},  {QChar(0x201d), QStringLiteral("\"")},
+        {QChar(0xab), QStringLiteral("\"")},    {QChar(0xbb), QStringLiteral("\"")},
+        {QChar(0x2018), QStringLiteral("'")},   {QChar(0x2019), QStringLiteral("'")},
+        {QChar(0x2026), QStringLiteral("...")}, {QChar(0xa0), QStringLiteral(" ")},
+        {QChar(0x202f), QStringLiteral(" ")},   {QChar(0xc6), QStringLiteral("AE")},
+        {QChar(0xe6), QStringLiteral("ae")},    {QChar(0x152), QStringLiteral("OE")},
+        {QChar(0x153), QStringLiteral("oe")},   {QChar(0xaa), QStringLiteral("a")},
         {QChar(0xba), QStringLiteral("o")},
     };
     QString result;
@@ -71,8 +77,10 @@ QString LcdFrame::toAscii(const QString &text)
             result.append(c);
             continue;
         }
-        if (c.unicode() == 0xb0) {   // degree sign: own glyph in the font
-            result.append(QChar(char16_t(LcdFont::DegreeSign)));
+        // Degree sign: own glyph in the font. Its code (127) is kept as it is,
+        // so text that was already converted (e.g. by elided()) stays the same.
+        if (c.unicode() == 0xb0 || c.unicode() == LcdFont::DegreeSign) {
+            result.append(QChar(static_cast<char16_t>(LcdFont::DegreeSign)));
             continue;
         }
         const auto it = replacements.constFind(c);
@@ -110,7 +118,7 @@ int LcdFrame::drawText(int x, int y, const QString &text, int scale, bool on)
         const unsigned char *columns = LcdFont::glyph(c.unicode());
         for (int col = 0; col < LcdFont::Width; ++col)
             for (int row = 0; row < LcdFont::Height; ++row)
-                if (columns[col] & (1 << row))
+                if ((static_cast<unsigned>(columns[col]) >> static_cast<unsigned>(row)) & 1U)
                     fillRect(x + col * scale, y + row * scale, scale, scale, on);
         x += LcdFont::Advance * scale;
     }
@@ -129,7 +137,7 @@ QByteArray LcdFrame::toG13Report() const
             unsigned char bits = 0;
             for (int bit = 0; bit < 8; ++bit)
                 if (pixel(x, band * 8 + bit))
-                    bits |= static_cast<unsigned char>(1 << bit);
+                    bits |= static_cast<unsigned char>(1U << static_cast<unsigned>(bit));
             report[Header + band * Width + x] = static_cast<char>(bits);
         }
     }

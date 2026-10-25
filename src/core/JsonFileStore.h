@@ -24,7 +24,7 @@
 //
 // File names are derived from the item name when an item is created
 // (DirectoryWatcher::uniqueFileName) and kept afterwards. Writes are atomic.
-template<typename T>
+template <typename T>
 class JsonFileStore {
 public:
     // Called for every item read; may adjust it and add messages (e.g. warnings).
@@ -79,9 +79,8 @@ public:
     QStringList names() const
     {
         QStringList list = m_items.keys();
-        std::sort(list.begin(), list.end(), [](const QString &a, const QString &b) {
-            return QString::compare(a, b, Qt::CaseInsensitive) < 0;
-        });
+        std::sort(list.begin(), list.end(),
+                  [](const QString &a, const QString &b) { return QString::compare(a, b, Qt::CaseInsensitive) < 0; });
         return list;
     }
 
@@ -96,9 +95,8 @@ public:
     bool save(const T &item, QString *error)
     {
         QDir().mkpath(m_directory);
-        const QString path = m_files.contains(item.name())
-                                 ? m_files.value(item.name())
-                                 : DirectoryWatcher::uniqueFileName(m_directory, item.name());
+        const QString path = m_files.contains(item.name()) ? m_files.value(item.name())
+                                                           : DirectoryWatcher::uniqueFileName(m_directory, item.name());
         QSaveFile file(path);
         if (!file.open(QIODevice::WriteOnly) || file.write(item.toJson()) < 0 || !file.commit()) {
             if (error)

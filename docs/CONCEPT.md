@@ -428,13 +428,15 @@ buttons are left to the system as well.
   its final image stays until the page is changed. It is not part of the rotation of "next" and
   "previous". A text sent over D-Bus interrupts it; after a temporary text the animation continues
   where it was. `LcdPage intro` plays it again. At least one other page always stays enabled.
-* Pages: status (device, profile, layer M1–M3, "REC" while recording), system (see below), clock
-  (time, seconds, day and date in the user's locale), text (set via D-Bus `LcdText`, up to five
-  lines).
+* Pages: status (device, profile, layer M1–M3, "REC" while recording), system (see below), cpu,
+  amdgpu, nvidia (see below), clock (time, seconds, day and date in the user's locale), text (set
+  via D-Bus `LcdText`, up to five lines).
 * Enabled pages and their order are global settings in `~/.config/gkey-config/settings.json`
   (`{ "lcd": { "pages": ["status", "system", "clock", "text"] } }`), edited in the GUI's LCD tab.
-  Without the file all pages are enabled in this order; a page added in a later version appears
-  unchecked in existing settings.
+  Without the file the pages intro, status, system, clock and text are enabled in this order
+  (`LcdPages::defaultPages()`); the hardware pages cpu, amdgpu and nvidia are off, as they are
+  only useful with that hardware. A page added in a later version appears unchecked in existing
+  settings.
 * The round button (BD) always shows the next page *(fixed after 1.1.1, decided 2026-10-22: it is the
   only way through the pages on the device)*; it has the role `lcd` and cannot be bound. Model
   files can still give a bindable key a `default` action that applies while the key is unbound in
@@ -458,6 +460,25 @@ buttons are left to the system as well.
   the card with the most VRAM. Intel GPUs have no load value in sysfs; NVIDIA is not supported
   yet. The values are read once per second, only while the page is shown. The font got a degree
   sign (code 127).
+* Hardware pages *(added after 1.3.0, decided 2026-10-24)*, redrawn once per second while shown:
+  * cpu: load and all CPU temperatures in the top row (hwmon `k10temp`/`zenpower`/`coretemp`;
+    `Tccd1` shortened to `CCD1`; if they do not fit, the values after the first are combined as
+    `61/63/60°`, without the first name if needed). Below, over the whole width, one bar per
+    **logical CPU** (each SMT thread, in the order of the CPU numbers; `cpufreq`
+    `scaling_cur_freq`), scaled from 0 to `cpuinfo_max_freq`, without clock labels *(changed
+    2026-10-25: first one bar per physical core, scaled from `cpuinfo_min_freq`, with labels)*.
+    The bar width follows the number of CPUs (one-pixel gap up to 52 CPUs, single pixels up to
+    158); with more CPUs than pixel columns a column stands for several CPUs and shows the
+    highest clock.
+  * amdgpu: the AMD GPU with the most VRAM: load bar (`gpu_busy_percent`), core and memory clock
+    (hwmon `sclk`/`mclk`), all hwmon temperatures (edge, junction, mem), VRAM bar with used/total,
+    power (`power1_average`, else `power1_input`) and fan (`fan1_input`, rpm).
+  * nvidia: the first NVIDIA GPU through NVML (`libnvidia-ml.so.1`, loaded at runtime with
+    `QLibrary`, no build or package dependency): load, graphics and memory clock, GPU temperature
+    (NVML has no hotspot or memory temperature for consumer cards), VRAM, power and fan (percent).
+    Untested on hardware.
+  * Values the driver does not report are shown as "--" or left out; without the GPU the page
+    shows the reason (e.g. "no NVIDIA driver (NVML)").
 * A media page is a possible later addition.
 * G15/G510 LCD: after the protocol has been analysed on hardware.
 
@@ -712,22 +733,17 @@ Agreed ideas that are not scheduled yet:
   2026-10-22 (master during the 7.4 merge window). Once merged: model file after the same scheme
   as G510/G15 (untested), `minKernel` = the first release containing it.
 
-* **NVIDIA GPUs on the LCD system page** *(discussed 2026-10-22, postponed)*. The proprietary
-  driver exposes neither load, VRAM nor a hwmon temperature in sysfs, so the values come from NVML
-  (`libnvidia-ml.so.1`, part of the driver, e.g. `nvidia-utils` on Arch; no special rights):
-  * loaded at runtime with `dlopen`, only when present; no build or package dependency, own
-    declarations of the few functions used (`nvmlInit_v2`, `nvmlShutdown`,
-    `nvmlDeviceGetCount_v2`, `nvmlDeviceGetHandleByIndex_v2`, `nvmlDeviceGetUtilizationRates`,
-    `nvmlDeviceGetMemoryInfo`, `nvmlDeviceGetTemperature` with the GPU sensor);
+* **NVIDIA GPUs on the LCD system page** *(discussed 2026-10-22, postponed)*. Since 2026-10-24
+  NVML is read by `NvidiaStats` for the page `nvidia` (7.2); still open for the system page:
   * same rows as for AMD (GPU load, GPU temperature, VRAM used/total); with AMD and NVIDIA in one
     system the GPU with the most VRAM wins;
   * hybrid laptops: if the NVIDIA PCI device is runtime-suspended
     (`/sys/bus/pci/devices/…/power/runtime_status`), NVML is not touched so the GPU is not woken;
     the row shows "--%";
   * nouveau is not supported (no load values);
-  * tests with a fake NVML library; real hardware not available, so marked untested until
-    someone reports back;
-  * release as 1.2.0.
+    (this also applies to the page `nvidia`, which reads NVML every second while shown);
+  * tests with a fake NVML library (so far only the case without the library is tested); real
+    hardware not available, so marked untested until someone reports back.
 
 ---
 

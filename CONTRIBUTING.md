@@ -34,14 +34,35 @@ ctest --test-dir build --output-on-failure
 | `BUILD_GUI` | `ON` | build the Qt6 application `gkey-config` |
 | `BUILD_TESTS` | `OFF` | build the unit tests (Qt Test) |
 | `ENABLE_SANITIZERS` | `OFF` | ASan/UBSan, only for `CMAKE_BUILD_TYPE=Debug` |
+| `ENABLE_WERROR` | `OFF` | warnings are errors (used in CI) |
 | `GKEY_VERSION` | `git describe` | displayed version |
 | `GKEY_PACKAGE_VERSION`, `GKEY_PACKAGE_RELEASE` | from the version, `1` | package version and release for CPack |
 | `GKEY_UDEV_RULES_DIR`, `GKEY_SYSTEMD_USER_UNIT_DIR`, `GKEY_SYSUSERS_DIR` | from `pkg-config` (udev, systemd), else `lib/...` | install directories, relative to the prefix |
 
 The code is C++23 with Qt 6: Qt types for strings and containers (standard library only at
 system interfaces), errors as return values instead of exceptions, comments in English. The build
-uses strict warnings (`-Wall -Wextra -Wpedantic -Wshadow -Wconversion …`); new code should not add
-any. Before a pull request, run the tests once with `-DENABLE_SANITIZERS=ON` (ASan/UBSan).
+uses strict warnings (`-Wall -Wextra -Wpedantic -Wshadow -Wconversion …`); new code must not add
+any.
+
+## Checks
+
+CI runs these on every push and pull request; each one fails the build. On `dev` and for release
+tags the workflow *Release packages* runs them first and builds packages only when all pass:
+
+| Check | Where | Run it locally |
+|---|---|---|
+| Build and tests with GCC, warnings as errors | Arch Linux, Fedora, Debian testing; Arch also in Release mode | `-DENABLE_WERROR=ON`, `ctest` |
+| Build and tests with Clang | Arch Linux | `-DCMAKE_CXX_COMPILER=clang++` |
+| clang-tidy (`.clang-tidy`, `tests/.clang-tidy`) | Arch Linux | `scripts/clang-tidy.sh build` (after a build) |
+| Tests with AddressSanitizer and UndefinedBehaviorSanitizer | Arch Linux | `-DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON`, `ctest` |
+| Formatting (`.clang-format`) | clang-format 23.1.3 | `git ls-files '*.cpp' '*.h' \| xargs clang-format -i` |
+| CodeQL security analysis | GitHub code scanning | – |
+| udev rule, desktop and AppStream files, REUSE | all / `reuse lint` | `reuse lint` |
+
+clang-format releases format some constructs differently; use the version CI uses
+(`pipx run --spec clang-format==23.1.3 clang-format …`). `.clang-tidy` lists the checks that are
+switched off and why; a finding that is wrong in one place can be silenced with
+`// NOLINT(check-name)` and a comment explaining it.
 
 Licensing follows the [REUSE specification](https://reuse.software/): each file starts with SPDX
 headers (`GPL-2.0-only`), files that cannot carry one are listed in `REUSE.toml`; `reuse lint`
@@ -134,8 +155,8 @@ workflow builds it from the pushed commit as a test.
    The last line only fast-forwards `dev` to the merge commit, so that development builds show
    versions like `x.y.z-3-gabc1234`.
 
-4. The workflow *Release packages* checks that the tag matches the project version, builds the
-   packages, creates the GitHub release and publishes the AUR package `gkey-config`. Publishing to the AUR needs the repository secret `AUR_SSH_PRIVATE_KEY`:
+4. The workflow *Release packages* runs all checks (see above), checks that the tag matches the
+   project version, builds the packages, creates the GitHub release and publishes the AUR package `gkey-config`. Publishing to the AUR needs the repository secret `AUR_SSH_PRIVATE_KEY`:
    *Settings → Secrets and variables → Actions → Repository secrets*, the complete private SSH key
    of the AUR account without passphrase, including the `-----BEGIN`/`-----END` lines. Without it
    the AUR step only shows a notice and the files are attached to the run as artifact `aur`; after

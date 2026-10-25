@@ -22,6 +22,10 @@ inline const QString IntroPage = QStringLiteral("intro");
 // Page names in their default order.
 const QStringList &allPages();
 
+// The pages enabled without settings: all but the hardware pages (cpu,
+// amdgpu, nvidia), which are only useful with that hardware.
+const QStringList &defaultPages();
+
 // The pages that "next" and "previous" go through: the enabled pages without
 // the start animation.
 QStringList rotation(const QStringList &pages);
@@ -40,6 +44,18 @@ void renderText(LcdFrame &frame, const QStringList &lines);
 // CPU, RAM, GPU and VRAM with bar, percent and temperature or amount; without
 // a supported GPU CPU, RAM and swap.
 void renderSystem(LcdFrame &frame, const SystemStats::Sample &sample);
+
+// CPU load and temperatures in the top row, below one bar per logical CPU for
+// its clock from 0 to the CPU's highest clock. The bars get narrower with more
+// CPUs, so all of them fit.
+void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu);
+
+// One GPU (AMD through amdgpu, NVIDIA through NVML): title and load bar,
+// core and memory clock, all temperatures, VRAM, power and fan. Values the
+// driver does not report are left out or shown as "--". Without a GPU the
+// title and the reason (problem) are shown.
+void renderGpu(LcdFrame &frame, const QString &title, const std::optional<SystemStats::GpuDetail> &gpu,
+               const QString &problem);
 
 // "16.4G": bytes in GiB, at most five characters.
 QString formatSize(qint64 bytes);

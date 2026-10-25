@@ -113,8 +113,8 @@ void TestEngine::comboOrder()
 {
     m_engine->handleKey(QStringLiteral("keys"), KEY_MACRO2, 1);
     m_engine->handleKey(QStringLiteral("keys"), KEY_MACRO2, 0);
-    QCOMPARE(m_sink->events, (QStringList{down(KEY_LEFTCTRL), down(KEY_LEFTSHIFT), down(KEY_T),
-                                          up(KEY_T), up(KEY_LEFTSHIFT), up(KEY_LEFTCTRL)}));
+    QCOMPARE(m_sink->events, (QStringList{down(KEY_LEFTCTRL), down(KEY_LEFTSHIFT), down(KEY_T), up(KEY_T),
+                                          up(KEY_LEFTSHIFT), up(KEY_LEFTCTRL)}));
 }
 
 void TestEngine::unboundAndUnmappedKeys()
@@ -206,8 +206,8 @@ void TestEngine::profileSwitchReleasesHeldKeys()
 {
     m_engine->handleKey(QStringLiteral("keys"), KEY_MACRO2, 1);   // combo held
     m_engine->setMode(2);                                          // must release it
-    QCOMPARE(m_sink->events, (QStringList{down(KEY_LEFTCTRL), down(KEY_LEFTSHIFT), down(KEY_T),
-                                          up(KEY_T), up(KEY_LEFTSHIFT), up(KEY_LEFTCTRL)}));
+    QCOMPARE(m_sink->events, (QStringList{down(KEY_LEFTCTRL), down(KEY_LEFTSHIFT), down(KEY_T), up(KEY_T),
+                                          up(KEY_LEFTSHIFT), up(KEY_LEFTCTRL)}));
 
     m_sink->events.clear();
     m_engine->handleKey(QStringLiteral("keys"), KEY_MACRO2, 0);   // late release: nothing more

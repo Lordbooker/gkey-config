@@ -43,6 +43,8 @@ add_library(gkey-core STATIC
     MacroStore.h
     ModelRegistry.cpp
     ModelRegistry.h
+    NvidiaStats.cpp
+    NvidiaStats.h
     OutputCodes.cpp
     OutputCodes.h
     Profile.cpp
@@ -55,6 +57,8 @@ add_library(gkey-core STATIC
     StickProcessor.h
     StickSettings.cpp
     StickSettings.h
+    SystemError.cpp
+    SystemError.h
     SystemStats.cpp
     SystemStats.h
 )

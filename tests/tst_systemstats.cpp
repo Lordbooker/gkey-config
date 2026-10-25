@@ -7,6 +7,7 @@
 #include "LcdFont.h"
 #include "LcdFrame.h"
 #include "LcdPages.h"
+#include "NvidiaStats.h"
 #include "SystemStats.h"
 
 #include <QDir>
@@ -25,6 +26,15 @@ private slots:
     void memory();
     void amdGpuAndTemperatures();
     void withoutGpu();
+    void cpuDetail();
+    void amdGpuDetail();
+    void nvidiaWithoutDriver();
+    void renderCpuBars_data();
+    void renderCpuBars();
+    void renderCpuTemperatures();
+    void renderGpu();
+    void renderGpuMissingValues();
+    void renderGpuWithoutGpu();
     void formatSize();
     void degreeSign();
     void renderFourRows();
@@ -124,6 +134,258 @@ void TestSystemStats::withoutGpu()
 {
     SystemStats stats(proc(), sys());
     QVERIFY(!stats.sample().gpu);
+}
+
+// 9800X3D-like: 2 physical cores with 2 threads each in the fake tree; one
+// clock per thread, in the order of the CPU numbers (cpufreq in kHz).
+void TestSystemStats::cpuDetail()
+{
+    const QString cpu = sys() + QStringLiteral("/devices/system/cpu/cpu%1");
+    const int coreIds[] = {0, 1, 0, 1};
+    const char *freqs[] = {"4111719\n", "603379\n", "5100000\n", "1200000\n"};
+    for (int i = 0; i < 4; ++i) {
+        write(cpu.arg(i) + QStringLiteral("/topology/physical_package_id"), "0\n");
+        write(cpu.arg(i) + QStringLiteral("/topology/core_id"), QByteArray::number(coreIds[i]) + '\n');
+        write(cpu.arg(i) + QStringLiteral("/cpufreq/scaling_cur_freq"), freqs[i]);
+        write(cpu.arg(i) + QStringLiteral("/cpufreq/cpuinfo_min_freq"), "603379\n");
+        write(cpu.arg(i) + QStringLiteral("/cpufreq/cpuinfo_max_freq"), "5271622\n");
+    }
+    QVERIFY(QDir().mkpath(sys() + QStringLiteral("/devices/system/cpu/cpufreq")));   // not a CPU
+
+    SystemStats stats(proc(), sys());
+    const SystemStats::CpuDetail detail = stats.cpuDetail();
+    QCOMPARE(detail.cpuMHz, (QList<int>{4111, 603, 5100, 1200}));
+    QCOMPARE(detail.maxMHz, 5271);
+    QCOMPARE(detail.temperatures.size(), 2);
+    QCOMPARE(detail.temperatures.at(0).label, QStringLiteral("Tctl"));
+    QCOMPARE(detail.temperatures.at(1).label, QStringLiteral("Tccd1"));
+    QCOMPARE(detail.temperatures.at(1).celsius, 31.75);
+    QVERIFY(!detail.percent);   // first call
+}
+
+// Values as on an RX 7900 XTX (amdgpu hwmon: clocks in Hz, power in µW).
+void TestSystemStats::amdGpuDetail()
+{
+    SystemStats none(proc(), sys());
+    QVERIFY(!none.amdGpuDetail());
+
+    addAmdGpu();
+    const QString hwmon = sys() + QStringLiteral("/class/drm/card1/device/hwmon/hwmon1");
+    write(sys() + QStringLiteral("/class/drm/card1/device/mem_busy_percent"), "12\n");
+    write(hwmon + QStringLiteral("/temp3_label"), "mem\n");
+    write(hwmon + QStringLiteral("/temp3_input"), "84000\n");
+    write(hwmon + QStringLiteral("/freq1_label"), "sclk\n");
+    write(hwmon + QStringLiteral("/freq1_input"), "2650000000\n");
+    write(hwmon + QStringLiteral("/freq2_label"), "mclk\n");
+    write(hwmon + QStringLiteral("/freq2_input"), "1249000000\n");
+    write(hwmon + QStringLiteral("/power1_label"), "PPT\n");
+    write(hwmon + QStringLiteral("/power1_average"), "312000000\n");
+    write(hwmon + QStringLiteral("/fan1_input"), "1450\n");
+
+    SystemStats stats(proc(), sys());
+    const auto detail = stats.amdGpuDetail();
+    QVERIFY(detail);
+    QCOMPARE(detail->busyPercent, std::optional<int>(84));
+    QCOMPARE(detail->memBusyPercent, std::optional<int>(12));
+    QCOMPARE(detail->coreMHz, std::optional<int>(2650));
+    QCOMPARE(detail->memMHz, std::optional<int>(1249));
+    QCOMPARE(detail->temperatures.size(), 3);
+    QCOMPARE(detail->temperatures.at(1).label, QStringLiteral("junction"));
+    QCOMPARE(detail->temperatures.at(2).celsius, 84.0);
+    QCOMPARE(detail->powerWatts, std::optional<double>(312.0));
+    QCOMPARE(detail->fanRpm, std::optional<int>(1450));
+    QVERIFY(detail->vram);
+}
+
+// Without the NVIDIA driver there is no sample and a reason for the page.
+void TestSystemStats::nvidiaWithoutDriver()
+{
+    NvidiaStats nvidia(QStringLiteral("gkey-config-no-such-library"));
+    QVERIFY(!nvidia.sample());
+    QVERIFY(!nvidia.problem().isEmpty());
+    QVERIFY(!nvidia.sample());   // tried once, no second attempt that could log again
+}
+
+void TestSystemStats::renderCpuBars_data()
+{
+    QTest::addColumn<int>("cpus");
+    QTest::newRow("8 CPUs") << 8;
+    QTest::newRow("16 CPUs") << 16;
+    QTest::newRow("64 CPUs") << 64;
+    QTest::newRow("200 CPUs") << 200;   // more CPUs than columns: one column for several
+}
+
+// One bar per logical CPU across the whole width, scaled from 0: a CPU at the
+// highest clock fills the height below the top row (33 rows), one at 600 of
+// 5300 MHz gets 4 rows. No clock labels.
+void TestSystemStats::renderCpuBars()
+{
+    QFETCH(int, cpus);
+    SystemStats::CpuDetail cpu;
+    cpu.percent = 23;
+    cpu.maxMHz = 5300;
+    for (int i = 0; i < cpus; ++i)
+        cpu.cpuMHz.append(i % 2 ? 600 : 5300);
+    LcdFrame frame(160, 43);
+    LcdPages::renderCpu(frame, cpu);
+
+    // Count the bars along the bottom row.
+    int tall = 0;
+    int low = 0;
+    bool inBar = false;
+    for (int x = 0; x < 160; ++x) {
+        const bool lit = frame.pixel(x, 42);
+        if (lit && !inBar) {
+            if (frame.pixel(x, 10)) {
+                ++tall;
+            } else {
+                ++low;
+                QVERIFY(frame.pixel(x, 39));
+                QVERIFY(!frame.pixel(x, 38));
+            }
+        }
+        inBar = lit;
+    }
+    for (int y = 10; y < 43; ++y) {   // one pixel margin left and right
+        QVERIFY(!frame.pixel(0, y));
+        QVERIFY(!frame.pixel(159, y));
+    }
+    if (cpus <= 158 / 3) {   // with gaps every bar is a separate run
+        QCOMPARE(tall + low, cpus);
+        QCOMPARE(tall, cpus / 2);
+    } else if (cpus > 158) {   // every column contains a CPU at the highest clock
+        QCOMPARE(low, 0);
+        QVERIFY(tall >= 1);
+    } else {
+        QVERIFY(tall + low >= 1);
+    }
+}
+
+void TestSystemStats::renderCpuTemperatures()
+{
+    SystemStats::CpuDetail cpu;
+    cpu.percent = 5;
+    cpu.maxMHz = 5300;
+    cpu.cpuMHz = {4000};
+    cpu.temperatures = {{QStringLiteral("Tctl"), 44.5}, {QStringLiteral("Tccd1"), 28.6}};
+    LcdFrame expected(160, 43);
+    expected.clear();
+    expected.drawText(1, 1, QStringLiteral("CPU 5% Tctl 45\u00b0 CCD1 29\u00b0"));
+    LcdFrame frame(160, 43);
+    LcdPages::renderCpu(frame, cpu);
+    for (int y = 0; y < 8; ++y)
+        for (int x = 0; x < 160; ++x)
+            QCOMPARE(frame.pixel(x, y), expected.pixel(x, y));
+
+    // More sensors: combined after the first one; without its name if needed.
+    cpu.temperatures = {{QStringLiteral("Tctl"), 70},
+                        {QStringLiteral("Tccd1"), 61},
+                        {QStringLiteral("Tccd2"), 63},
+                        {QStringLiteral("Tccd3"), 60}};
+    cpu.percent = 100;
+    LcdPages::renderCpu(frame, cpu);
+    expected.clear();
+    expected.drawText(1, 1, QStringLiteral("CPU 100% 70\u00b0 61/63/60\u00b0"));
+    for (int y = 0; y < 8; ++y)
+        for (int x = 0; x < 160; ++x)
+            QCOMPARE(frame.pixel(x, y), expected.pixel(x, y));
+
+    cpu.percent = 7;   // shorter load: the first sensor keeps its name
+    LcdPages::renderCpu(frame, cpu);
+    expected.clear();
+    expected.drawText(1, 1, QStringLiteral("CPU 7% Tctl 70\u00b0 61/63/60\u00b0"));
+    for (int y = 0; y < 8; ++y)
+        for (int x = 0; x < 160; ++x)
+            QCOMPARE(frame.pixel(x, y), expected.pixel(x, y));
+}
+
+namespace {
+
+// Rows y0..y0+height of both frames are the same.
+bool sameRows(const LcdFrame &a, const LcdFrame &b, int y0, int height)
+{
+    for (int y = y0; y < y0 + height; ++y)
+        for (int x = 0; x < a.width(); ++x)
+            if (a.pixel(x, y) != b.pixel(x, y))
+                return false;
+    return true;
+}
+
+}
+
+void TestSystemStats::renderGpu()
+{
+    SystemStats::GpuDetail gpu;
+    gpu.busyPercent = 50;
+    gpu.coreMHz = 2650;
+    gpu.memMHz = 1249;
+    gpu.temperatures = {{QStringLiteral("edge"), 62.4}, {QStringLiteral("junction"), 78}, {QStringLiteral("mem"), 84}};
+    constexpr qint64 GiB = 1024LL * 1024 * 1024;
+    gpu.vram = SystemStats::Memory{12 * GiB, 24 * GiB};
+    gpu.powerWatts = 312.4;
+    gpu.fanRpm = 1450;
+    LcdFrame frame(160, 43);
+    LcdPages::renderGpu(frame, QStringLiteral("AMD"), gpu, QString());
+
+    LcdFrame expected(160, 43);
+    expected.drawText(1, 1, QStringLiteral("AMD"));
+    expected.drawRect(22, 0, 108, 8);
+    expected.fillRect(23, 1, 53, 6);
+    expected.drawText(160 - LcdFrame::textWidth(QStringLiteral("50%")) - 1, 1, QStringLiteral("50%"));
+    expected.drawText(1, 10, QStringLiteral("Core 2650 Mem 1249 MHz"));
+    expected.drawText(1, 19, QStringLiteral("Edge 62\u00b0 Junc 78\u00b0 Mem 84\u00b0"));
+    const QString vram = QStringLiteral("12.0/24.0G");
+    expected.drawText(1, 28, QStringLiteral("VRM"));
+    const int vramWidth = 160 - 22 - LcdFrame::textWidth(vram) - 5;
+    expected.drawRect(22, 27, vramWidth, 8);
+    expected.fillRect(23, 28, (vramWidth - 2) / 2, 6);
+    expected.drawText(160 - LcdFrame::textWidth(vram) - 1, 28, vram);
+    expected.drawText(1, 36, QStringLiteral("312 W"));
+    const QString fan = QStringLiteral("Fan 1450 rpm");
+    expected.drawText(160 - LcdFrame::textWidth(fan) - 1, 36, fan);
+    QVERIFY(sameRows(frame, expected, 0, 43));
+}
+
+// NVIDIA: one temperature, fan in percent; values the driver does not report
+// are "--" or left out.
+void TestSystemStats::renderGpuMissingValues()
+{
+    SystemStats::GpuDetail gpu;
+    gpu.temperatures = {{QStringLiteral("GPU"), 55}};
+    gpu.fanPercent = 40;
+    LcdFrame frame(160, 43);
+    LcdPages::renderGpu(frame, QStringLiteral("NV"), gpu, QString());
+
+    LcdFrame expected(160, 43);
+    expected.drawText(1, 1, QStringLiteral("NV"));
+    expected.drawRect(22, 0, 108, 8);
+    expected.drawText(160 - LcdFrame::textWidth(QStringLiteral("--%")) - 1, 1, QStringLiteral("--%"));
+    expected.drawText(1, 10, QStringLiteral("Core -- Mem -- MHz"));
+    expected.drawText(1, 19, QStringLiteral("GPU 55\u00b0"));
+    const QString fan = QStringLiteral("Fan 40%");
+    expected.drawText(160 - LcdFrame::textWidth(fan) - 1, 36, fan);
+    QVERIFY(sameRows(frame, expected, 0, 43));
+
+    // Too many sensors for the names: only the values.
+    gpu.temperatures = {{QStringLiteral("edge"), 62},
+                        {QStringLiteral("junction"), 78},
+                        {QStringLiteral("mem"), 84},
+                        {QStringLiteral("hotspot"), 90},
+                        {QStringLiteral("vrm"), 70}};
+    LcdPages::renderGpu(frame, QStringLiteral("NV"), gpu, QString());
+    expected.clear();
+    expected.drawText(1, 19, QStringLiteral("62/78/84/90/70\u00b0"));
+    QVERIFY(sameRows(frame, expected, 19, 7));
+}
+
+void TestSystemStats::renderGpuWithoutGpu()
+{
+    LcdFrame frame(160, 43);
+    LcdPages::renderGpu(frame, QStringLiteral("NV"), std::nullopt, QStringLiteral("no NVML"));
+    LcdFrame expected(160, 43);
+    expected.drawText(1, 1, QStringLiteral("NV"));
+    expected.drawText((160 - LcdFrame::textWidth(QStringLiteral("no NVML"))) / 2, 20, QStringLiteral("no NVML"));
+    QVERIFY(sameRows(frame, expected, 0, 43));
 }
 
 void TestSystemStats::formatSize()

@@ -3,16 +3,19 @@
 
 #include "LedController.h"
 
+#include "SystemError.h"
+
 #include <QDir>
 #include <QFile>
 #include <QLoggingCategory>
 
 #include <cerrno>
-#include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
 
+namespace {
 Q_LOGGING_CATEGORY(lcLeds, "gkey.leds")
+}
 
 LedController::LedController(const DeviceModel &model, const QString &hidSyspath) : m_model(model)
 {
@@ -28,8 +31,8 @@ LedController::LedController(const DeviceModel &model, const QString &hidSyspath
             }
         }
         if (!m_paths.contains(led.role))
-            qCWarning(lcLeds).noquote() << QStringLiteral("%1: LED \"%2\" not found in %3")
-                                               .arg(m_model.name(), led.suffix, ledDir.path());
+            qCWarning(lcLeds).noquote()
+                << QStringLiteral("%1: LED \"%2\" not found in %3").arg(m_model.name(), led.suffix, ledDir.path());
     }
 }
 
@@ -61,8 +64,8 @@ void LedController::setBacklight(const std::optional<Profile::Rgb> &rgb)
     QByteArray maximum = "255";
     if (maxFile.open(QIODevice::ReadOnly))
         maximum = maxFile.readAll().trimmed();
-    const QByteArray intensity = QByteArray::number(rgb->red) + ' ' + QByteArray::number(rgb->green) + ' '
-                                 + QByteArray::number(rgb->blue);
+    const QByteArray intensity =
+        QByteArray::number(rgb->red) + ' ' + QByteArray::number(rgb->green) + ' ' + QByteArray::number(rgb->blue);
     if (writeAttribute(led->role, QStringLiteral("multi_intensity"), intensity))
         writeAttribute(led->role, QStringLiteral("brightness"), maximum);
 }
@@ -125,8 +128,7 @@ bool LedController::writeAttribute(const QString &role, const QString &attribute
         }
     } else {
         qCWarning(lcLeds).noquote() << QStringLiteral("%1: cannot write %2: %3")
-                                           .arg(m_model.name(), QString::fromLocal8Bit(path),
-                                                QString::fromLocal8Bit(std::strerror(err)));
+                                           .arg(m_model.name(), QString::fromLocal8Bit(path), SystemError::text(err));
     }
     return false;
 }

@@ -3,17 +3,20 @@
 
 #include "InputDevice.h"
 
+#include "SystemError.h"
+
 #include <QLoggingCategory>
 #include <QSocketNotifier>
 
 #include <libevdev/libevdev.h>
 
 #include <cerrno>
-#include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
 
+namespace {
 Q_LOGGING_CATEGORY(lcInput, "gkey.input")
+}
 
 InputDevice::InputDevice(const QString &devNode, const QString &role, QObject *parent)
     : QObject(parent), m_devNode(devNode), m_role(role)
@@ -30,15 +33,16 @@ bool InputDevice::open(QString *error, bool grab)
     m_fd = ::open(m_devNode.toLocal8Bit().constData(), O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     if (m_fd < 0) {
         const int err = errno;
-        *error = QStringLiteral("%1: %2").arg(m_devNode, QString::fromLocal8Bit(std::strerror(err)));
+        *error = QStringLiteral("%1: %2").arg(m_devNode, SystemError::text(err));
         if (err == EACCES)
-            *error += QStringLiteral(" - is the udev rule 70-gkey-config.rules installed? Replug the device after installing it.");
+            *error += QStringLiteral(
+                " - is the udev rule 70-gkey-config.rules installed? Replug the device after installing it.");
         return false;
     }
 
     int rc = libevdev_new_from_fd(m_fd, &m_device);
     if (rc < 0) {
-        *error = QStringLiteral("%1: %2").arg(m_devNode, QString::fromLocal8Bit(std::strerror(-rc)));
+        *error = QStringLiteral("%1: %2").arg(m_devNode, SystemError::text(-rc));
         close();
         return false;
     }
@@ -61,7 +65,7 @@ bool InputDevice::setGrabbed(bool grabbed, QString *error)
     if (rc < 0) {
         if (error)
             *error = QStringLiteral("%1: exclusive access failed (%2) - another program grabs the device")
-                         .arg(m_devNode, QString::fromLocal8Bit(std::strerror(-rc)));
+                         .arg(m_devNode, SystemError::text(-rc));
         return false;
     }
     m_grabbed = grabbed;
@@ -91,7 +95,7 @@ void InputDevice::onReadable()
             }
             return;
         } else {
-            qCInfo(lcInput) << m_devNode << "closed:" << std::strerror(-rc);
+            qCInfo(lcInput) << m_devNode << "closed:" << SystemError::text(-rc);
             close();
             emit failed(m_devNode);
             return;

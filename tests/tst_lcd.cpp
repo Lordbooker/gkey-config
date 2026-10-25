@@ -15,6 +15,7 @@ private slots:
     void reportLayout();
     void text();
     void ascii();
+    void asciiTwice();
     void elide();
     void pages();
     void introAnimation();
@@ -83,6 +84,23 @@ void TestLcd::ascii()
     QCOMPARE(LcdFrame::toAscii(QStringLiteral("1ª 2º")), QStringLiteral("1a 2o"));
 }
 
+// Converting already converted text changes nothing (drawText() converts
+// again what elided() returned); the degree sign used to become another glyph.
+void TestLcd::asciiTwice()
+{
+    const QString text = QStringLiteral("Temperatur 21\u00b0C \u00e4 \u2013 caf\u00e9");
+    const QString once = LcdFrame::toAscii(text);
+    QCOMPARE(LcdFrame::toAscii(once), once);
+
+    LcdFrame direct(160, 43);
+    direct.clear();
+    direct.drawText(1, 1, text);
+    LcdFrame viaElided(160, 43);
+    viaElided.clear();
+    viaElided.drawText(1, 1, LcdFrame::elided(text, 158));
+    QCOMPARE(viaElided.toG13Report(), direct.toG13Report());
+}
+
 void TestLcd::elide()
 {
     const QString shown = LcdFrame::elided(QStringLiteral("A very long profile name"), 60);
@@ -118,7 +136,9 @@ void TestLcd::introAnimation()
     QVERIFY(LcdPages::allPages().startsWith(LcdPages::IntroPage));
     QVERIFY(!LcdPages::rotation(LcdPages::allPages()).contains(LcdPages::IntroPage));
 
-    const auto bit = [](const auto &bitmap, int x, int y) { return ((bitmap[y][x >> 3] >> (7 - (x & 7))) & 1) != 0; };
+    const auto bit = [](const auto &bitmap, int x, int y) {
+        return ((static_cast<unsigned>(bitmap[y][x / 8]) >> (7U - static_cast<unsigned>(x % 8))) & 1U) != 0;
+    };
     LcdIntro intro(QStringLiteral("g13"));
     LcdFrame frame(160, 43);
     intro.step();
@@ -146,7 +166,9 @@ void TestLcd::introAnimation()
 
 void TestLcd::introStartsDarkWithoutFirmwareLogo()
 {
-    const auto bit = [](const auto &bitmap, int x, int y) { return ((bitmap[y][x >> 3] >> (7 - (x & 7))) & 1) != 0; };
+    const auto bit = [](const auto &bitmap, int x, int y) {
+        return ((static_cast<unsigned>(bitmap[y][x / 8]) >> (7U - static_cast<unsigned>(x % 8))) & 1U) != 0;
+    };
     LcdIntro intro(QStringLiteral("g510"));
     LcdFrame frame(160, 43);
     intro.step();
