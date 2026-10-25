@@ -14,6 +14,7 @@
 
 #include <cerrno>
 #include <memory>
+#include <vector>
 
 #include <grp.h>
 #include <unistd.h>
@@ -108,10 +109,12 @@ void TestSession::gnomeDisabledEntry()
 void TestSession::groupStates()
 {
     QCOMPARE(GroupAccess::state(QStringLiteral("gkey-no-such-group-4711")), GroupAccess::State::Missing);
-    const group *own = getgrgid(getegid());
-    if (!own)
+    group entry{};
+    group *own = nullptr;
+    std::vector<char> buffer(64 * 1024);
+    if (getgrgid_r(getegid(), &entry, buffer.data(), buffer.size(), &own) != 0 || !own)
         QSKIP("own group not in the group database");
-    QCOMPARE(GroupAccess::state(QString::fromLocal8Bit(own->gr_name)), GroupAccess::State::Active);
+    QCOMPARE(GroupAccess::state(QString::fromLocal8Bit(entry.gr_name)), GroupAccess::State::Active);
     QVERIFY(!GroupAccess::userName().isEmpty());
 }
 
