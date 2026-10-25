@@ -15,6 +15,7 @@ private slots:
     void reportLayout();
     void text();
     void ascii();
+    void asciiTwice();
     void elide();
     void pages();
     void introAnimation();
@@ -81,6 +82,23 @@ void TestLcd::ascii()
     QCOMPARE(LcdFrame::toAscii(QStringLiteral("miércoles, año")), QStringLiteral("miercoles, ano"));
     QCOMPARE(LcdFrame::toAscii(QStringLiteral("«\u00a0œuvre\u00a0» l’été")), QStringLiteral("\" oeuvre \" l'ete"));
     QCOMPARE(LcdFrame::toAscii(QStringLiteral("1ª 2º")), QStringLiteral("1a 2o"));
+}
+
+// Converting already converted text changes nothing (drawText() converts
+// again what elided() returned); the degree sign used to become another glyph.
+void TestLcd::asciiTwice()
+{
+    const QString text = QStringLiteral("Temperatur 21\u00b0C \u00e4 \u2013 caf\u00e9");
+    const QString once = LcdFrame::toAscii(text);
+    QCOMPARE(LcdFrame::toAscii(once), once);
+
+    LcdFrame direct(160, 43);
+    direct.clear();
+    direct.drawText(1, 1, text);
+    LcdFrame viaElided(160, 43);
+    viaElided.clear();
+    viaElided.drawText(1, 1, LcdFrame::elided(text, 158));
+    QCOMPARE(viaElided.toG13Report(), direct.toG13Report());
 }
 
 void TestLcd::elide()

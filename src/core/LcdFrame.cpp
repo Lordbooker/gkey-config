@@ -71,7 +71,9 @@ QString LcdFrame::toAscii(const QString &text)
             result.append(c);
             continue;
         }
-        if (c.unicode() == 0xb0) {   // degree sign: own glyph in the font
+        // Degree sign: own glyph in the font. Its code (127) is kept as it is,
+        // so text that was already converted (e.g. by elided()) stays the same.
+        if (c.unicode() == 0xb0 || c.unicode() == LcdFont::DegreeSign) {
             result.append(QChar(char16_t(LcdFont::DegreeSign)));
             continue;
         }
