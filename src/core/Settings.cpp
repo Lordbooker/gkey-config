@@ -23,7 +23,7 @@ QStringList validPages(const QStringList &pages)
         if (LcdPages::allPages().contains(page) && !result.contains(page))
             result.append(page);
     }
-    return result.isEmpty() ? LcdPages::allPages() : result;
+    return result.isEmpty() ? LcdPages::defaultPages() : result;
 }
 
 }

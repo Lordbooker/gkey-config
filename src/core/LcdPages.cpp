@@ -99,6 +99,19 @@ void drawRight(LcdFrame &frame, int y, const QString &text)
 
 const QStringList &allPages()
 {
+    static const QStringList pages = {IntroPage,
+                                      QStringLiteral("status"),
+                                      QStringLiteral("system"),
+                                      QStringLiteral("cpu"),
+                                      QStringLiteral("amdgpu"),
+                                      QStringLiteral("nvidia"),
+                                      QStringLiteral("clock"),
+                                      QStringLiteral("text")};
+    return pages;
+}
+
+const QStringList &defaultPages()
+{
     static const QStringList pages = {IntroPage, QStringLiteral("status"), QStringLiteral("system"),
                                       QStringLiteral("clock"), QStringLiteral("text")};
     return pages;

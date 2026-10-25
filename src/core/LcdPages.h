@@ -22,6 +22,10 @@ inline const QString IntroPage = QStringLiteral("intro");
 // Page names in their default order.
 const QStringList &allPages();
 
+// The pages enabled without settings: all but the hardware pages (cpu,
+// amdgpu, nvidia), which are only useful with that hardware.
+const QStringList &defaultPages();
+
 // The pages that "next" and "previous" go through: the enabled pages without
 // the start animation.
 QStringList rotation(const QStringList &pages);
