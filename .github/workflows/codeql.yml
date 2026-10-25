@@ -41,10 +41,12 @@ jobs:
           build-mode: manual
           queries: security-and-quality
 
+      # Two jobs: with the CodeQL tracer on every compiler call, a fully
+      # parallel build ran out of memory (killed, exit code 137).
       - name: Build
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-          cmake --build build --parallel
+          cmake --build build --parallel 2
 
       - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
