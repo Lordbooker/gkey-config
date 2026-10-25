@@ -136,7 +136,9 @@ void TestLcd::introAnimation()
     QVERIFY(LcdPages::allPages().startsWith(LcdPages::IntroPage));
     QVERIFY(!LcdPages::rotation(LcdPages::allPages()).contains(LcdPages::IntroPage));
 
-    const auto bit = [](const auto &bitmap, int x, int y) { return ((bitmap[y][x >> 3] >> (7 - (x & 7))) & 1) != 0; };
+    const auto bit = [](const auto &bitmap, int x, int y) {
+        return ((static_cast<unsigned>(bitmap[y][x / 8]) >> (7U - static_cast<unsigned>(x % 8))) & 1U) != 0;
+    };
     LcdIntro intro(QStringLiteral("g13"));
     LcdFrame frame(160, 43);
     intro.step();
@@ -164,7 +166,9 @@ void TestLcd::introAnimation()
 
 void TestLcd::introStartsDarkWithoutFirmwareLogo()
 {
-    const auto bit = [](const auto &bitmap, int x, int y) { return ((bitmap[y][x >> 3] >> (7 - (x & 7))) & 1) != 0; };
+    const auto bit = [](const auto &bitmap, int x, int y) {
+        return ((static_cast<unsigned>(bitmap[y][x / 8]) >> (7U - static_cast<unsigned>(x % 8))) & 1U) != 0;
+    };
     LcdIntro intro(QStringLiteral("g510"));
     LcdFrame frame(160, 43);
     intro.step();

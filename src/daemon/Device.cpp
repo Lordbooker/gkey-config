@@ -12,7 +12,11 @@
 #include <QLoggingCategory>
 #include <QPoint>
 
+#include <algorithm>
+
+namespace {
 Q_LOGGING_CATEGORY(lcDevice, "gkey.device")
+}
 
 Device::Device(const DeviceModel &model, const QString &hidSyspath, KeyOutput &output, QObject *parent)
     : QObject(parent), m_model(model), m_hidSyspath(hidSyspath)
@@ -107,11 +111,7 @@ bool Device::removeInput(const QString &devNode)
 
 bool Device::hasInput(const QString &devNode) const
 {
-    for (const InputDevice *input : m_inputs) {
-        if (input->devNode() == devNode)
-            return true;
-    }
-    return false;
+    return std::ranges::any_of(m_inputs, [&devNode](const InputDevice *input) { return input->devNode() == devNode; });
 }
 
 void Device::setStickSettings(const StickSettings &settings)

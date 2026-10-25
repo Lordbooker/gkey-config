@@ -318,7 +318,8 @@ void TestSystemStats::renderGpu()
     gpu.coreMHz = 2650;
     gpu.memMHz = 1249;
     gpu.temperatures = {{QStringLiteral("edge"), 62.4}, {QStringLiteral("junction"), 78}, {QStringLiteral("mem"), 84}};
-    gpu.vram = SystemStats::Memory{qint64(12) << 30, qint64(24) << 30};
+    constexpr qint64 GiB = 1024LL * 1024 * 1024;
+    gpu.vram = SystemStats::Memory{12 * GiB, 24 * GiB};
     gpu.powerWatts = 312.4;
     gpu.fanRpm = 1450;
     LcdFrame frame(160, 43);

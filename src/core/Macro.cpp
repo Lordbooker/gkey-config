@@ -10,6 +10,8 @@
 #include <QJsonDocument>
 #include <QJsonParseError>
 
+#include <utility>
+
 namespace {
 
 std::expected<int, QString> outputCode(const QString &name)
@@ -76,7 +78,7 @@ std::expected<Macro, QString> Macro::fromJson(const QByteArray &json)
         }
         macro.m_steps.append(step);
     }
-    macro.m_unknown = root;
+    macro.m_unknown = std::move(root);
     return macro;
 }
 

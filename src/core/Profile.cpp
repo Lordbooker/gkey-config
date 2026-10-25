@@ -11,6 +11,7 @@
 #include <QSet>
 
 #include <algorithm>
+#include <utility>
 
 namespace {
 
@@ -41,7 +42,7 @@ std::expected<Profile, QString> Profile::fromJson(const QByteArray &json)
     const QJsonValue backlight = root.take(QStringLiteral("backlight"));
     if (!backlight.isUndefined()) {
         const QJsonArray rgb = backlight.toArray();
-        const bool valid = rgb.size() == 3 && std::all_of(rgb.begin(), rgb.end(), [](const QJsonValue &v) {
+        const bool valid = rgb.size() == 3 && std::ranges::all_of(rgb, [](const QJsonValue &v) {
             return v.isDouble() && v.toInt(-1) >= 0 && v.toInt(-1) <= 255;
         });
         if (valid)
@@ -89,7 +90,7 @@ std::expected<Profile, QString> Profile::fromJson(const QByteArray &json)
 
     profile.m_stick = root.take(QStringLiteral("stick")).toObject();
     StickSettings::fromJson(profile.m_stick, &profile.m_warnings);   // report invalid values
-    profile.m_unknown = root;
+    profile.m_unknown = std::move(root);
     return profile;
 }
 

@@ -14,7 +14,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+namespace {
 Q_LOGGING_CATEGORY(lcInput, "gkey.input")
+}
 
 InputDevice::InputDevice(const QString &devNode, const QString &role, QObject *parent)
     : QObject(parent), m_devNode(devNode), m_role(role)

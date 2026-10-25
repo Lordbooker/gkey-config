@@ -48,14 +48,14 @@ QString cpuTemperatures(const QList<SystemStats::Temperature> &temperatures, int
     QStringList all;
     for (const SystemStats::Temperature &t : temperatures)
         all.append(shortLabel(t.label) + u' ' + degrees(t.celsius));
-    const QString full = all.join(u' ');
+    QString full = all.join(u' ');
     if (LcdFrame::textWidth(full) <= maxWidth || temperatures.size() == 1)
         return full;
     QStringList rest;
     for (qsizetype i = 1; i < temperatures.size(); ++i)
         rest.append(QString::number(qRound(temperatures.at(i).celsius)));
     const QString combined = rest.join(u'/') + u'\u00b0';
-    const QString named = all.first() + u' ' + combined;
+    QString named = all.first() + u' ' + combined;
     if (LcdFrame::textWidth(named) <= maxWidth)
         return named;
     return degrees(temperatures.first().celsius) + u' ' + combined;
@@ -73,7 +73,7 @@ QString gpuTemperatures(const QList<SystemStats::Temperature> &temperatures, int
         named.append(label + u' ' + degrees(t.celsius));
         values.append(QString::number(qRound(t.celsius)));
     }
-    const QString full = named.join(u' ');
+    QString full = named.join(u' ');
     if (LcdFrame::textWidth(full) <= maxWidth || temperatures.size() == 1)
         return full;
     return values.join(u'/') + u'\u00b0';
@@ -212,12 +212,15 @@ void renderSystem(LcdFrame &frame, const SystemStats::Sample &sample)
 
     // Rows of label, bar (22..91), percent (96..119) and right-aligned extra.
     frame.clear();
-    constexpr int BarX = 22, BarWidth = 70, BarHeight = 9, PercentX = 96;
+    constexpr int BarX = 22;
+    constexpr int BarWidth = 70;
+    constexpr int BarHeight = 9;
+    constexpr int PercentX = 96;
     const int pitch = rows.size() > 3 ? 11 : 14;
     const int top = rows.size() > 3 ? 0 : 2;
     for (qsizetype i = 0; i < rows.size(); ++i) {
         const Row &row = rows.at(i);
-        const int y = top + int(i) * pitch;
+        const int y = top + static_cast<int>(i) * pitch;
         frame.drawText(1, y + 1, row.label);
         frame.drawRect(BarX, y, BarWidth, BarHeight);
         if (row.percent)
@@ -240,7 +243,8 @@ void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu)
                    LcdFrame::elided(cpuTemperatures(cpu.temperatures, frame.width() - tempX - 1), frame.width() - tempX - 1));
 
     // Bars: x 1..158, y 10..42; scale from 0 to the highest clock
-    constexpr int Left = 1, Top = 10;
+    constexpr int Left = 1;
+    constexpr int Top = 10;
     const int width = frame.width() - 2 * Left;
     const int height = frame.height() - Top;
     if (cpu.cpuMHz.isEmpty() || cpu.maxMHz <= 0) {
@@ -260,7 +264,7 @@ void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu)
         const int first = i * cores / count;
         const int last = (i + 1) * cores / count;
         const int mhz = *std::max_element(cpu.cpuMHz.cbegin() + first, cpu.cpuMHz.cbegin() + last);
-        const double share = std::clamp(double(mhz) / cpu.maxMHz, 0.0, 1.0);
+        const double share = std::clamp(static_cast<double>(mhz) / cpu.maxMHz, 0.0, 1.0);
         const int barHeight = qMax(1, qRound(share * height));
         frame.fillRect(start + i * pitch, frame.height() - barHeight, pitch - gap, barHeight);
     }
@@ -270,7 +274,8 @@ void renderGpu(LcdFrame &frame, const QString &title, const std::optional<System
                const QString &problem)
 {
     frame.clear();
-    constexpr int BarX = 22, BarHeight = 8;
+    constexpr int BarX = 22;
+    constexpr int BarHeight = 8;
     frame.drawText(1, 1, title);
     if (!gpu) {
         const QString text = LcdFrame::elided(problem, frame.width() - 2);

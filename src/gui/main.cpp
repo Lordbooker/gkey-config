@@ -62,8 +62,12 @@ void installTranslations(QApplication &app)
 void applyDarkPalette()
 {
     QApplication::setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
-    const QColor window(0x20, 0x23, 0x26), base(0x14, 0x16, 0x18), button(0x29, 0x2c, 0x30);
-    const QColor text(0xfc, 0xfc, 0xfc), disabled(0x6e, 0x71, 0x75), highlight(0x3d, 0xae, 0xe9);
+    const QColor window(0x20, 0x23, 0x26);
+    const QColor base(0x14, 0x16, 0x18);
+    const QColor button(0x29, 0x2c, 0x30);
+    const QColor text(0xfc, 0xfc, 0xfc);
+    const QColor disabled(0x6e, 0x71, 0x75);
+    const QColor highlight(0x3d, 0xae, 0xe9);
     QPalette palette;
     palette.setColor(QPalette::Window, window);
     palette.setColor(QPalette::WindowText, text);
@@ -143,9 +147,9 @@ int main(int argc, char *argv[])
         window.showKey(parser.value(keyOption), parser.value(tabOption).toInt());
         QTimer::singleShot(300, &app, [&] {
             window.saveScreenshot(parser.value(screenshotOption));
-            app.quit();
+            QCoreApplication::quit();
         });
-        return app.exec();
+        return QCoreApplication::exec();
     }
 
     if (notifyRunningInstance())
@@ -174,7 +178,7 @@ int main(int argc, char *argv[])
             if (window.setupTray())
                 timer->stop();
             else if (++attempts >= 30)
-                app.quit();
+                QCoreApplication::quit();
         });
         if (!window.setupTray())
             timer->start(1000);
@@ -182,5 +186,5 @@ int main(int argc, char *argv[])
         window.setupTray();
         window.showWindow();
     }
-    return app.exec();
+    return QCoreApplication::exec();
 }

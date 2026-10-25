@@ -6,6 +6,8 @@
 #include <QDateTime>
 #include <QTimer>
 
+#include <utility>
+
 LcdController::LcdController(const DeviceModel &model, const QString &hidSyspath, QObject *parent)
     : QObject(parent), m_model(model),
       m_frame(model.lcd() ? model.lcd()->width : 1, model.lcd() ? model.lcd()->height : 1)
@@ -108,7 +110,7 @@ void LcdController::showPage(const QString &page)
         return;
     if (m_textTimer)
         m_textTimer->stop();
-    m_page = target;
+    m_page = std::move(target);
     refresh();
 }
 

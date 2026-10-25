@@ -20,9 +20,9 @@
 #include <QLoggingCategory>
 #include <QThread>
 
-Q_LOGGING_CATEGORY(lcDaemon, "gkey.daemon")
-
 namespace {
+
+Q_LOGGING_CATEGORY(lcDaemon, "gkey.daemon")
 
 // Input roles handled by the daemon.
 bool roleHandled(const QString &role)

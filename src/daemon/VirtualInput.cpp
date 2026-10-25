@@ -12,7 +12,9 @@
 #include <QLoggingCategory>
 
 
+namespace {
 Q_LOGGING_CATEGORY(lcOutput, "gkey.output")
+}
 
 VirtualInput::~VirtualInput()
 {

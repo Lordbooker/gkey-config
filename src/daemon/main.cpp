@@ -33,10 +33,10 @@ void installSignalHandlers(QCoreApplication &app)
     if (::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, signalPipe) != 0)
         return;
     auto *notifier = new QSocketNotifier(signalPipe[0], QSocketNotifier::Read, &app);
-    QObject::connect(notifier, &QSocketNotifier::activated, &app, [&app] {
+    QObject::connect(notifier, &QSocketNotifier::activated, &app, [] {
         char byte;
         [[maybe_unused]] const ssize_t got = ::read(signalPipe[0], &byte, 1);
-        app.quit();
+        QCoreApplication::quit();
     });
     struct sigaction action = {};
     action.sa_handler = onSignal;
@@ -101,5 +101,5 @@ int main(int argc, char *argv[])
         qCritical("%s", qPrintable(error));
         return 1;
     }
-    return app.exec();
+    return QCoreApplication::exec();
 }

@@ -8,9 +8,9 @@
 #include <algorithm>
 #include <type_traits>
 
-Q_LOGGING_CATEGORY(lcNvidia, "gkey.nvidia")
-
 namespace {
+
+Q_LOGGING_CATEGORY(lcNvidia, "gkey.nvidia")
 
 // From nvml.h (NVIDIA Management Library documentation)
 constexpr int Success = 0;            // NVML_SUCCESS

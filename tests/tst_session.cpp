@@ -13,6 +13,7 @@
 #include <QTest>
 
 #include <cerrno>
+#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -111,7 +112,7 @@ void TestSession::groupStates()
     QCOMPARE(GroupAccess::state(QStringLiteral("gkey-no-such-group-4711")), GroupAccess::State::Missing);
     group entry{};
     group *own = nullptr;
-    std::vector<char> buffer(64 * 1024);
+    std::vector<char> buffer(std::size_t{64} * 1024);
     if (getgrgid_r(getegid(), &entry, buffer.data(), buffer.size(), &own) != 0 || !own)
         QSKIP("own group not in the group database");
     QCOMPARE(GroupAccess::state(QString::fromLocal8Bit(entry.gr_name)), GroupAccess::State::Active);

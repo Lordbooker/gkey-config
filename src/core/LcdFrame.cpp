@@ -7,6 +7,8 @@
 
 #include <QHash>
 
+#include <algorithm>
+
 LcdFrame::LcdFrame(int width, int height)
     : m_width(width), m_height(height), m_pixels(static_cast<size_t>(width) * static_cast<size_t>(height), 0)
 {
@@ -14,7 +16,7 @@ LcdFrame::LcdFrame(int width, int height)
 
 void LcdFrame::clear()
 {
-    std::fill(m_pixels.begin(), m_pixels.end(), 0);
+    std::ranges::fill(m_pixels, 0);
 }
 
 void LcdFrame::setPixel(int x, int y, bool on)
@@ -74,7 +76,7 @@ QString LcdFrame::toAscii(const QString &text)
         // Degree sign: own glyph in the font. Its code (127) is kept as it is,
         // so text that was already converted (e.g. by elided()) stays the same.
         if (c.unicode() == 0xb0 || c.unicode() == LcdFont::DegreeSign) {
-            result.append(QChar(char16_t(LcdFont::DegreeSign)));
+            result.append(QChar(static_cast<char16_t>(LcdFont::DegreeSign)));
             continue;
         }
         const auto it = replacements.constFind(c);
@@ -112,7 +114,7 @@ int LcdFrame::drawText(int x, int y, const QString &text, int scale, bool on)
         const unsigned char *columns = LcdFont::glyph(c.unicode());
         for (int col = 0; col < LcdFont::Width; ++col)
             for (int row = 0; row < LcdFont::Height; ++row)
-                if (columns[col] & (1 << row))
+                if ((static_cast<unsigned>(columns[col]) >> static_cast<unsigned>(row)) & 1U)
                     fillRect(x + col * scale, y + row * scale, scale, scale, on);
         x += LcdFont::Advance * scale;
     }
@@ -131,7 +133,7 @@ QByteArray LcdFrame::toG13Report() const
             unsigned char bits = 0;
             for (int bit = 0; bit < 8; ++bit)
                 if (pixel(x, band * 8 + bit))
-                    bits |= static_cast<unsigned char>(1 << bit);
+                    bits |= static_cast<unsigned char>(1U << static_cast<unsigned>(bit));
             report[Header + band * Width + x] = static_cast<char>(bits);
         }
     }

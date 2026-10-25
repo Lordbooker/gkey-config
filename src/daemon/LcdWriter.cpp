@@ -21,7 +21,7 @@ LcdWriter::LcdWriter(const QString &deviceName, const QString &hidSyspath, const
 LcdWriter::~LcdWriter()
 {
     {
-        const std::lock_guard lock(m_mutex);
+        const std::scoped_lock lock(m_mutex);
         m_stop = true;
     }
     m_wake.notify_one();
@@ -33,7 +33,7 @@ LcdWriter::~LcdWriter()
 void LcdWriter::submit(const QByteArray &report)
 {
     {
-        const std::lock_guard lock(m_mutex);
+        const std::scoped_lock lock(m_mutex);
         m_pending = report;
     }
     m_wake.notify_one();

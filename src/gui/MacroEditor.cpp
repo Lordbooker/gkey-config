@@ -25,6 +25,8 @@
 #include <QTreeWidget>
 #include <QVBoxLayout>
 
+#include <algorithm>
+
 namespace {
 
 constexpr int StepRole = Qt::UserRole;
@@ -525,7 +527,7 @@ void MacroEditor::moveSelected(int delta)
     QList<QTreeWidgetItem *> selected = m_steps->selectedItems();
     if (selected.isEmpty())
         return;
-    std::sort(selected.begin(), selected.end(), [this](QTreeWidgetItem *a, QTreeWidgetItem *b) {
+    std::ranges::sort(selected, [this](QTreeWidgetItem *a, QTreeWidgetItem *b) {
         return m_steps->indexOfTopLevelItem(a) < m_steps->indexOfTopLevelItem(b);
     });
     const int first = m_steps->indexOfTopLevelItem(selected.first());
@@ -533,7 +535,7 @@ void MacroEditor::moveSelected(int delta)
     if ((delta < 0 && first == 0) || (delta > 0 && last == m_steps->topLevelItemCount() - 1))
         return;
     if (delta > 0)
-        std::reverse(selected.begin(), selected.end());
+        std::ranges::reverse(selected);
     for (QTreeWidgetItem *item : selected) {
         const int index = m_steps->indexOfTopLevelItem(item);
         m_steps->takeTopLevelItem(index);

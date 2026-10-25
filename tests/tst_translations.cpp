@@ -35,7 +35,9 @@ QHash<QString, Message> readTs(const QString &path, QString *error)
         return messages;
     }
     QXmlStreamReader xml(&file);
-    QString context, source, comment;
+    QString context;
+    QString source;
+    QString comment;
     Message message;
     while (!xml.atEnd()) {
         xml.readNext();
@@ -85,7 +87,7 @@ int accelerators(const QString &text)
     static const QRegularExpression pattern(QStringLiteral("&(?![a-zA-Z#][a-zA-Z0-9]*;)(?!&)"));
     QString plain = text;
     plain.replace(QStringLiteral("&&"), QString());
-    return int(plain.count(pattern));
+    return static_cast<int>(plain.count(pattern));
 }
 
 QString shortKey(const QString &key)

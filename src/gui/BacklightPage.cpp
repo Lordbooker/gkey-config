@@ -25,7 +25,7 @@ QIcon colorIcon(const QColor &color)
     painter.setPen(QPen(Qt::gray, 1));
     painter.setBrush(color.isValid() ? color : QColor(Qt::transparent));
     painter.drawRoundedRect(QRectF(0.5, 0.5, 31, 19), 4, 4);
-    return QIcon(pixmap);
+    return {pixmap};
 }
 
 QColor toColor(const std::optional<Profile::Rgb> &rgb)

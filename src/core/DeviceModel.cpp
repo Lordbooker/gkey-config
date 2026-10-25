@@ -12,6 +12,8 @@
 #include <QRegularExpression>
 #include <QSet>
 
+#include <algorithm>
+
 namespace {
 
 // Error collector: the first error ends parsing; it is reported with the file name.
@@ -296,11 +298,7 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
 
 bool DeviceModel::matchesUsb(quint16 vendor, quint16 product) const
 {
-    for (const UsbId &id : m_usbIds) {
-        if (id.vendor == vendor && id.product == product)
-            return true;
-    }
-    return false;
+    return std::ranges::any_of(m_usbIds, [&](const UsbId &id) { return id.vendor == vendor && id.product == product; });
 }
 
 const DeviceModel::Key *DeviceModel::keyForCode(const QString &inputRole, int code) const

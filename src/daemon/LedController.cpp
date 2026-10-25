@@ -13,7 +13,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+namespace {
 Q_LOGGING_CATEGORY(lcLeds, "gkey.leds")
+}
 
 LedController::LedController(const DeviceModel &model, const QString &hidSyspath) : m_model(model)
 {

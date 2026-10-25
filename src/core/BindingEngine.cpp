@@ -10,8 +10,12 @@
 #include <QLoggingCategory>
 
 #include <algorithm>
+#include <ranges>
+#include <utility>
 
+namespace {
 Q_LOGGING_CATEGORY(lcEngine, "gkey.engine")
+}
 
 BindingEngine::BindingEngine(const DeviceModel &model, KeyOutput &output, QObject *parent)
     : QObject(parent), m_model(model), m_output(output)
@@ -89,7 +93,7 @@ void BindingEngine::handle(const QString &keyId, DeviceModel::KeyRole role, bool
             const auto it = m_held.find(keyId);
             if (it == m_held.end())
                 return;
-            const Action action = it.value();
+            const Action action = std::move(it.value());   // erase() removes the original
             m_held.erase(it);
             release(action);
         }
@@ -125,7 +129,7 @@ void BindingEngine::handle(const QString &keyId, DeviceModel::KeyRole role, bool
         const auto it = m_held.find(keyId);
         if (it == m_held.end())
             return;
-        const Action action = it.value();
+        const Action action = std::move(it.value());   // erase() removes the original
         m_held.erase(it);
         release(action);
     }
@@ -178,9 +182,8 @@ void BindingEngine::press(const QString &keyId, const Action &action)
 
 void BindingEngine::release(const Action &action)
 {
-    const QList<int> &codes = action.codes();
-    for (auto it = codes.crbegin(); it != codes.crend(); ++it)
-        m_output.release(*it);
+    for (const int code : std::views::reverse(action.codes()))
+        m_output.release(code);
 }
 
 void BindingEngine::startMacro(const QString &keyId, const Action &action)

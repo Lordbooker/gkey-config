@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <cstddef>
 #include <optional>
 #include <vector>
 
@@ -26,7 +27,7 @@ bool withBuffer(Lookup lookup)
         const int rc = lookup(buffer);
         if (rc != ERANGE)
             return rc == 0;
-        if (buffer.size() >= 1024 * 1024)
+        if (buffer.size() >= std::size_t{1024} * 1024)
             return false;
         buffer.resize(buffer.size() * 2);
     }

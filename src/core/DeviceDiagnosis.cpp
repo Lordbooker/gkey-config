@@ -11,6 +11,7 @@
 #include <QRegularExpression>
 
 #include <sys/utsname.h>
+#include <utility>
 
 namespace {
 
@@ -62,7 +63,8 @@ Result diagnose(const DeviceModel &model, const QString &sysfsRoot, const QStrin
     const QDir usbDir(sysfsRoot + QStringLiteral("/bus/usb/devices"));
     for (const QString &entry : usbDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::System)) {
         const QString path = usbDir.filePath(entry);
-        bool vendorOk = false, productOk = false;
+        bool vendorOk = false;
+        bool productOk = false;
         const quint16 vendor = readLine(path + QStringLiteral("/idVendor")).toUShort(&vendorOk, 16);
         const quint16 product = readLine(path + QStringLiteral("/idProduct")).toUShort(&productOk, 16);
         if (vendorOk && productOk && model.matchesUsb(vendor, product)) {
@@ -117,7 +119,7 @@ Result diagnose(const DeviceModel &model, const QString &sysfsRoot, const QStrin
         }
     }
     result.problem = Problem::NoKernelDriver;
-    result.detail = driver;
+    result.detail = std::move(driver);
     return result;
 }
 

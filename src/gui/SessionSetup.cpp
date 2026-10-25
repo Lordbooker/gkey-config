@@ -30,6 +30,9 @@ SessionSetup::SessionSetup(QObject *parent) : QObject(parent)
 
 void SessionSetup::runSystemctl(const QStringList &arguments, const std::function<void(int, const QString &)> &done)
 {
+    // Deleted by deleteLater() when it has finished or failed to start, and
+    // owned by this object until then; the analyser does not follow that.
+    // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
     auto *process = new QProcess(this);
     connect(process, &QProcess::finished, this, [process, done](int exitCode, QProcess::ExitStatus status) {
         const QString output = QString::fromLocal8Bit(process->readAllStandardOutput()).trimmed();
@@ -44,6 +47,7 @@ void SessionSetup::runSystemctl(const QStringList &arguments, const std::functio
         done(-1, process->errorString());
     });
     process->start(QStringLiteral("systemctl"), QStringList{QStringLiteral("--user")} + arguments);
+    // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 }
 
 void SessionSetup::runDaemonCommand(const QString &verb, const std::function<void(int, const QString &)> &done)

@@ -17,7 +17,7 @@ public:
     struct Memory {
         qint64 used = 0;    // bytes
         qint64 total = 0;   // bytes
-        int percent() const { return total > 0 ? int((used * 100 + total / 2) / total) : 0; }
+        int percent() const { return total > 0 ? static_cast<int>((used * 100 + total / 2) / total) : 0; }
     };
 
     struct Gpu {

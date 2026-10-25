@@ -31,7 +31,15 @@ constexpr std::uint32_t Seed = 1313;
 constexpr double bayer(int x, int y)
 {
     constexpr int m[16] = {0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5};
-    return (m[(y & 3) * 4 + (x & 3)] + 0.5) / 16.0;
+    return (m[(static_cast<unsigned>(y) & 3U) * 4 + (static_cast<unsigned>(x) & 3U)] + 0.5) / 16.0;
+}
+
+// Pixel of a 1-bit image with 8 pixels per byte, the leftmost in the highest bit.
+template <typename Bitmap>
+bool bitmapPixel(const Bitmap &bitmap, int x, int y)
+{
+    const auto byte = static_cast<unsigned>(bitmap[y][x / 8]);
+    return ((byte >> (7U - static_cast<unsigned>(x % 8))) & 1U) != 0;
 }
 
 double ease(double t)
@@ -71,23 +79,23 @@ bool LcdIntro::startPixel(int x, int y) const
 {
     if (!m_start)
         return true;   // dark display
-    return ((*m_start)[y][x >> 3] >> (7 - (x & 7))) & 1;
+    return bitmapPixel(*m_start, x, y);
 }
 
 bool LcdIntro::finalPixel(int x, int y) const
 {
     if (!m_final)
-        return x >= 40 || ((LcdIntroImages::g13Final[y][x >> 3] >> (7 - (x & 7))) & 1);   // Tux only
-    return ((*m_final)[y][x >> 3] >> (7 - (x & 7))) & 1;
+        return x >= 40 || bitmapPixel(LcdIntroImages::g13Final, x, y);   // Tux only
+    return bitmapPixel(*m_final, x, y);
 }
 
 // mulberry32: the same sequence as in linux-g13-driver
 double LcdIntro::random()
 {
     m_rng += 0x6D2B79F5U;
-    std::uint32_t t = (m_rng ^ (m_rng >> 15)) * (1U | m_rng);
-    t = (t + ((t ^ (t >> 7)) * (61U | t))) ^ t;
-    return static_cast<double>(t ^ (t >> 14)) / 4294967296.0;
+    std::uint32_t t = (m_rng ^ (m_rng >> 15U)) * (1U | m_rng);
+    t = (t + ((t ^ (t >> 7U)) * (61U | t))) ^ t;
+    return static_cast<double>(t ^ (t >> 14U)) / 4294967296.0;
 }
 
 // Height of the hot wall body in rows from the bottom; <= 0: no wall.

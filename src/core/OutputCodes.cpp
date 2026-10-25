@@ -12,7 +12,7 @@ bool isKeyboardKey(int code)
     if (code >= KEY_ESC && code <= KEY_MICMUTE)
         return true;
     if (code >= KEY_OK && code <= KEY_MAX)
-        return !(code >= BTN_TRIGGER_HAPPY && code <= BTN_TRIGGER_HAPPY40);
+        return code < BTN_TRIGGER_HAPPY || code > BTN_TRIGGER_HAPPY40;
     return false;
 }
 

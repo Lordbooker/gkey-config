@@ -41,7 +41,7 @@ QList<SystemStats::Temperature> temperatures(const QString &hwmon)
     QList<SystemStats::Temperature> list;
     const QDir dir(hwmon);
     QStringList inputs = dir.entryList({QStringLiteral("temp*_input")}, QDir::Files);
-    std::sort(inputs.begin(), inputs.end(), [](const QString &a, const QString &b) {
+    std::ranges::sort(inputs, [](const QString &a, const QString &b) {
         return a.mid(4).section(u'_', 0, 0).toInt() < b.mid(4).section(u'_', 0, 0).toInt();
     });
     for (const QString &input : inputs) {
@@ -121,7 +121,7 @@ void SystemStats::findSensors()
     // Logical CPUs (each thread of a core) in the order of their numbers.
     const QDir cpuDir(m_sysRoot + QStringLiteral("/devices/system/cpu"));
     QStringList cpus = cpuDir.entryList({QStringLiteral("cpu[0-9]*")}, QDir::Dirs | QDir::System);
-    std::sort(cpus.begin(), cpus.end(), [](const QString &a, const QString &b) { return a.mid(3).toInt() < b.mid(3).toInt(); });
+    std::ranges::sort(cpus, [](const QString &a, const QString &b) { return a.mid(3).toInt() < b.mid(3).toInt(); });
     for (const QString &cpu : cpus) {
         const QString cpufreq = cpuDir.filePath(cpu) + QStringLiteral("/cpufreq");
         if (QFile::exists(cpufreq + QStringLiteral("/scaling_cur_freq")))   // else offline or without cpufreq
@@ -152,7 +152,7 @@ std::optional<int> SystemStats::cpuPercent()
     std::optional<int> percent;
     if (m_lastTotal >= 0 && total > m_lastTotal) {
         const qint64 busy = (total - m_lastTotal) - (idle - m_lastIdle);
-        percent = int(std::clamp<qint64>((busy * 100 + (total - m_lastTotal) / 2) / (total - m_lastTotal), 0, 100));
+        percent = static_cast<int>(std::clamp<qint64>((busy * 100 + (total - m_lastTotal) / 2) / (total - m_lastTotal), 0, 100));
     }
     m_lastTotal = total;
     m_lastIdle = idle;
@@ -192,7 +192,7 @@ SystemStats::Sample SystemStats::sample()
     if (!m_gpuDevice.isEmpty()) {
         Gpu gpu;
         if (const auto busy = readNumber(m_gpuDevice + QStringLiteral("/gpu_busy_percent")))
-            gpu.busyPercent = int(std::clamp<qint64>(*busy, 0, 100));
+            gpu.busyPercent = static_cast<int>(std::clamp<qint64>(*busy, 0, 100));
         gpu.temperature = readMilliCelsius(m_gpuTempFile);
         const auto used = readNumber(m_gpuDevice + QStringLiteral("/mem_info_vram_used"));
         const auto total = readNumber(m_gpuDevice + QStringLiteral("/mem_info_vram_total"));
