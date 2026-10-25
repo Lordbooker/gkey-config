@@ -36,6 +36,16 @@ jobs:
             install: >-
               pacman -Syu --noconfirm --needed
               base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
+          # Second compiler, and the static analysis with clang-tidy
+          # (.clang-tidy, scripts/clang-tidy.sh).
+          - distro: Arch Linux (Clang, clang-tidy)
+            image: archlinux:latest
+            compiler: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+            tidy: true
+            install: >-
+              pacman -Syu --noconfirm --needed
+              base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
+              clang python
           - distro: Fedora
             image: fedora:latest
             install: >-
@@ -59,13 +69,17 @@ jobs:
       - name: Configure
         run: >-
           cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type || 'Debug' }} -DBUILD_TESTS=ON
-          -DENABLE_WERROR=ON -DCMAKE_INSTALL_PREFIX=/usr
+          -DENABLE_WERROR=ON -DCMAKE_INSTALL_PREFIX=/usr ${{ matrix.compiler }}
 
       - name: Build
         run: cmake --build build --parallel
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+      - name: clang-tidy
+        if: matrix.tidy
+        run: scripts/clang-tidy.sh build
 
       - name: Verify udev rule
         run: |
