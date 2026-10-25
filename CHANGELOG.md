@@ -8,7 +8,7 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ### Added
 
-- LCD pages for the CPU (load, all temperatures, one clock bar per physical core), the AMD GPU and
+- LCD pages for the CPU (load, all temperatures, one clock bar per logical CPU), the AMD GPU and
   the NVIDIA GPU (load, core and memory clock, temperatures, VRAM, power, fan). They are off by
   default and can be enabled in the LCD tab; a key can switch to them. NVIDIA is read through NVML
   from the NVIDIA driver and is untested.
