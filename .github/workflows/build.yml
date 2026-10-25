@@ -28,6 +28,14 @@ jobs:
             install: >-
               pacman -Syu --noconfirm --needed
               base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
+          # Release: the optimiser finds warnings a debug build does not show
+          # (e.g. -Wnull-dereference after inlining); Arch has the newest GCC.
+          - distro: Arch Linux (Release)
+            image: archlinux:latest
+            build_type: Release
+            install: >-
+              pacman -Syu --noconfirm --needed
+              base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
           - distro: Fedora
             image: fedora:latest
             install: >-
@@ -49,7 +57,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DCMAKE_INSTALL_PREFIX=/usr
+        run: >-
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type || 'Debug' }} -DBUILD_TESTS=ON
+          -DENABLE_WERROR=ON -DCMAKE_INSTALL_PREFIX=/usr
 
       - name: Build
         run: cmake --build build --parallel

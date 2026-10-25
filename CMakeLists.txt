@@ -35,6 +35,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_GUI         "Build the Qt6 configuration tool gkey-config" ON)
 option(BUILD_TESTS       "Build the unit tests (Qt Test)"               OFF)
 option(ENABLE_SANITIZERS "Enable ASan/UBSan in debug builds"             OFF)
+option(ENABLE_WERROR     "Treat compiler warnings as errors (CI)"         OFF)
 
 if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
@@ -43,6 +44,9 @@ endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wold-style-cast
                     -Wnon-virtual-dtor -Woverloaded-virtual -Wnull-dereference -Wformat=2 -Wimplicit-fallthrough)
+if(ENABLE_WERROR)
+    add_compile_options(-Werror)
+endif()
 
 # --- Dependencies -------------------------------------------------------------
 include(GNUInstallDirs)
