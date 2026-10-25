@@ -217,7 +217,6 @@ SystemStats::CpuDetail SystemStats::cpuDetail()
             static_cast<int>(readNumber(cpufreq + QStringLiteral("/scaling_cur_freq")).value_or(0) / 1000));
     if (!m_cpufreq.isEmpty()) {
         const QString &first = m_cpufreq.first();
-        detail.minMHz = static_cast<int>(readNumber(first + QStringLiteral("/cpuinfo_min_freq")).value_or(0) / 1000);
         detail.maxMHz = static_cast<int>(readNumber(first + QStringLiteral("/cpuinfo_max_freq")).value_or(0) / 1000);
     }
     return detail;

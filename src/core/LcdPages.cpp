@@ -31,12 +31,6 @@ QString percentText(const std::optional<int> &percent)
     return percent ? QStringLiteral("%1%").arg(*percent) : QStringLiteral("--%");
 }
 
-// "5.3G" for 5271 MHz
-QString gigahertz(int mhz)
-{
-    return QStringLiteral("%1G").arg(mhz / 1000.0, 0, 'f', 1);
-}
-
 // CPU temperatures as short as needed: all with their names if they fit, else
 // the first (Tctl, Tdie or package) with its name and the others combined,
 // else only the values.
@@ -245,19 +239,18 @@ void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu)
     frame.drawText(tempX, 1,
                    LcdFrame::elided(cpuTemperatures(cpu.temperatures, frame.width() - tempX - 1), frame.width() - tempX - 1));
 
-    // Bars: x 28..158, y 10..42; scale from the lowest to the highest clock
-    constexpr int Left = 28, Top = 10;
-    const int width = frame.width() - Left - 1;
+    // Bars: x 1..158, y 10..42; scale from 0 to the highest clock
+    constexpr int Left = 1, Top = 10;
+    const int width = frame.width() - 2 * Left;
     const int height = frame.height() - Top;
-    if (cpu.cpuMHz.isEmpty() || cpu.maxMHz <= cpu.minMHz) {
-        frame.drawText(Left, Top + height / 2 - 4, QStringLiteral("no clock (cpufreq)"));
+    if (cpu.cpuMHz.isEmpty() || cpu.maxMHz <= 0) {
+        const QString text = QStringLiteral("no clock (cpufreq)");
+        frame.drawText(centeredX(frame, text, 1), Top + height / 2 - 4, text);
         return;
     }
-    frame.drawText(1, Top, gigahertz(cpu.maxMHz));
-    frame.drawText(1, frame.height() - LcdFont::Height, gigahertz(cpu.minMHz));
 
-    // More cores than columns: one column shows the highest clock of the
-    // cores it stands for.
+    // More CPUs than columns: one column shows the highest clock of the CPUs
+    // it stands for.
     const int cores = static_cast<int>(cpu.cpuMHz.size());
     const int count = qMin(cores, width);
     const int pitch = width / count;
@@ -267,7 +260,7 @@ void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu)
         const int first = i * cores / count;
         const int last = (i + 1) * cores / count;
         const int mhz = *std::max_element(cpu.cpuMHz.cbegin() + first, cpu.cpuMHz.cbegin() + last);
-        const double share = std::clamp(double(mhz - cpu.minMHz) / (cpu.maxMHz - cpu.minMHz), 0.0, 1.0);
+        const double share = std::clamp(double(mhz) / cpu.maxMHz, 0.0, 1.0);
         const int barHeight = qMax(1, qRound(share * height));
         frame.fillRect(start + i * pitch, frame.height() - barHeight, pitch - gap, barHeight);
     }

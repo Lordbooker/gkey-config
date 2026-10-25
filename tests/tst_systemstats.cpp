@@ -155,7 +155,6 @@ void TestSystemStats::cpuDetail()
     SystemStats stats(proc(), sys());
     const SystemStats::CpuDetail detail = stats.cpuDetail();
     QCOMPARE(detail.cpuMHz, (QList<int>{4111, 603, 5100, 1200}));
-    QCOMPARE(detail.minMHz, 603);
     QCOMPARE(detail.maxMHz, 5271);
     QCOMPARE(detail.temperatures.size(), 2);
     QCOMPARE(detail.temperatures.at(0).label, QStringLiteral("Tctl"));
@@ -209,44 +208,54 @@ void TestSystemStats::nvidiaWithoutDriver()
 
 void TestSystemStats::renderCpuBars_data()
 {
-    QTest::addColumn<int>("cores");
-    QTest::newRow("8 cores") << 8;
-    QTest::newRow("16 cores") << 16;
-    QTest::newRow("64 cores") << 64;
-    QTest::newRow("200 cores") << 200;   // more cores than columns: 1-pixel bars
+    QTest::addColumn<int>("cpus");
+    QTest::newRow("8 CPUs") << 8;
+    QTest::newRow("16 CPUs") << 16;
+    QTest::newRow("64 CPUs") << 64;
+    QTest::newRow("200 CPUs") << 200;   // more CPUs than columns: one column for several
 }
 
-// One bar per core, all inside the frame; a core at the highest clock fills
-// the whole height, one at the lowest is a single row.
+// One bar per logical CPU across the whole width, scaled from 0: a CPU at the
+// highest clock fills the height below the top row (33 rows), one at 600 of
+// 5300 MHz gets 4 rows. No clock labels.
 void TestSystemStats::renderCpuBars()
 {
-    QFETCH(int, cores);
+    QFETCH(int, cpus);
     SystemStats::CpuDetail cpu;
     cpu.percent = 23;
-    cpu.minMHz = 600;
     cpu.maxMHz = 5300;
-    for (int i = 0; i < cores; ++i)
+    for (int i = 0; i < cpus; ++i)
         cpu.cpuMHz.append(i % 2 ? 600 : 5300);
     LcdFrame frame(160, 43);
     LcdPages::renderCpu(frame, cpu);
 
-    // Count the bars along the bottom row (runs of lit pixels right of the labels).
+    // Count the bars along the bottom row.
     int tall = 0;
     int low = 0;
     bool inBar = false;
-    for (int x = 28; x < 160; ++x) {
+    for (int x = 0; x < 160; ++x) {
         const bool lit = frame.pixel(x, 42);
-        if (lit && !inBar)
-            (frame.pixel(x, 10) ? tall : low) += 1;
+        if (lit && !inBar) {
+            if (frame.pixel(x, 10)) {
+                ++tall;
+            } else {
+                ++low;
+                QVERIFY(frame.pixel(x, 39));
+                QVERIFY(!frame.pixel(x, 38));
+            }
+        }
         inBar = lit;
     }
-    // Nothing between the clock labels and the bars.
-    for (int y = 10; y < 43; ++y)
-        for (int x = 25; x < 28; ++x)
-            QVERIFY2(!frame.pixel(x, y), qPrintable(QStringLiteral("pixel %1,%2").arg(x).arg(y)));
-    if (cores <= 130 / 3) {   // with gaps every bar is a separate run
-        QCOMPARE(tall + low, cores);
-        QCOMPARE(tall, cores / 2);
+    for (int y = 10; y < 43; ++y) {   // one pixel margin left and right
+        QVERIFY(!frame.pixel(0, y));
+        QVERIFY(!frame.pixel(159, y));
+    }
+    if (cpus <= 158 / 3) {   // with gaps every bar is a separate run
+        QCOMPARE(tall + low, cpus);
+        QCOMPARE(tall, cpus / 2);
+    } else if (cpus > 158) {   // every column contains a CPU at the highest clock
+        QCOMPARE(low, 0);
+        QVERIFY(tall >= 1);
     } else {
         QVERIFY(tall + low >= 1);
     }
@@ -256,7 +265,6 @@ void TestSystemStats::renderCpuTemperatures()
 {
     SystemStats::CpuDetail cpu;
     cpu.percent = 5;
-    cpu.minMHz = 600;
     cpu.maxMHz = 5300;
     cpu.cpuMHz = {4000};
     cpu.temperatures = {{QStringLiteral("Tctl"), 44.5}, {QStringLiteral("Tccd1"), 28.6}};

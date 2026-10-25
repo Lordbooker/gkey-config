@@ -45,9 +45,9 @@ void renderText(LcdFrame &frame, const QStringList &lines);
 // a supported GPU CPU, RAM and swap.
 void renderSystem(LcdFrame &frame, const SystemStats::Sample &sample);
 
-// CPU load and temperatures in the top row, below one bar per physical core
-// for its clock between the CPU's lowest and highest clock. The bars get
-// narrower with more cores, so all of them fit.
+// CPU load and temperatures in the top row, below one bar per logical CPU for
+// its clock from 0 to the CPU's highest clock. The bars get narrower with more
+// CPUs, so all of them fit.
 void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu);
 
 // One GPU (AMD through amdgpu, NVIDIA through NVML): title and load bar,

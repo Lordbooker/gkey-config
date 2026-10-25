@@ -36,8 +36,7 @@ public:
         std::optional<int> percent;        // load since the previous call
         QList<Temperature> temperatures;   // all of the CPU sensor, e.g. Tctl, Tccd1
         QList<int> cpuMHz;                 // current clock per logical CPU (thread)
-        int minMHz = 0;                    // clock range of the CPU (cpufreq)
-        int maxMHz = 0;
+        int maxMHz = 0;                    // highest clock of the CPU (cpufreq)
     };
 
     // Details for the LCD pages "amdgpu" and "nvidia".
