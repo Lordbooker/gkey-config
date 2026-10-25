@@ -6,6 +6,8 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-25
+
 ### Added
 
 - LCD pages for the CPU (load, all temperatures, one clock bar per logical CPU), the AMD GPU and
@@ -22,8 +24,9 @@ All notable changes to gkey-config are documented in this file. The format follo
 ### Changed
 
 - CI: warnings are errors, plus a Release build, a Clang build with clang-tidy, tests with
-  AddressSanitizer and UndefinedBehaviorSanitizer, a clang-format check and CodeQL. All C++
-  sources were formatted once with clang-format.
+  AddressSanitizer and UndefinedBehaviorSanitizer, a clang-format check and CodeQL. Packages are
+  built and released only after all checks have passed. All C++ sources were formatted once with
+  clang-format.
 
 ## [1.3.0] - 2026-10-24
 
@@ -150,7 +153,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/Lordbooker/gkey-config/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/Lordbooker/gkey-config/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/Lordbooker/gkey-config/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/Lordbooker/gkey-config/compare/v1.1.1...v1.2.0
