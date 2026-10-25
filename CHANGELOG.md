@@ -16,6 +16,14 @@ All notable changes to gkey-config are documented in this file. The format follo
 ### Fixed
 
 - A degree sign in LCD text from scripts was shown as "?".
+- Error messages are produced thread-safely (`strerror_r`, `getpwuid_r`, `getgrnam_r`); the LCD
+  writer reports errors from a thread of its own.
+
+### Changed
+
+- CI: warnings are errors, plus a Release build, a Clang build with clang-tidy, tests with
+  AddressSanitizer and UndefinedBehaviorSanitizer, a clang-format check and CodeQL. All C++
+  sources were formatted once with clang-format.
 
 ## [1.3.0] - 2026-10-24
 
