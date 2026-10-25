@@ -67,6 +67,34 @@ QString cpuTemperatures(const QList<SystemStats::Temperature> &temperatures, int
     return degrees(temperatures.first().celsius) + u' ' + combined;
 }
 
+// GPU temperatures with short names (junction -> Junc), else only the values.
+QString gpuTemperatures(const QList<SystemStats::Temperature> &temperatures, int maxWidth)
+{
+    QStringList named;
+    QStringList values;
+    for (const SystemStats::Temperature &t : temperatures) {
+        QString label = t.label == u"junction" ? QStringLiteral("Junc") : t.label;
+        if (!label.isEmpty())
+            label[0] = label.at(0).toUpper();
+        named.append(label + u' ' + degrees(t.celsius));
+        values.append(QString::number(qRound(t.celsius)));
+    }
+    const QString full = named.join(u' ');
+    if (LcdFrame::textWidth(full) <= maxWidth || temperatures.size() == 1)
+        return full;
+    return values.join(u'/') + u'\u00b0';
+}
+
+QString megahertz(const std::optional<int> &mhz)
+{
+    return mhz ? QString::number(*mhz) : QStringLiteral("--");
+}
+
+void drawRight(LcdFrame &frame, int y, const QString &text)
+{
+    frame.drawText(frame.width() - LcdFrame::textWidth(text) - 1, y, text);
+}
+
 }
 
 const QStringList &allPages()
@@ -230,6 +258,56 @@ void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu)
         const int barHeight = qMax(1, qRound(share * height));
         frame.fillRect(start + i * pitch, frame.height() - barHeight, pitch - gap, barHeight);
     }
+}
+
+void renderGpu(LcdFrame &frame, const QString &title, const std::optional<SystemStats::GpuDetail> &gpu,
+               const QString &problem)
+{
+    frame.clear();
+    constexpr int BarX = 22, BarHeight = 8;
+    frame.drawText(1, 1, title);
+    if (!gpu) {
+        const QString text = LcdFrame::elided(problem, frame.width() - 2);
+        frame.drawText(centeredX(frame, text, 1), 20, text);
+        return;
+    }
+
+    // Row 1: load bar and percent
+    const int barWidth = frame.width() - BarX - 30;
+    frame.drawRect(BarX, 0, barWidth, BarHeight);
+    if (gpu->busyPercent)
+        frame.fillRect(BarX + 1, 1, (barWidth - 2) * qBound(0, *gpu->busyPercent, 100) / 100, BarHeight - 2);
+    drawRight(frame, 1, percentText(gpu->busyPercent));
+
+    // Row 2: clocks
+    frame.drawText(1, 10,
+                   QStringLiteral("Core %1 Mem %2 MHz").arg(megahertz(gpu->coreMHz), megahertz(gpu->memMHz)));
+
+    // Row 3: temperatures
+    if (!gpu->temperatures.isEmpty())
+        frame.drawText(1, 19, LcdFrame::elided(gpuTemperatures(gpu->temperatures, frame.width() - 2), frame.width() - 2));
+
+    // Row 4: VRAM bar and used/total
+    if (gpu->vram) {
+        const QString used = formatSize(gpu->vram->used).chopped(1) + u'/' + formatSize(gpu->vram->total);
+        const int vramWidth = frame.width() - BarX - LcdFrame::textWidth(used) - 5;
+        frame.drawText(1, 28, QStringLiteral("VRM"));
+        frame.drawRect(BarX, 27, vramWidth, BarHeight);
+        frame.fillRect(BarX + 1, 28, (vramWidth - 2) * qBound(0, gpu->vram->percent(), 100) / 100, BarHeight - 2);
+        drawRight(frame, 28, used);
+    }
+
+    // Row 5: power left, fan right
+    const int bottom = frame.height() - LcdFont::Height;
+    if (gpu->powerWatts)
+        frame.drawText(1, bottom, QStringLiteral("%1 W").arg(qRound(*gpu->powerWatts)));
+    QString fan;
+    if (gpu->fanRpm)
+        fan = QStringLiteral("%1 rpm").arg(*gpu->fanRpm);
+    else if (gpu->fanPercent)
+        fan = QStringLiteral("%1%").arg(*gpu->fanPercent);
+    if (!fan.isEmpty())
+        drawRight(frame, bottom, QStringLiteral("Fan ") + fan);
 }
 
 }

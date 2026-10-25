@@ -32,6 +32,9 @@ private slots:
     void renderCpuBars_data();
     void renderCpuBars();
     void renderCpuTemperatures();
+    void renderGpu();
+    void renderGpuMissingValues();
+    void renderGpuWithoutGpu();
     void formatSize();
     void degreeSign();
     void renderFourRows();
@@ -284,6 +287,91 @@ void TestSystemStats::renderCpuTemperatures()
     for (int y = 0; y < 8; ++y)
         for (int x = 0; x < 160; ++x)
             QCOMPARE(frame.pixel(x, y), expected.pixel(x, y));
+}
+
+namespace {
+
+// Rows y0..y0+height of both frames are the same.
+bool sameRows(const LcdFrame &a, const LcdFrame &b, int y0, int height)
+{
+    for (int y = y0; y < y0 + height; ++y)
+        for (int x = 0; x < a.width(); ++x)
+            if (a.pixel(x, y) != b.pixel(x, y))
+                return false;
+    return true;
+}
+
+}
+
+void TestSystemStats::renderGpu()
+{
+    SystemStats::GpuDetail gpu;
+    gpu.busyPercent = 50;
+    gpu.coreMHz = 2650;
+    gpu.memMHz = 1249;
+    gpu.temperatures = {{QStringLiteral("edge"), 62.4}, {QStringLiteral("junction"), 78}, {QStringLiteral("mem"), 84}};
+    gpu.vram = SystemStats::Memory{qint64(12) << 30, qint64(24) << 30};
+    gpu.powerWatts = 312.4;
+    gpu.fanRpm = 1450;
+    LcdFrame frame(160, 43);
+    LcdPages::renderGpu(frame, QStringLiteral("AMD"), gpu, QString());
+
+    LcdFrame expected(160, 43);
+    expected.drawText(1, 1, QStringLiteral("AMD"));
+    expected.drawRect(22, 0, 108, 8);
+    expected.fillRect(23, 1, 53, 6);
+    expected.drawText(160 - LcdFrame::textWidth(QStringLiteral("50%")) - 1, 1, QStringLiteral("50%"));
+    expected.drawText(1, 10, QStringLiteral("Core 2650 Mem 1249 MHz"));
+    expected.drawText(1, 19, QStringLiteral("Edge 62\u00b0 Junc 78\u00b0 Mem 84\u00b0"));
+    const QString vram = QStringLiteral("12.0/24.0G");
+    expected.drawText(1, 28, QStringLiteral("VRM"));
+    const int vramWidth = 160 - 22 - LcdFrame::textWidth(vram) - 5;
+    expected.drawRect(22, 27, vramWidth, 8);
+    expected.fillRect(23, 28, (vramWidth - 2) / 2, 6);
+    expected.drawText(160 - LcdFrame::textWidth(vram) - 1, 28, vram);
+    expected.drawText(1, 36, QStringLiteral("312 W"));
+    const QString fan = QStringLiteral("Fan 1450 rpm");
+    expected.drawText(160 - LcdFrame::textWidth(fan) - 1, 36, fan);
+    QVERIFY(sameRows(frame, expected, 0, 43));
+}
+
+// NVIDIA: one temperature, fan in percent; values the driver does not report
+// are "--" or left out.
+void TestSystemStats::renderGpuMissingValues()
+{
+    SystemStats::GpuDetail gpu;
+    gpu.temperatures = {{QStringLiteral("GPU"), 55}};
+    gpu.fanPercent = 40;
+    LcdFrame frame(160, 43);
+    LcdPages::renderGpu(frame, QStringLiteral("NV"), gpu, QString());
+
+    LcdFrame expected(160, 43);
+    expected.drawText(1, 1, QStringLiteral("NV"));
+    expected.drawRect(22, 0, 108, 8);
+    expected.drawText(160 - LcdFrame::textWidth(QStringLiteral("--%")) - 1, 1, QStringLiteral("--%"));
+    expected.drawText(1, 10, QStringLiteral("Core -- Mem -- MHz"));
+    expected.drawText(1, 19, QStringLiteral("GPU 55\u00b0"));
+    const QString fan = QStringLiteral("Fan 40%");
+    expected.drawText(160 - LcdFrame::textWidth(fan) - 1, 36, fan);
+    QVERIFY(sameRows(frame, expected, 0, 43));
+
+    // Too many sensors for the names: only the values.
+    gpu.temperatures = {{QStringLiteral("edge"), 62}, {QStringLiteral("junction"), 78}, {QStringLiteral("mem"), 84},
+                        {QStringLiteral("hotspot"), 90}, {QStringLiteral("vrm"), 70}};
+    LcdPages::renderGpu(frame, QStringLiteral("NV"), gpu, QString());
+    expected.clear();
+    expected.drawText(1, 19, QStringLiteral("62/78/84/90/70\u00b0"));
+    QVERIFY(sameRows(frame, expected, 19, 7));
+}
+
+void TestSystemStats::renderGpuWithoutGpu()
+{
+    LcdFrame frame(160, 43);
+    LcdPages::renderGpu(frame, QStringLiteral("NV"), std::nullopt, QStringLiteral("no NVML"));
+    LcdFrame expected(160, 43);
+    expected.drawText(1, 1, QStringLiteral("NV"));
+    expected.drawText((160 - LcdFrame::textWidth(QStringLiteral("no NVML"))) / 2, 20, QStringLiteral("no NVML"));
+    QVERIFY(sameRows(frame, expected, 0, 43));
 }
 
 void TestSystemStats::formatSize()

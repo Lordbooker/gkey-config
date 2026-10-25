@@ -46,6 +46,13 @@ void renderSystem(LcdFrame &frame, const SystemStats::Sample &sample);
 // narrower with more cores, so all of them fit.
 void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu);
 
+// One GPU (AMD through amdgpu, NVIDIA through NVML): title and load bar,
+// core and memory clock, all temperatures, VRAM, power and fan. Values the
+// driver does not report are left out or shown as "--". Without a GPU the
+// title and the reason (problem) are shown.
+void renderGpu(LcdFrame &frame, const QString &title, const std::optional<SystemStats::GpuDetail> &gpu,
+               const QString &problem);
+
 // "16.4G": bytes in GiB, at most five characters.
 QString formatSize(qint64 bytes);
 
