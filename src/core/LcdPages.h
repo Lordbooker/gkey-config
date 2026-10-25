@@ -41,6 +41,11 @@ void renderText(LcdFrame &frame, const QStringList &lines);
 // a supported GPU CPU, RAM and swap.
 void renderSystem(LcdFrame &frame, const SystemStats::Sample &sample);
 
+// CPU load and temperatures in the top row, below one bar per physical core
+// for its clock between the CPU's lowest and highest clock. The bars get
+// narrower with more cores, so all of them fit.
+void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu);
+
 // "16.4G": bytes in GiB, at most five characters.
 QString formatSize(qint64 bytes);
 

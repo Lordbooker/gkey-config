@@ -8,6 +8,8 @@
 
 #include <QLocale>
 
+#include <algorithm>
+
 namespace LcdPages {
 
 namespace {
@@ -17,6 +19,52 @@ constexpr int LineHeight = LcdFont::Height + 1;
 int centeredX(const LcdFrame &frame, const QString &text, int scale)
 {
     return qMax(0, (frame.width() - LcdFrame::textWidth(text, scale)) / 2);
+}
+
+QString degrees(double celsius)
+{
+    return QStringLiteral("%1\u00b0").arg(qRound(celsius));
+}
+
+QString percentText(const std::optional<int> &percent)
+{
+    return percent ? QStringLiteral("%1%").arg(*percent) : QStringLiteral("--%");
+}
+
+// "5.3G" for 5271 MHz
+QString gigahertz(int mhz)
+{
+    return QStringLiteral("%1G").arg(mhz / 1000.0, 0, 'f', 1);
+}
+
+// CPU temperatures as short as needed: all with their names if they fit, else
+// the first (Tctl, Tdie or package) with its name and the others combined,
+// else only the values.
+QString cpuTemperatures(const QList<SystemStats::Temperature> &temperatures, int maxWidth)
+{
+    if (temperatures.isEmpty())
+        return {};
+    const auto shortLabel = [](QString label) {
+        if (label.startsWith(u"Tccd"))
+            return QStringLiteral("CCD") + label.mid(4);
+        if (label.startsWith(u"Package"))
+            return QStringLiteral("Pkg");
+        return label;
+    };
+    QStringList all;
+    for (const SystemStats::Temperature &t : temperatures)
+        all.append(shortLabel(t.label) + u' ' + degrees(t.celsius));
+    const QString full = all.join(u' ');
+    if (LcdFrame::textWidth(full) <= maxWidth || temperatures.size() == 1)
+        return full;
+    QStringList rest;
+    for (qsizetype i = 1; i < temperatures.size(); ++i)
+        rest.append(QString::number(qRound(temperatures.at(i).celsius)));
+    const QString combined = rest.join(u'/') + u'\u00b0';
+    const QString named = all.first() + u' ' + combined;
+    if (LcdFrame::textWidth(named) <= maxWidth)
+        return named;
+    return degrees(temperatures.first().celsius) + u' ' + combined;
 }
 
 }
@@ -143,6 +191,38 @@ void renderSystem(LcdFrame &frame, const SystemStats::Sample &sample)
                        row.percent ? QStringLiteral("%1%").arg(*row.percent, 3) : QStringLiteral(" --%"));
         if (!row.extra.isEmpty())
             frame.drawText(frame.width() - LcdFrame::textWidth(row.extra) - 1, y + 1, row.extra);
+    }
+}
+
+void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu)
+{
+    frame.clear();
+    const QString load = QStringLiteral("CPU ") + percentText(cpu.percent);
+    frame.drawText(1, 1, load);
+    // textWidth() leaves out the gap after the last character: + 1 for it
+    const int tempX = 1 + LcdFrame::textWidth(load + u' ') + 1;
+    frame.drawText(tempX, 1,
+                   LcdFrame::elided(cpuTemperatures(cpu.temperatures, frame.width() - tempX - 1), frame.width() - tempX - 1));
+
+    // Bars: x 28..158, y 10..42; scale from the lowest to the highest clock
+    constexpr int Left = 28, Top = 10;
+    const int width = frame.width() - Left - 1;
+    const int height = frame.height() - Top;
+    if (cpu.coreMHz.isEmpty() || cpu.maxMHz <= cpu.minMHz) {
+        frame.drawText(Left, Top + height / 2 - 4, QStringLiteral("no clock (cpufreq)"));
+        return;
+    }
+    frame.drawText(1, Top, gigahertz(cpu.maxMHz));
+    frame.drawText(1, frame.height() - LcdFont::Height, gigahertz(cpu.minMHz));
+
+    const int count = static_cast<int>(cpu.coreMHz.size());
+    const int pitch = qMax(1, width / count);
+    const int gap = pitch >= 3 ? 1 : 0;
+    const int start = Left + (width - pitch * count) / 2;   // centre the group
+    for (int i = 0; i < count; ++i) {
+        const double share = std::clamp(double(cpu.coreMHz.at(i) - cpu.minMHz) / (cpu.maxMHz - cpu.minMHz), 0.0, 1.0);
+        const int barHeight = qMax(1, qRound(share * height));
+        frame.fillRect(start + i * pitch, frame.height() - barHeight, pitch - gap, barHeight);
     }
 }
 

@@ -29,6 +29,9 @@ private slots:
     void cpuDetail();
     void amdGpuDetail();
     void nvidiaWithoutDriver();
+    void renderCpuBars_data();
+    void renderCpuBars();
+    void renderCpuTemperatures();
     void formatSize();
     void degreeSign();
     void renderFourRows();
@@ -199,6 +202,84 @@ void TestSystemStats::nvidiaWithoutDriver()
     QVERIFY(!nvidia.sample());
     QVERIFY(!nvidia.problem().isEmpty());
     QVERIFY(!nvidia.sample());   // tried once, no second attempt that could log again
+}
+
+void TestSystemStats::renderCpuBars_data()
+{
+    QTest::addColumn<int>("cores");
+    QTest::newRow("8 cores") << 8;
+    QTest::newRow("16 cores") << 16;
+    QTest::newRow("64 cores") << 64;
+    QTest::newRow("200 cores") << 200;   // more cores than columns: 1-pixel bars
+}
+
+// One bar per core, all inside the frame; a core at the highest clock fills
+// the whole height, one at the lowest is a single row.
+void TestSystemStats::renderCpuBars()
+{
+    QFETCH(int, cores);
+    SystemStats::CpuDetail cpu;
+    cpu.percent = 23;
+    cpu.minMHz = 600;
+    cpu.maxMHz = 5300;
+    for (int i = 0; i < cores; ++i)
+        cpu.coreMHz.append(i % 2 ? 600 : 5300);
+    LcdFrame frame(160, 43);
+    LcdPages::renderCpu(frame, cpu);
+
+    // Count the bars along the bottom row (runs of lit pixels right of the labels).
+    int tall = 0;
+    int low = 0;
+    bool inBar = false;
+    for (int x = 28; x < 160; ++x) {
+        const bool lit = frame.pixel(x, 42);
+        if (lit && !inBar)
+            (frame.pixel(x, 10) ? tall : low) += 1;
+        inBar = lit;
+    }
+    if (cores <= 130 / 3) {   // with gaps every bar is a separate run
+        QCOMPARE(tall + low, cores);
+        QCOMPARE(tall, cores / 2);
+    } else {
+        QVERIFY(tall + low >= 1);
+    }
+}
+
+void TestSystemStats::renderCpuTemperatures()
+{
+    SystemStats::CpuDetail cpu;
+    cpu.percent = 5;
+    cpu.minMHz = 600;
+    cpu.maxMHz = 5300;
+    cpu.coreMHz = {4000};
+    cpu.temperatures = {{QStringLiteral("Tctl"), 44.5}, {QStringLiteral("Tccd1"), 28.6}};
+    LcdFrame expected(160, 43);
+    expected.clear();
+    expected.drawText(1, 1, QStringLiteral("CPU 5% Tctl 45\u00b0 CCD1 29\u00b0"));
+    LcdFrame frame(160, 43);
+    LcdPages::renderCpu(frame, cpu);
+    for (int y = 0; y < 8; ++y)
+        for (int x = 0; x < 160; ++x)
+            QCOMPARE(frame.pixel(x, y), expected.pixel(x, y));
+
+    // More sensors: combined after the first one; without its name if needed.
+    cpu.temperatures = {{QStringLiteral("Tctl"), 70}, {QStringLiteral("Tccd1"), 61}, {QStringLiteral("Tccd2"), 63},
+                        {QStringLiteral("Tccd3"), 60}};
+    cpu.percent = 100;
+    LcdPages::renderCpu(frame, cpu);
+    expected.clear();
+    expected.drawText(1, 1, QStringLiteral("CPU 100% 70\u00b0 61/63/60\u00b0"));
+    for (int y = 0; y < 8; ++y)
+        for (int x = 0; x < 160; ++x)
+            QCOMPARE(frame.pixel(x, y), expected.pixel(x, y));
+
+    cpu.percent = 7;   // shorter load: the first sensor keeps its name
+    LcdPages::renderCpu(frame, cpu);
+    expected.clear();
+    expected.drawText(1, 1, QStringLiteral("CPU 7% Tctl 70\u00b0 61/63/60\u00b0"));
+    for (int y = 0; y < 8; ++y)
+        for (int x = 0; x < 160; ++x)
+            QCOMPARE(frame.pixel(x, y), expected.pixel(x, y));
 }
 
 void TestSystemStats::formatSize()
