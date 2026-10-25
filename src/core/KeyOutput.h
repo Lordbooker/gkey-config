@@ -12,7 +12,11 @@ class OutputSink {
 public:
     virtual ~OutputSink() = default;
     virtual void writeKey(int code, bool pressed) = 0;
-    virtual void writeRel(int code, int value) { Q_UNUSED(code) Q_UNUSED(value) }
+    virtual void writeRel(int code, int value)
+    {
+        Q_UNUSED(code)
+        Q_UNUSED(value)
+    }
     virtual void sync() = 0;
 };
 

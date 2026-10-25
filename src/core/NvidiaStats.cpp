@@ -40,11 +40,11 @@ bool NvidiaStats::load()
         function = reinterpret_cast<std::remove_reference_t<decltype(function)>>(m_library.resolve(name));
         return function != nullptr;
     };
-    if (!resolve(m_init, "nvmlInit_v2") || !resolve(m_shutdown, "nvmlShutdown")
-        || !resolve(m_count, "nvmlDeviceGetCount_v2") || !resolve(m_handle, "nvmlDeviceGetHandleByIndex_v2")
-        || !resolve(m_utilization, "nvmlDeviceGetUtilizationRates") || !resolve(m_memory, "nvmlDeviceGetMemoryInfo")
-        || !resolve(m_temperature, "nvmlDeviceGetTemperature") || !resolve(m_clock, "nvmlDeviceGetClockInfo")
-        || !resolve(m_power, "nvmlDeviceGetPowerUsage") || !resolve(m_fan, "nvmlDeviceGetFanSpeed")) {
+    if (!resolve(m_init, "nvmlInit_v2") || !resolve(m_shutdown, "nvmlShutdown") ||
+        !resolve(m_count, "nvmlDeviceGetCount_v2") || !resolve(m_handle, "nvmlDeviceGetHandleByIndex_v2") ||
+        !resolve(m_utilization, "nvmlDeviceGetUtilizationRates") || !resolve(m_memory, "nvmlDeviceGetMemoryInfo") ||
+        !resolve(m_temperature, "nvmlDeviceGetTemperature") || !resolve(m_clock, "nvmlDeviceGetClockInfo") ||
+        !resolve(m_power, "nvmlDeviceGetPowerUsage") || !resolve(m_fan, "nvmlDeviceGetFanSpeed")) {
         m_problem = QStringLiteral("NVML too old");
         qCWarning(lcNvidia) << "NVML lacks a needed function:" << m_library.errorString();
         return false;

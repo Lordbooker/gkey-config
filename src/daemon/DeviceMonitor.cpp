@@ -48,8 +48,8 @@ bool DeviceMonitor::start(QString *error)
     }
 
     m_monitor = udev_monitor_new_from_netlink(m_udev, "udev");
-    if (!m_monitor || udev_monitor_filter_add_match_subsystem_devtype(m_monitor, "input", nullptr) < 0
-        || udev_monitor_enable_receiving(m_monitor) < 0) {
+    if (!m_monitor || udev_monitor_filter_add_match_subsystem_devtype(m_monitor, "input", nullptr) < 0 ||
+        udev_monitor_enable_receiving(m_monitor) < 0) {
         *error = QStringLiteral("cannot monitor udev events");
         return false;
     }

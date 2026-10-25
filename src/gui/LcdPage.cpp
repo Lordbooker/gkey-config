@@ -195,8 +195,8 @@ void LcdPage::setModelId(const QString &modelId)
 
 void LcdPage::updatePreview()
 {
-    const QString page = m_list->currentItem() ? m_list->currentItem()->data(Qt::UserRole).toString()
-                                               : QStringLiteral("status");
+    const QString page =
+        m_list->currentItem() ? m_list->currentItem()->data(Qt::UserRole).toString() : QStringLiteral("status");
     LcdFrame frame(160, 43);
     if (page == LcdPages::IntroPage) {
         if (!m_intro)
@@ -209,7 +209,8 @@ void LcdPage::updatePreview()
     else if (page == u"cpu")
         LcdPages::renderCpu(frame, m_stats.cpuDetail());
     else if (page == u"amdgpu")
-        LcdPages::renderGpu(frame, QStringLiteral("AMD"), m_stats.amdGpuDetail(), QStringLiteral("no AMD GPU (amdgpu)"));
+        LcdPages::renderGpu(frame, QStringLiteral("AMD"), m_stats.amdGpuDetail(),
+                            QStringLiteral("no AMD GPU (amdgpu)"));
     else if (page == u"nvidia") {
         const auto gpu = m_nvidia.sample();
         LcdPages::renderGpu(frame, QStringLiteral("NV"), gpu, m_nvidia.problem());

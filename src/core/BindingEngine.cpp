@@ -190,7 +190,8 @@ void BindingEngine::startMacro(const QString &keyId, const Action &action)
 {
     const Macro *macro = m_macros ? m_macros->macro(action.macro()) : nullptr;
     if (!macro) {
-        qCWarning(lcEngine).noquote() << QStringLiteral("key %1: macro \"%2\" does not exist").arg(keyId, action.macro());
+        qCWarning(lcEngine).noquote()
+            << QStringLiteral("key %1: macro \"%2\" does not exist").arg(keyId, action.macro());
         return;
     }
     auto *run = new MacroRun(*macro, action.repeat(), action.count(), m_output, this);

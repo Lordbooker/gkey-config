@@ -27,8 +27,14 @@ public:
     QStringList events;
 };
 
-QString down(int code) { return QStringLiteral("+%1").arg(code); }
-QString up(int code) { return QStringLiteral("-%1").arg(code); }
+QString down(int code)
+{
+    return QStringLiteral("+%1").arg(code);
+}
+QString up(int code)
+{
+    return QStringLiteral("-%1").arg(code);
+}
 
 Macro parse(const QByteArray &json)
 {
@@ -73,13 +79,15 @@ void TestMacros::parsing_data()
     QTest::addColumn<QString>("expectedError");
 
     QTest::newRow("valid") << QByteArray(R"({"name":"m","steps":[{"tap":"KEY_A"},{"delay":5},
-        {"press":"BTN_LEFT"},{"release":"BTN_LEFT"},{"tap":"KEY_B","hold":0}]})") << QString();
+        {"press":"BTN_LEFT"},{"release":"BTN_LEFT"},{"tap":"KEY_B","hold":0}]})")
+                           << QString();
     QTest::newRow("empty steps") << QByteArray(R"({"name":"m"})") << QString();
     QTest::newRow("no name") << QByteArray(R"({"steps":[]})") << QStringLiteral("name");
     QTest::newRow("unknown step") << QByteArray(R"({"name":"m","steps":[{"jump":1}]})") << QStringLiteral("step 1");
-    QTest::newRow("unknown key") << QByteArray(R"({"name":"m","steps":[{"tap":"KEY_NOPE"}]})") << QStringLiteral("unknown key");
-    QTest::newRow("joystick button")
-        << QByteArray(R"({"name":"m","steps":[{"press":"BTN_THUMB"}]})") << QStringLiteral("neither");
+    QTest::newRow("unknown key") << QByteArray(R"({"name":"m","steps":[{"tap":"KEY_NOPE"}]})")
+                                 << QStringLiteral("unknown key");
+    QTest::newRow("joystick button") << QByteArray(R"({"name":"m","steps":[{"press":"BTN_THUMB"}]})")
+                                     << QStringLiteral("neither");
     QTest::newRow("negative delay") << QByteArray(R"({"name":"m","steps":[{"delay":-1}]})") << QStringLiteral("delay");
     QTest::newRow("huge delay") << QByteArray(R"({"name":"m","steps":[{"delay":600000}]})") << QStringLiteral("delay");
 }
@@ -113,8 +121,9 @@ void TestMacros::playOnce()
 {
     RecordingSink sink;
     KeyOutput output(sink);
-    MacroRun run(parse(R"({"name":"m","steps":[{"tap":"KEY_A","hold":5},{"delay":5},{"press":"KEY_B"},{"release":"KEY_B"}]})"),
-                 Action::Repeat::Once, 1, output);
+    MacroRun run(
+        parse(R"({"name":"m","steps":[{"tap":"KEY_A","hold":5},{"delay":5},{"press":"KEY_B"},{"release":"KEY_B"}]})"),
+        Action::Repeat::Once, 1, output);
     QSignalSpy finished(&run, &MacroRun::finished);
     run.start();
     QVERIFY(run.isRunning());
@@ -138,8 +147,9 @@ void TestMacros::stopReleasesHeldKeys()
 {
     RecordingSink sink;
     KeyOutput output(sink);
-    MacroRun run(parse(R"({"name":"m","steps":[{"press":"KEY_LEFTSHIFT"},{"delay":5000},{"release":"KEY_LEFTSHIFT"}]})"),
-                 Action::Repeat::Once, 1, output);
+    MacroRun run(
+        parse(R"({"name":"m","steps":[{"press":"KEY_LEFTSHIFT"},{"delay":5000},{"release":"KEY_LEFTSHIFT"}]})"),
+        Action::Repeat::Once, 1, output);
     QSignalSpy finished(&run, &MacroRun::finished);
     run.start();
     QCOMPARE(sink.events, QStringList{down(KEY_LEFTSHIFT)});
@@ -234,8 +244,7 @@ void TestMacros::engineModeChangeStopsMacro()
 
     Profile profile;
     profile.setName(QStringLiteral("p"));
-    profile.setBinding(1, QStringLiteral("G1"),
-                       *Action::fromJson(QJsonObject{{"type", "macro"}, {"macro", "long"}}));
+    profile.setBinding(1, QStringLiteral("G1"), *Action::fromJson(QJsonObject{{"type", "macro"}, {"macro", "long"}}));
 
     RecordingSink sink;
     KeyOutput output(sink);

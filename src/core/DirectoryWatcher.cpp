@@ -5,12 +5,11 @@
 
 #include <QDir>
 #include <QFile>
-#include <QRegularExpression>
 #include <QFileSystemWatcher>
+#include <QRegularExpression>
 #include <QTimer>
 
-DirectoryWatcher::DirectoryWatcher(const QString &directory, QObject *parent)
-    : QObject(parent), m_directory(directory)
+DirectoryWatcher::DirectoryWatcher(const QString &directory, QObject *parent) : QObject(parent), m_directory(directory)
 {
     m_watcher = new QFileSystemWatcher(this);
     m_debounce = new QTimer(this);

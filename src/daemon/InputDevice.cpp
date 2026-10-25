@@ -35,7 +35,8 @@ bool InputDevice::open(QString *error, bool grab)
         const int err = errno;
         *error = QStringLiteral("%1: %2").arg(m_devNode, SystemError::text(err));
         if (err == EACCES)
-            *error += QStringLiteral(" - is the udev rule 70-gkey-config.rules installed? Replug the device after installing it.");
+            *error += QStringLiteral(
+                " - is the udev rule 70-gkey-config.rules installed? Replug the device after installing it.");
         return false;
     }
 

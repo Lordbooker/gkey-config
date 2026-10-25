@@ -54,10 +54,10 @@ int listModels()
     for (const DeviceModel &model : registry.models()) {
         QStringList ids;
         for (const DeviceModel::UsbId &usb : model.usbIds())
-            ids.append(QStringLiteral("%1:%2").arg(usb.vendor, 4, 16, QChar(u'0'))
-                                              .arg(usb.product, 4, 16, QChar(u'0')));
-        out << model.id() << '\t' << model.name() << '\t' << ids.join(u',')
-            << (model.tested() ? "" : "\t(untested)") << '\n';
+            ids.append(
+                QStringLiteral("%1:%2").arg(usb.vendor, 4, 16, QChar(u'0')).arg(usb.product, 4, 16, QChar(u'0')));
+        out << model.id() << '\t' << model.name() << '\t' << ids.join(u',') << (model.tested() ? "" : "\t(untested)")
+            << '\n';
     }
     for (const QString &error : registry.errors())
         out << "invalid model file: " << error << '\n';

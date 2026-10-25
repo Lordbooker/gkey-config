@@ -76,10 +76,9 @@ bool Device::addInput(const QString &role, const QString &devNode, QString *erro
             m_stick->setCenter(x, y);
         } else {
             m_stick->setCenter(middle, middle);
-            qCInfo(lcDevice).noquote() << m_model.name()
-                                       << QStringLiteral(": no stick position yet (%1/%2), using the middle as rest position")
-                                              .arg(x)
-                                              .arg(y);
+            qCInfo(lcDevice).noquote()
+                << m_model.name()
+                << QStringLiteral(": no stick position yet (%1/%2), using the middle as rest position").arg(x).arg(y);
         }
         // The values read now are not used as a position: 0/0 before the first
         // report would hold "left" and "up" (e.g. A and W) until the stick moves.

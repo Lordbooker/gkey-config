@@ -6,8 +6,8 @@
 #include "ModelRegistry.h"
 
 #include <QDir>
-#include <QSet>
 #include <QFile>
+#include <QSet>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -35,7 +35,8 @@ QByteArray minimalModel(const QByteArray &keys = R"([{ "id": "G1", "code": "KEY_
                         const QByteArray &extra = {})
 {
     return R"({ "id": "test", "name": "Test", "usb": [{ "vendor": "046d", "product": "ffff" }],
-               "inputs": { "keys": "Test Keys" }, "keys": )" + keys + extra + "}";
+               "inputs": { "keys": "Test Keys" }, "keys": )" +
+           keys + extra + "}";
 }
 
 }
@@ -194,45 +195,39 @@ void TestDeviceModel::invalidModels_data()
 
     QTest::newRow("valid") << minimalModel() << QString();
     QTest::newRow("broken json") << QByteArray("{") << QStringLiteral("invalid JSON");
-    QTest::newRow("unknown code")
-        << minimalModel(R"([{ "id": "G1", "code": "KEY_NOPE" }])") << QStringLiteral("unknown event code");
+    QTest::newRow("unknown code") << minimalModel(R"([{ "id": "G1", "code": "KEY_NOPE" }])")
+                                  << QStringLiteral("unknown event code");
     QTest::newRow("duplicate id")
         << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }, { "id": "G1", "code": "KEY_MACRO2" }])")
         << QStringLiteral("duplicate key id");
     QTest::newRow("duplicate code")
         << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }, { "id": "G2", "code": "KEY_MACRO1" }])")
         << QStringLiteral("already mapped");
-    QTest::newRow("unknown input")
-        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1", "input": "stick" }])")
-        << QStringLiteral("unknown input");
-    QTest::newRow("reserved id")
-        << minimalModel(R"([{ "id": "STICK_UP", "code": "KEY_MACRO1" }])") << QStringLiteral("reserved");
-    QTest::newRow("unknown role")
-        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1", "role": "turbo" }])")
-        << QStringLiteral("unknown role");
-    QTest::newRow("unknown led role")
-        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
-                        R"(, "leds": { "disco": { "suffix": "x" } })")
-        << QStringLiteral("unknown LED role");
-    QTest::newRow("view area for unknown key")
-        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
-                        R"(, "view": { "width": 10, "height": 10,
+    QTest::newRow("unknown input") << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1", "input": "stick" }])")
+                                   << QStringLiteral("unknown input");
+    QTest::newRow("reserved id") << minimalModel(R"([{ "id": "STICK_UP", "code": "KEY_MACRO1" }])")
+                                 << QStringLiteral("reserved");
+    QTest::newRow("unknown role") << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1", "role": "turbo" }])")
+                                  << QStringLiteral("unknown role");
+    QTest::newRow("unknown led role") << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
+                                                      R"(, "leds": { "disco": { "suffix": "x" } })")
+                                      << QStringLiteral("unknown LED role");
+    QTest::newRow("view area for unknown key") << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
+                                                               R"(, "view": { "width": 10, "height": 10,
                              "keys": [{ "key": "G9", "x": 1, "y": 1, "w": 5, "h": 5 }] })")
-        << QStringLiteral("unknown key");
-    QTest::newRow("view key drawn twice")
-        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
-                        R"(, "view": { "width": 10, "height": 10, "keys": [
+                                               << QStringLiteral("unknown key");
+    QTest::newRow("view key drawn twice") << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
+                                                          R"(, "view": { "width": 10, "height": 10, "keys": [
                              { "key": "G1", "x": 1, "y": 1, "w": 5, "h": 5 },
                              { "key": "G1", "x": 2, "y": 2, "w": 5, "h": 5 }] })")
-        << QStringLiteral("drawn twice");
-    QTest::newRow("view bad shape")
-        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
-                        R"(, "view": { "width": 10, "height": 10,
+                                          << QStringLiteral("drawn twice");
+    QTest::newRow("view bad shape") << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
+                                                    R"(, "view": { "width": 10, "height": 10,
                              "keys": [{ "key": "G1", "shape": "star", "x": 1, "y": 1, "w": 5, "h": 5 }] })")
-        << QStringLiteral("invalid shape");
-    QTest::newRow("view without size")
-        << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])", R"(, "view": { "keys": [] })")
-        << QStringLiteral("width");
+                                    << QStringLiteral("invalid shape");
+    QTest::newRow("view without size") << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
+                                                       R"(, "view": { "keys": [] })")
+                                       << QStringLiteral("width");
     QTest::newRow("bad usb id")
         << QByteArray(R"({ "id": "test", "name": "Test", "usb": [{ "vendor": "46d", "product": "ffff" }],
                          "inputs": { "keys": "x" }, "keys": [{ "id": "G1", "code": "KEY_MACRO1" }] })")

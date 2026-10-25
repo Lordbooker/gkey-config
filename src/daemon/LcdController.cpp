@@ -154,7 +154,8 @@ void LcdController::refresh()
     else if (m_page == u"cpu")
         LcdPages::renderCpu(m_frame, m_stats.cpuDetail());
     else if (m_page == u"amdgpu")
-        LcdPages::renderGpu(m_frame, QStringLiteral("AMD"), m_stats.amdGpuDetail(), QStringLiteral("no AMD GPU (amdgpu)"));
+        LcdPages::renderGpu(m_frame, QStringLiteral("AMD"), m_stats.amdGpuDetail(),
+                            QStringLiteral("no AMD GPU (amdgpu)"));
     else if (m_page == u"nvidia") {
         const auto gpu = m_nvidia.sample();
         LcdPages::renderGpu(m_frame, QStringLiteral("NV"), gpu, m_nvidia.problem());
@@ -164,8 +165,9 @@ void LcdController::refresh()
         LcdPages::renderStatus(m_frame, m_status);
 
     if (m_clockTimer) {
-        static const QStringList tickingPages = {QStringLiteral("clock"), QStringLiteral("system"), QStringLiteral("cpu"),
-                                                 QStringLiteral("amdgpu"), QStringLiteral("nvidia")};
+        static const QStringList tickingPages = {QStringLiteral("clock"), QStringLiteral("system"),
+                                                 QStringLiteral("cpu"), QStringLiteral("amdgpu"),
+                                                 QStringLiteral("nvidia")};
         const bool ticking = tickingPages.contains(m_page);
         if (ticking && !m_clockTimer->isActive())
             m_clockTimer->start(1000 - QTime::currentTime().msec());

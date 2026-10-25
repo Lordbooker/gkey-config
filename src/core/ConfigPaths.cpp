@@ -10,8 +10,7 @@ namespace ConfigPaths {
 
 QString configDir()
 {
-    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
-           + QStringLiteral("/gkey-config");
+    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/gkey-config");
 }
 
 QString profileDir(const QString &modelId)

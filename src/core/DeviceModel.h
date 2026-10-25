@@ -41,7 +41,7 @@ public:
     struct Key {
         QString id;         // key ID used in profiles, e.g. "G1"
         QString codeName;   // evdev name, e.g. "KEY_MACRO1"
-        int     code = 0;   // numeric evdev code
+        int code = 0;   // numeric evdev code
         QString input;      // input role the key comes from ("keys" or "stick")
         KeyRole role = KeyRole::Bindable;
         // Used when the key is not bound in the active layer, e.g. BD -> next LCD page.
@@ -63,16 +63,16 @@ public:
 
     struct Stick {
         QString input;     // input role of the stick device
-        int     axisX = 0;
-        int     axisY = 0;
-        int     minimum = 0;
-        int     maximum = 255;
+        int axisX = 0;
+        int axisY = 0;
+        int minimum = 0;
+        int maximum = 255;
     };
 
     struct Lcd {
         QString type;      // protocol, e.g. "g13-hidraw"
-        int     width = 0;
-        int     height = 0;
+        int width = 0;
+        int height = 0;
     };
 
     enum class AreaShape { Rect, Ellipse };
@@ -80,11 +80,11 @@ public:
     // Geometry shared by decorations and key areas (view coordinates).
     struct Shape {
         AreaShape shape = AreaShape::Rect;
-        double    x = 0;
-        double    y = 0;
-        double    width = 0;
-        double    height = 0;
-        double    radius = 4;   // corner radius of rectangles
+        double x = 0;
+        double y = 0;
+        double width = 0;
+        double height = 0;
+        double radius = 4;   // corner radius of rectangles
     };
 
     // Non-interactive part of the schematic drawing, e.g. "body", "lcd".
@@ -110,8 +110,7 @@ public:
     static const QList<QString> &stickDirectionKeys();
 
     // Parses and validates a model file. sourceName is only used in error texts.
-    static std::expected<DeviceModel, QString> fromJson(const QByteArray &json,
-                                                        const QString &sourceName);
+    static std::expected<DeviceModel, QString> fromJson(const QByteArray &json, const QString &sourceName);
 
     const QString &id() const { return m_id; }
     const QString &name() const { return m_name; }

@@ -141,8 +141,8 @@ void LcdIntro::step()
 
     // Cooling per column: moving patterns produce high and low flame tongues
     for (int x = 0; x < Width; ++x) {
-        const double n = 0.5 + 0.5 * (std::sin(x * 0.42 + phase * 1.9) * 0.55 + std::sin(x * 0.97 - phase * 2.7) * 0.3
-                                      + std::sin(x * 0.17 + phase * 0.8) * 0.15);
+        const double n = 0.5 + 0.5 * (std::sin(x * 0.42 + phase * 1.9) * 0.55 + std::sin(x * 0.97 - phase * 2.7) * 0.3 +
+                                      std::sin(x * 0.17 + phase * 0.8) * 0.15);
         m_cool[static_cast<std::size_t>(x)] = 2 + n * n * 11;
     }
 

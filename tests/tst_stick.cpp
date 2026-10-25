@@ -38,8 +38,14 @@ public:
     int hwheel = 0;
 };
 
-QString down(int code) { return QStringLiteral("+%1").arg(code); }
-QString up(int code) { return QStringLiteral("-%1").arg(code); }
+QString down(int code)
+{
+    return QStringLiteral("+%1").arg(code);
+}
+QString up(int code)
+{
+    return QStringLiteral("-%1").arg(code);
+}
 
 }
 

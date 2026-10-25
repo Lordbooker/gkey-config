@@ -72,8 +72,8 @@ bool Settings::save(QString *error)
     root.insert(QStringLiteral("lcd"), lcd);
 
     QSaveFile file(m_filePath);
-    if (!file.open(QIODevice::WriteOnly) || file.write(QJsonDocument(root).toJson(QJsonDocument::Indented)) < 0
-        || !file.commit()) {
+    if (!file.open(QIODevice::WriteOnly) || file.write(QJsonDocument(root).toJson(QJsonDocument::Indented)) < 0 ||
+        !file.commit()) {
         if (error)
             *error = QStringLiteral("%1: %2").arg(m_filePath, file.errorString());
         return false;

@@ -32,10 +32,7 @@ bool roleHandled(const QString &role)
 
 }
 
-Daemon::Daemon(QObject *parent)
-    : QObject(parent), m_state(ConfigPaths::stateDir() + QStringLiteral("/state.json"))
-{
-}
+Daemon::Daemon(QObject *parent) : QObject(parent), m_state(ConfigPaths::stateDir() + QStringLiteral("/state.json")) {}
 
 Daemon::~Daemon()
 {
@@ -105,8 +102,8 @@ bool Daemon::start(QString *error, const DaemonStartOptions &options)
             return false;
     }
 
-    qCInfo(lcDaemon) << "running," << m_registry.models().size() << "model(s) known,"
-                     << m_macros->names().size() << "macro(s)";
+    qCInfo(lcDaemon) << "running," << m_registry.models().size() << "model(s) known," << m_macros->names().size()
+                     << "macro(s)";
     return true;
 }
 
@@ -353,8 +350,8 @@ void Daemon::onProfileRequested(const QString &modelId, const QString &target)
         }
     }
     if (name.isEmpty()) {
-        qCWarning(lcDaemon).noquote() << QStringLiteral("%1: profile \"%2\" does not exist")
-                                             .arg(ctx->model.name(), target);
+        qCWarning(lcDaemon).noquote()
+            << QStringLiteral("%1: profile \"%2\" does not exist").arg(ctx->model.name(), target);
         return;
     }
     setProfile(modelId, name);

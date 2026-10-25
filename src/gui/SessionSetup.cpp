@@ -24,9 +24,7 @@ QString trayExec()
 
 }
 
-SessionSetup::SessionSetup(QObject *parent) : QObject(parent)
-{
-}
+SessionSetup::SessionSetup(QObject *parent) : QObject(parent) {}
 
 void SessionSetup::runSystemctl(const QStringList &arguments, const std::function<void(int, const QString &)> &done)
 {
@@ -106,8 +104,8 @@ bool SessionSetup::trayAutostart() const
 
 bool SessionSetup::setTrayAutostart(bool enabled, QString *error)
 {
-    return Autostart::setEnabled(QString::fromLatin1(TrayDesktopFile), enabled,
-                                 tr("G-Key Configuration (tray icon)"), trayExec(), Autostart::defaultPaths(), error);
+    return Autostart::setEnabled(QString::fromLatin1(TrayDesktopFile), enabled, tr("G-Key Configuration (tray icon)"),
+                                 trayExec(), Autostart::defaultPaths(), error);
 }
 
 GroupAccess::State SessionSetup::ledGroupState() const
@@ -129,12 +127,17 @@ void SessionSetup::requestLedAccess()
     QStringList arguments;
     if (GroupAccess::state(group) == GroupAccess::State::Missing) {
         // Normally created by the package (sysusers.d); not for a manual installation.
-        arguments = {QStringLiteral("/bin/sh"), QStringLiteral("-c"),
-                     QStringLiteral("getent group \"$1\" >/dev/null || groupadd -r \"$1\" && usermod -aG \"$1\" \"$2\""),
-                     QStringLiteral("gkey-config"), group, user};
+        arguments = {
+            QStringLiteral("/bin/sh"),
+            QStringLiteral("-c"),
+            QStringLiteral("getent group \"$1\" >/dev/null || groupadd -r \"$1\" && usermod -aG \"$1\" \"$2\""),
+            QStringLiteral("gkey-config"),
+            group,
+            user};
     } else {
         const QString usermod = QStandardPaths::findExecutable(
-            QStringLiteral("usermod"), {QStringLiteral("/usr/sbin"), QStringLiteral("/usr/bin"), QStringLiteral("/sbin")});
+            QStringLiteral("usermod"),
+            {QStringLiteral("/usr/sbin"), QStringLiteral("/usr/bin"), QStringLiteral("/sbin")});
         arguments = {usermod.isEmpty() ? QStringLiteral("/usr/sbin/usermod") : usermod, QStringLiteral("-aG"), group,
                      user};
     }

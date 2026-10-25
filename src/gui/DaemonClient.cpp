@@ -26,10 +26,8 @@ DaemonClient::DaemonClient(QObject *parent) : QObject(parent)
 {
     QDBusConnection bus = QDBusConnection::sessionBus();
 
-    m_watcher = new QDBusServiceWatcher(Service, bus,
-                                        QDBusServiceWatcher::WatchForRegistration
-                                            | QDBusServiceWatcher::WatchForUnregistration,
-                                        this);
+    m_watcher = new QDBusServiceWatcher(
+        Service, bus, QDBusServiceWatcher::WatchForRegistration | QDBusServiceWatcher::WatchForUnregistration, this);
     connect(m_watcher, &QDBusServiceWatcher::serviceRegistered, this, [this] {
         setAvailable(true);
         refreshStatus();

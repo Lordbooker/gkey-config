@@ -79,8 +79,8 @@ void TestSession::systemEntry()
     QVERIFY(read(QDir(m_paths.userDir).filePath(FileName)).contains("Hidden=true"));
 
     // On again: the user file is removed, the system-wide entry applies.
-    QVERIFY(Autostart::setEnabled(FileName, true, QStringLiteral("Tray"), QStringLiteral("gkey-config --tray"),
-                                  m_paths, &error));
+    QVERIFY(Autostart::setEnabled(FileName, true, QStringLiteral("Tray"), QStringLiteral("gkey-config --tray"), m_paths,
+                                  &error));
     QVERIFY(Autostart::isEnabled(FileName, m_paths));
     QVERIFY(!QFile::exists(QDir(m_paths.userDir).filePath(FileName)));
 }

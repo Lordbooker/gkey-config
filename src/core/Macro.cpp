@@ -31,9 +31,8 @@ std::expected<Macro, QString> Macro::fromJson(const QByteArray &json)
     QJsonParseError parseError;
     const QJsonDocument document = QJsonDocument::fromJson(json, &parseError);
     if (parseError.error != QJsonParseError::NoError)
-        return std::unexpected(QStringLiteral("invalid JSON at offset %1: %2")
-                                   .arg(parseError.offset)
-                                   .arg(parseError.errorString()));
+        return std::unexpected(
+            QStringLiteral("invalid JSON at offset %1: %2").arg(parseError.offset).arg(parseError.errorString()));
     if (!document.isObject())
         return std::unexpected(QStringLiteral("top level must be an object"));
     QJsonObject root = document.object();

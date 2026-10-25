@@ -93,8 +93,8 @@ void LcdWriter::write(const QByteArray &report)
     const int err = errno;
     if (!m_errorLogged) {
         m_errorLogged = true;
-        qCWarning(lcLcd).noquote() << QStringLiteral("%1: LCD write failed: %2")
-                                          .arg(m_deviceName, SystemError::text(err));
+        qCWarning(lcLcd).noquote()
+            << QStringLiteral("%1: LCD write failed: %2").arg(m_deviceName, SystemError::text(err));
     }
     ::close(m_fd);   // reopen for the next report
     m_fd = -1;

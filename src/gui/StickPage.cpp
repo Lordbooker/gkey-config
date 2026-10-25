@@ -63,10 +63,10 @@ StickPage::StickPage(QWidget *parent) : QWidget(parent)
 
     auto *calibration = new QGroupBox(tr("Rest position"), this);
     auto *calibrationLayout = new QVBoxLayout(calibration);
-    auto *calibrationHint = new QLabel(
-        tr("The dead zone is centred on the position the stick rests in. Let go of the stick and click "
-           "the button to measure it."),
-        calibration);
+    auto *calibrationHint =
+        new QLabel(tr("The dead zone is centred on the position the stick rests in. Let go of the stick and click "
+                      "the button to measure it."),
+                   calibration);
     calibrationHint->setWordWrap(true);
     m_rest = new QLabel(calibration);
     m_calibrate = new QPushButton(tr("Measure rest position"), calibration);

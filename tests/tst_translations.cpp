@@ -122,8 +122,8 @@ void TestTranslations::initTestCase()
     const QByteArray output = lupdate.readAll();
     // lupdate itself cannot start (e.g. on Arch without qt6-declarative):
     // that is a missing tool, not a translation problem.
-    if (lupdate.exitStatus() != QProcess::NormalExit || lupdate.exitCode() == 127
-        || output.contains("error while loading shared libraries"))
+    if (lupdate.exitStatus() != QProcess::NormalExit || lupdate.exitCode() == 127 ||
+        output.contains("error while loading shared libraries"))
         QSKIP(qPrintable(QStringLiteral("lupdate cannot run: ") + QString::fromLocal8Bit(output).trimmed()));
     QVERIFY2(lupdate.exitCode() == 0, output.constData());
     QString error;

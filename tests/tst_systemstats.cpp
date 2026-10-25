@@ -278,7 +278,9 @@ void TestSystemStats::renderCpuTemperatures()
             QCOMPARE(frame.pixel(x, y), expected.pixel(x, y));
 
     // More sensors: combined after the first one; without its name if needed.
-    cpu.temperatures = {{QStringLiteral("Tctl"), 70}, {QStringLiteral("Tccd1"), 61}, {QStringLiteral("Tccd2"), 63},
+    cpu.temperatures = {{QStringLiteral("Tctl"), 70},
+                        {QStringLiteral("Tccd1"), 61},
+                        {QStringLiteral("Tccd2"), 63},
                         {QStringLiteral("Tccd3"), 60}};
     cpu.percent = 100;
     LcdPages::renderCpu(frame, cpu);
@@ -365,8 +367,11 @@ void TestSystemStats::renderGpuMissingValues()
     QVERIFY(sameRows(frame, expected, 0, 43));
 
     // Too many sensors for the names: only the values.
-    gpu.temperatures = {{QStringLiteral("edge"), 62}, {QStringLiteral("junction"), 78}, {QStringLiteral("mem"), 84},
-                        {QStringLiteral("hotspot"), 90}, {QStringLiteral("vrm"), 70}};
+    gpu.temperatures = {{QStringLiteral("edge"), 62},
+                        {QStringLiteral("junction"), 78},
+                        {QStringLiteral("mem"), 84},
+                        {QStringLiteral("hotspot"), 90},
+                        {QStringLiteral("vrm"), 70}};
     LcdPages::renderGpu(frame, QStringLiteral("NV"), gpu, QString());
     expected.clear();
     expected.drawText(1, 19, QStringLiteral("62/78/84/90/70\u00b0"));

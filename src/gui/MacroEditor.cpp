@@ -175,8 +175,8 @@ MacroEditor::MacroEditor(MacroStore *store, DaemonClient *client, QWidget *paren
     // Double-click on the time of a wait or tap edits it in place.
     connect(m_steps, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item, int column) {
         const Macro::Step step = stepFromItem(item);
-        if (column == 2 && !m_recording
-            && (step.type == Macro::Step::Type::Delay || step.type == Macro::Step::Type::Tap))
+        if (column == 2 && !m_recording &&
+            (step.type == Macro::Step::Type::Delay || step.type == Macro::Step::Type::Tap))
             m_steps->editItem(item, 2);
     });
     connect(m_steps, &QTreeWidget::itemChanged, this, [this](QTreeWidgetItem *item, int column) {
@@ -327,7 +327,8 @@ void MacroEditor::onNew()
     if (!confirmDiscard())
         return;
     bool ok = false;
-    const QString name = QInputDialog::getText(this, tr("New macro"), tr("Name:"), QLineEdit::Normal, {}, &ok).trimmed();
+    const QString name =
+        QInputDialog::getText(this, tr("New macro"), tr("Name:"), QLineEdit::Normal, {}, &ok).trimmed();
     if (!ok || name.isEmpty())
         return;
     if (m_store->macro(name)) {
@@ -351,8 +352,7 @@ void MacroEditor::onDelete()
     if (m_current.isEmpty())
         return;
     const auto answer = QMessageBox::question(
-        this, tr("Delete macro"),
-        tr("Delete the macro \"%1\"? Keys bound to it will do nothing.").arg(m_current));
+        this, tr("Delete macro"), tr("Delete the macro \"%1\"? Keys bound to it will do nothing.").arg(m_current));
     if (answer != QMessageBox::Yes)
         return;
     QString error;
@@ -459,8 +459,8 @@ void MacroEditor::stopRecording()
 
 bool MacroEditor::eventFilter(QObject *watched, QEvent *event)
 {
-    if (m_recording && (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease
-                        || event->type() == QEvent::ShortcutOverride)) {
+    if (m_recording && (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease ||
+                        event->type() == QEvent::ShortcutOverride)) {
         auto *keyEvent = static_cast<QKeyEvent *>(event);
         if (event->type() == QEvent::ShortcutOverride) {
             event->accept();   // no shortcuts while recording
@@ -515,8 +515,8 @@ void MacroEditor::insertStep(Macro::Step::Type type)
     auto *item = new QTreeWidgetItem;
     applyToItem(item, step);
     const QList<QTreeWidgetItem *> selected = m_steps->selectedItems();
-    const int index = selected.isEmpty() ? m_steps->topLevelItemCount()
-                                         : m_steps->indexOfTopLevelItem(selected.last()) + 1;
+    const int index =
+        selected.isEmpty() ? m_steps->topLevelItemCount() : m_steps->indexOfTopLevelItem(selected.last()) + 1;
     m_steps->insertTopLevelItem(index, item);
     m_steps->setCurrentItem(item);
     setDirty(true);

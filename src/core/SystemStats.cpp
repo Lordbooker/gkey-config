@@ -74,10 +74,7 @@ QString temperatureFile(const QString &hwmon, const QStringList &preferredLabels
 
 }
 
-SystemStats::SystemStats(const QString &procRoot, const QString &sysRoot)
-    : m_procRoot(procRoot), m_sysRoot(sysRoot)
-{
-}
+SystemStats::SystemStats(const QString &procRoot, const QString &sysRoot) : m_procRoot(procRoot), m_sysRoot(sysRoot) {}
 
 void SystemStats::findSensors()
 {
@@ -152,7 +149,8 @@ std::optional<int> SystemStats::cpuPercent()
     std::optional<int> percent;
     if (m_lastTotal >= 0 && total > m_lastTotal) {
         const qint64 busy = (total - m_lastTotal) - (idle - m_lastIdle);
-        percent = static_cast<int>(std::clamp<qint64>((busy * 100 + (total - m_lastTotal) / 2) / (total - m_lastTotal), 0, 100));
+        percent = static_cast<int>(
+            std::clamp<qint64>((busy * 100 + (total - m_lastTotal) / 2) / (total - m_lastTotal), 0, 100));
     }
     m_lastTotal = total;
     m_lastIdle = idle;

@@ -76,16 +76,17 @@ void TestProfiles::actions_data()
     QTest::newRow("unknown key") << QByteArray(R"({"type":"key","key":"KEY_NOPE"})") << QStringLiteral("unknown key");
     QTest::newRow("joystick button as key")
         << QByteArray(R"({"type":"key","key":"BTN_THUMB"})") << QStringLiteral("not a keyboard key");
-    QTest::newRow("macro key as key")
-        << QByteArray(R"({"type":"key","key":"BTN_TRIGGER_HAPPY1"})") << QStringLiteral("not a keyboard key");
-    QTest::newRow("combo of one") << QByteArray(R"({"type":"combo","keys":["KEY_A"]})") << QStringLiteral("at least two");
-    QTest::newRow("combo duplicate")
-        << QByteArray(R"({"type":"combo","keys":["KEY_A","KEY_A"]})") << QStringLiteral("twice");
+    QTest::newRow("macro key as key") << QByteArray(R"({"type":"key","key":"BTN_TRIGGER_HAPPY1"})")
+                                      << QStringLiteral("not a keyboard key");
+    QTest::newRow("combo of one") << QByteArray(R"({"type":"combo","keys":["KEY_A"]})")
+                                  << QStringLiteral("at least two");
+    QTest::newRow("combo duplicate") << QByteArray(R"({"type":"combo","keys":["KEY_A","KEY_A"]})")
+                                     << QStringLiteral("twice");
     QTest::newRow("keyboard key as mouse")
         << QByteArray(R"({"type":"mouse","button":"KEY_A"})") << QStringLiteral("not a mouse button");
     QTest::newRow("mode 4") << QByteArray(R"({"type":"mode","mode":4})") << QStringLiteral("1, 2 or 3");
-    QTest::newRow("macro repeat")
-        << QByteArray(R"({"type":"macro","macro":"x","repeat":"forever"})") << QStringLiteral("unknown repeat");
+    QTest::newRow("macro repeat") << QByteArray(R"({"type":"macro","macro":"x","repeat":"forever"})")
+                                  << QStringLiteral("unknown repeat");
 }
 
 void TestProfiles::actions()
@@ -181,7 +182,8 @@ void TestProfiles::profileRoundTrip()
     QCOMPARE(again->stick(), profile->stick());
     QCOMPARE(again->backlightLevel(), std::optional<int>(1));
     QCOMPARE(again->lcdBacklightLevel(), std::optional<int>(0));
-    QCOMPARE(QJsonDocument::fromJson(again->toJson()).object().value(u"futureOption").toObject().value(u"a").toInt(), 1);
+    QCOMPARE(QJsonDocument::fromJson(again->toJson()).object().value(u"futureOption").toObject().value(u"a").toInt(),
+             1);
 }
 
 // Bindings the daemon cannot use (unknown key name, key not bindable on the
@@ -212,11 +214,17 @@ void TestProfiles::invalidBindingsAreKept()
     // An explicit change of the key replaces the inactive binding.
     profile->setBinding(1, QStringLiteral("G1"), Action::key(KEY_5));
     const QJsonObject changed = QJsonDocument::fromJson(profile->toJson()).object();
-    QCOMPARE(changed.value(u"modes").toObject().value(u"M1").toObject().value(u"G1").toObject().value(u"key").toString(),
-             QStringLiteral("KEY_5"));
+    QCOMPARE(
+        changed.value(u"modes").toObject().value(u"M1").toObject().value(u"G1").toObject().value(u"key").toString(),
+        QStringLiteral("KEY_5"));
     profile->removeBinding(1, QStringLiteral("BD"));
-    QVERIFY(!QJsonDocument::fromJson(profile->toJson()).object().value(u"modes").toObject()
-                 .value(u"M1").toObject().contains(u"BD"));
+    QVERIFY(!QJsonDocument::fromJson(profile->toJson())
+                 .object()
+                 .value(u"modes")
+                 .toObject()
+                 .value(u"M1")
+                 .toObject()
+                 .contains(u"BD"));
 }
 
 void TestProfiles::profileValidation()
@@ -306,7 +314,8 @@ void TestProfiles::storeRenameAndRemove()
     QVERIFY(store.rename(QStringLiteral("Old"), QStringLiteral("New Name"), &error));
     QVERIFY(!QFile::exists(dir.filePath(QStringLiteral("g13/old.json"))));
     QVERIFY(QFile::exists(dir.filePath(QStringLiteral("g13/new-name.json"))));
-    QCOMPARE(store.profile(QStringLiteral("New Name"))->bindings(2).value(QStringLiteral("G7")).codes(), QList<int>{KEY_7});
+    QCOMPARE(store.profile(QStringLiteral("New Name"))->bindings(2).value(QStringLiteral("G7")).codes(),
+             QList<int>{KEY_7});
 
     QVERIFY(store.remove(QStringLiteral("Other"), &error));
     QCOMPARE(store.names(), QStringList{QStringLiteral("New Name")});

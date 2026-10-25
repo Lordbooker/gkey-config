@@ -239,8 +239,9 @@ void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu)
     frame.drawText(1, 1, load);
     // textWidth() leaves out the gap after the last character: + 1 for it
     const int tempX = 1 + LcdFrame::textWidth(load + u' ') + 1;
-    frame.drawText(tempX, 1,
-                   LcdFrame::elided(cpuTemperatures(cpu.temperatures, frame.width() - tempX - 1), frame.width() - tempX - 1));
+    frame.drawText(
+        tempX, 1,
+        LcdFrame::elided(cpuTemperatures(cpu.temperatures, frame.width() - tempX - 1), frame.width() - tempX - 1));
 
     // Bars: x 1..158, y 10..42; scale from 0 to the highest clock
     constexpr int Left = 1;
@@ -291,12 +292,12 @@ void renderGpu(LcdFrame &frame, const QString &title, const std::optional<System
     drawRight(frame, 1, percentText(gpu->busyPercent));
 
     // Row 2: clocks
-    frame.drawText(1, 10,
-                   QStringLiteral("Core %1 Mem %2 MHz").arg(megahertz(gpu->coreMHz), megahertz(gpu->memMHz)));
+    frame.drawText(1, 10, QStringLiteral("Core %1 Mem %2 MHz").arg(megahertz(gpu->coreMHz), megahertz(gpu->memMHz)));
 
     // Row 3: temperatures
     if (!gpu->temperatures.isEmpty())
-        frame.drawText(1, 19, LcdFrame::elided(gpuTemperatures(gpu->temperatures, frame.width() - 2), frame.width() - 2));
+        frame.drawText(1, 19,
+                       LcdFrame::elided(gpuTemperatures(gpu->temperatures, frame.width() - 2), frame.width() - 2));
 
     // Row 4: VRAM bar and used/total
     if (gpu->vram) {

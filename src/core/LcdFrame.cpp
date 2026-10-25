@@ -57,14 +57,18 @@ void LcdFrame::drawRect(int x, int y, int width, int height)
 QString LcdFrame::toAscii(const QString &text)
 {
     static const QHash<QChar, QString> replacements = {
-        {QChar(0xe4), QStringLiteral("ae")}, {QChar(0xf6), QStringLiteral("oe")}, {QChar(0xfc), QStringLiteral("ue")},
-        {QChar(0xc4), QStringLiteral("Ae")}, {QChar(0xd6), QStringLiteral("Oe")}, {QChar(0xdc), QStringLiteral("Ue")},
-        {QChar(0xdf), QStringLiteral("ss")}, {QChar(0x2013), QStringLiteral("-")}, {QChar(0x2014), QStringLiteral("-")},
-        {QChar(0x201e), QStringLiteral("\"")}, {QChar(0x201c), QStringLiteral("\"")}, {QChar(0x201d), QStringLiteral("\"")},
-        {QChar(0xab), QStringLiteral("\"")}, {QChar(0xbb), QStringLiteral("\"")}, {QChar(0x2018), QStringLiteral("'")},
-        {QChar(0x2019), QStringLiteral("'")}, {QChar(0x2026), QStringLiteral("...")}, {QChar(0xa0), QStringLiteral(" ")},
-        {QChar(0x202f), QStringLiteral(" ")}, {QChar(0xc6), QStringLiteral("AE")}, {QChar(0xe6), QStringLiteral("ae")},
-        {QChar(0x152), QStringLiteral("OE")}, {QChar(0x153), QStringLiteral("oe")}, {QChar(0xaa), QStringLiteral("a")},
+        {QChar(0xe4), QStringLiteral("ae")},    {QChar(0xf6), QStringLiteral("oe")},
+        {QChar(0xfc), QStringLiteral("ue")},    {QChar(0xc4), QStringLiteral("Ae")},
+        {QChar(0xd6), QStringLiteral("Oe")},    {QChar(0xdc), QStringLiteral("Ue")},
+        {QChar(0xdf), QStringLiteral("ss")},    {QChar(0x2013), QStringLiteral("-")},
+        {QChar(0x2014), QStringLiteral("-")},   {QChar(0x201e), QStringLiteral("\"")},
+        {QChar(0x201c), QStringLiteral("\"")},  {QChar(0x201d), QStringLiteral("\"")},
+        {QChar(0xab), QStringLiteral("\"")},    {QChar(0xbb), QStringLiteral("\"")},
+        {QChar(0x2018), QStringLiteral("'")},   {QChar(0x2019), QStringLiteral("'")},
+        {QChar(0x2026), QStringLiteral("...")}, {QChar(0xa0), QStringLiteral(" ")},
+        {QChar(0x202f), QStringLiteral(" ")},   {QChar(0xc6), QStringLiteral("AE")},
+        {QChar(0xe6), QStringLiteral("ae")},    {QChar(0x152), QStringLiteral("OE")},
+        {QChar(0x153), QStringLiteral("oe")},   {QChar(0xaa), QStringLiteral("a")},
         {QChar(0xba), QStringLiteral("o")},
     };
     QString result;

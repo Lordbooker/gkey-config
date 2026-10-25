@@ -10,10 +10,10 @@
 #include <QLibraryInfo>
 #include <QLocalServer>
 #include <QLocalSocket>
-#include <QPalette>
-#include <QStyleFactory>
 #include <QLocale>
+#include <QPalette>
 #include <QStandardPaths>
+#include <QStyleFactory>
 #include <QTimer>
 #include <QTranslator>
 
@@ -105,12 +105,14 @@ int main(int argc, char *argv[])
     // the XDG desktop portal, which fails (with a warning) when the desktop
     // file is not installed, e.g. when started from the build directory.
     const QString desktopFile = QStringLiteral("io.github.lordbooker.GKeyConfig");
-    if (!QStandardPaths::locate(QStandardPaths::ApplicationsLocation, desktopFile + QStringLiteral(".desktop")).isEmpty())
+    if (!QStandardPaths::locate(QStandardPaths::ApplicationsLocation, desktopFile + QStringLiteral(".desktop"))
+             .isEmpty())
         QApplication::setDesktopFileName(desktopFile);
     installTranslations(app);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(QApplication::translate("main", "Configuration of the gaming keys of Logitech G keyboards."));
+    parser.setApplicationDescription(
+        QApplication::translate("main", "Configuration of the gaming keys of Logitech G keyboards."));
     parser.addHelpOption();
     parser.addVersionOption();
     const QCommandLineOption trayOption(QStringLiteral("tray"),
@@ -127,8 +129,8 @@ int main(int argc, char *argv[])
     const QCommandLineOption modelOption(QStringLiteral("show-model"),
                                          QApplication::translate("main", "With --screenshot: show this device model."),
                                          QStringLiteral("model"));
-    const QCommandLineOption darkOption(QStringLiteral("dark"),
-                                        QApplication::translate("main", "With --screenshot: use a dark colour scheme."));
+    const QCommandLineOption darkOption(
+        QStringLiteral("dark"), QApplication::translate("main", "With --screenshot: use a dark colour scheme."));
     parser.addOption(trayOption);
     parser.addOption(darkOption);
     parser.addOption(modelOption);
