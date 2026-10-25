@@ -136,8 +136,8 @@ void TestSystemStats::withoutGpu()
     QVERIFY(!stats.sample().gpu);
 }
 
-// 9800X3D-like: 2 physical cores with 2 threads each in the fake tree; the
-// clock of a core is the highest of its threads (cpufreq in kHz).
+// 9800X3D-like: 2 physical cores with 2 threads each in the fake tree; one
+// clock per thread, in the order of the CPU numbers (cpufreq in kHz).
 void TestSystemStats::cpuDetail()
 {
     const QString cpu = sys() + QStringLiteral("/devices/system/cpu/cpu%1");
@@ -154,7 +154,7 @@ void TestSystemStats::cpuDetail()
 
     SystemStats stats(proc(), sys());
     const SystemStats::CpuDetail detail = stats.cpuDetail();
-    QCOMPARE(detail.coreMHz, (QList<int>{5100, 1200}));
+    QCOMPARE(detail.cpuMHz, (QList<int>{4111, 603, 5100, 1200}));
     QCOMPARE(detail.minMHz, 603);
     QCOMPARE(detail.maxMHz, 5271);
     QCOMPARE(detail.temperatures.size(), 2);
@@ -226,7 +226,7 @@ void TestSystemStats::renderCpuBars()
     cpu.minMHz = 600;
     cpu.maxMHz = 5300;
     for (int i = 0; i < cores; ++i)
-        cpu.coreMHz.append(i % 2 ? 600 : 5300);
+        cpu.cpuMHz.append(i % 2 ? 600 : 5300);
     LcdFrame frame(160, 43);
     LcdPages::renderCpu(frame, cpu);
 
@@ -258,7 +258,7 @@ void TestSystemStats::renderCpuTemperatures()
     cpu.percent = 5;
     cpu.minMHz = 600;
     cpu.maxMHz = 5300;
-    cpu.coreMHz = {4000};
+    cpu.cpuMHz = {4000};
     cpu.temperatures = {{QStringLiteral("Tctl"), 44.5}, {QStringLiteral("Tccd1"), 28.6}};
     LcdFrame expected(160, 43);
     expected.clear();

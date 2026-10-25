@@ -249,7 +249,7 @@ void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu)
     constexpr int Left = 28, Top = 10;
     const int width = frame.width() - Left - 1;
     const int height = frame.height() - Top;
-    if (cpu.coreMHz.isEmpty() || cpu.maxMHz <= cpu.minMHz) {
+    if (cpu.cpuMHz.isEmpty() || cpu.maxMHz <= cpu.minMHz) {
         frame.drawText(Left, Top + height / 2 - 4, QStringLiteral("no clock (cpufreq)"));
         return;
     }
@@ -258,7 +258,7 @@ void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu)
 
     // More cores than columns: one column shows the highest clock of the
     // cores it stands for.
-    const int cores = static_cast<int>(cpu.coreMHz.size());
+    const int cores = static_cast<int>(cpu.cpuMHz.size());
     const int count = qMin(cores, width);
     const int pitch = width / count;
     const int gap = pitch >= 3 ? 1 : 0;
@@ -266,7 +266,7 @@ void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu)
     for (int i = 0; i < count; ++i) {
         const int first = i * cores / count;
         const int last = (i + 1) * cores / count;
-        const int mhz = *std::max_element(cpu.coreMHz.cbegin() + first, cpu.coreMHz.cbegin() + last);
+        const int mhz = *std::max_element(cpu.cpuMHz.cbegin() + first, cpu.cpuMHz.cbegin() + last);
         const double share = std::clamp(double(mhz - cpu.minMHz) / (cpu.maxMHz - cpu.minMHz), 0.0, 1.0);
         const int barHeight = qMax(1, qRound(share * height));
         frame.fillRect(start + i * pitch, frame.height() - barHeight, pitch - gap, barHeight);

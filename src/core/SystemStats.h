@@ -35,7 +35,7 @@ public:
     struct CpuDetail {
         std::optional<int> percent;        // load since the previous call
         QList<Temperature> temperatures;   // all of the CPU sensor, e.g. Tctl, Tccd1
-        QList<int> coreMHz;                // current clock per physical core
+        QList<int> cpuMHz;                 // current clock per logical CPU (thread)
         int minMHz = 0;                    // clock range of the CPU (cpufreq)
         int maxMHz = 0;
     };
@@ -68,8 +68,7 @@ public:
     // Reads all values. The CPU load is the load since the previous call.
     Sample sample();
 
-    // CPU load, temperatures and the clock of each physical core (the
-    // threads of a core share it; the highest of them is taken).
+    // CPU load, temperatures and the clock of each logical CPU.
     CpuDetail cpuDetail();
 
     // The AMD GPU (amdgpu) with the most VRAM; nullopt without one.
@@ -84,7 +83,7 @@ private:
     bool m_sensorsSearched = false;
     QString m_cpuTempFile;   // hwmon temp*_input of the CPU package
     QString m_cpuHwmon;      // hwmon directory of the CPU sensor
-    QList<QStringList> m_cores;   // per physical core: cpufreq directories of its threads
+    QStringList m_cpufreq;   // cpufreq directory of each logical CPU
     QString m_gpuDevice;     // /sys/class/drm/cardN/device
     QString m_gpuTempFile;
     QString m_gpuHwmon;      // hwmon directory of that GPU

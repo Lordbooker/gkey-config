@@ -118,24 +118,14 @@ void SystemStats::findSensors()
             m_gpuDevice = device;
         }
     }
-    // Physical cores: threads with the same package and core id.
+    // Logical CPUs (each thread of a core) in the order of their numbers.
     const QDir cpuDir(m_sysRoot + QStringLiteral("/devices/system/cpu"));
     QStringList cpus = cpuDir.entryList({QStringLiteral("cpu[0-9]*")}, QDir::Dirs | QDir::System);
     std::sort(cpus.begin(), cpus.end(), [](const QString &a, const QString &b) { return a.mid(3).toInt() < b.mid(3).toInt(); });
-    QList<QString> coreKeys;
     for (const QString &cpu : cpus) {
-        const QString path = cpuDir.filePath(cpu);
-        if (!QFile::exists(path + QStringLiteral("/cpufreq/scaling_cur_freq")))
-            continue;   // offline or without cpufreq
-        const QString key = readLine(path + QStringLiteral("/topology/physical_package_id")) + u':'
-                            + readLine(path + QStringLiteral("/topology/core_id"));
-        qsizetype index = coreKeys.indexOf(key);
-        if (index < 0) {
-            coreKeys.append(key);
-            m_cores.append(QStringList());
-            index = m_cores.size() - 1;
-        }
-        m_cores[index].append(path + QStringLiteral("/cpufreq"));
+        const QString cpufreq = cpuDir.filePath(cpu) + QStringLiteral("/cpufreq");
+        if (QFile::exists(cpufreq + QStringLiteral("/scaling_cur_freq")))   // else offline or without cpufreq
+            m_cpufreq.append(cpufreq);
     }
 
     if (!m_gpuDevice.isEmpty()) {
@@ -222,14 +212,11 @@ SystemStats::CpuDetail SystemStats::cpuDetail()
     detail.percent = cpuPercent();
     if (!m_cpuHwmon.isEmpty())
         detail.temperatures = temperatures(m_cpuHwmon);
-    for (const QStringList &threads : std::as_const(m_cores)) {
-        qint64 kHz = 0;
-        for (const QString &cpufreq : threads)
-            kHz = std::max(kHz, readNumber(cpufreq + QStringLiteral("/scaling_cur_freq")).value_or(0));
-        detail.coreMHz.append(static_cast<int>(kHz / 1000));
-    }
-    if (!m_cores.isEmpty()) {
-        const QString &first = m_cores.first().first();
+    for (const QString &cpufreq : std::as_const(m_cpufreq))
+        detail.cpuMHz.append(
+            static_cast<int>(readNumber(cpufreq + QStringLiteral("/scaling_cur_freq")).value_or(0) / 1000));
+    if (!m_cpufreq.isEmpty()) {
+        const QString &first = m_cpufreq.first();
         detail.minMHz = static_cast<int>(readNumber(first + QStringLiteral("/cpuinfo_min_freq")).value_or(0) / 1000);
         detail.maxMHz = static_cast<int>(readNumber(first + QStringLiteral("/cpuinfo_max_freq")).value_or(0) / 1000);
     }
