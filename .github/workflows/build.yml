@@ -40,12 +40,20 @@ jobs:
           # (.clang-tidy, scripts/clang-tidy.sh).
           - distro: Arch Linux (Clang, clang-tidy)
             image: archlinux:latest
-            compiler: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+            options: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
             tidy: true
             install: >-
               pacman -Syu --noconfirm --needed
               base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
               clang python
+          # Tests with AddressSanitizer (memory errors, leaks) and
+          # UndefinedBehaviorSanitizer.
+          - distro: Arch Linux (ASan, UBSan)
+            image: archlinux:latest
+            options: -DENABLE_SANITIZERS=ON
+            install: >-
+              pacman -Syu --noconfirm --needed
+              base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
           - distro: Fedora
             image: fedora:latest
             install: >-
@@ -69,12 +77,15 @@ jobs:
       - name: Configure
         run: >-
           cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type || 'Debug' }} -DBUILD_TESTS=ON
-          -DENABLE_WERROR=ON -DCMAKE_INSTALL_PREFIX=/usr ${{ matrix.compiler }}
+          -DENABLE_WERROR=ON -DCMAKE_INSTALL_PREFIX=/usr ${{ matrix.options }}
 
       - name: Build
         run: cmake --build build --parallel
 
       - name: Test
+        env:
+          ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+          UBSAN_OPTIONS: print_stacktrace=1
         run: ctest --test-dir build --output-on-failure
 
       - name: clang-tidy

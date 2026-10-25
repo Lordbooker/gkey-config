@@ -38,7 +38,8 @@ option(ENABLE_SANITIZERS "Enable ASan/UBSan in debug builds"             OFF)
 option(ENABLE_WERROR     "Treat compiler warnings as errors (CI)"         OFF)
 
 if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+    # -fno-sanitize-recover: undefined behaviour ends the program (fails the test)
+    add_compile_options(-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer)
     add_link_options(-fsanitize=address,undefined)
 endif()
 
