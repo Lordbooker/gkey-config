@@ -1,13 +1,18 @@
 # SPDX-FileCopyrightText: 2026 Lordbooker
 # SPDX-License-Identifier: GPL-2.0-only
 
+# Checks: builds and tests with GCC and Clang, clang-tidy, sanitizers,
+# formatting, udev/desktop/AppStream files and REUSE. Runs on its own for main
+# and pull requests; on dev and for release tags "Release packages" runs it
+# first and builds packages only when it passes (no double run on dev).
 name: Build
 
 on:
   push:
-    branches: [dev, main]
+    branches: [main]
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
