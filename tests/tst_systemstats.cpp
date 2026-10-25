@@ -7,6 +7,7 @@
 #include "LcdFont.h"
 #include "LcdFrame.h"
 #include "LcdPages.h"
+#include "NvidiaStats.h"
 #include "SystemStats.h"
 
 #include <QDir>
@@ -27,6 +28,7 @@ private slots:
     void withoutGpu();
     void cpuDetail();
     void amdGpuDetail();
+    void nvidiaWithoutDriver();
     void formatSize();
     void degreeSign();
     void renderFourRows();
@@ -188,6 +190,15 @@ void TestSystemStats::amdGpuDetail()
     QCOMPARE(detail->powerWatts, std::optional<double>(312.0));
     QCOMPARE(detail->fanRpm, std::optional<int>(1450));
     QVERIFY(detail->vram);
+}
+
+// Without the NVIDIA driver there is no sample and a reason for the page.
+void TestSystemStats::nvidiaWithoutDriver()
+{
+    NvidiaStats nvidia(QStringLiteral("gkey-config-no-such-library"));
+    QVERIFY(!nvidia.sample());
+    QVERIFY(!nvidia.problem().isEmpty());
+    QVERIFY(!nvidia.sample());   // tried once, no second attempt that could log again
 }
 
 void TestSystemStats::formatSize()
