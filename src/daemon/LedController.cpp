@@ -3,12 +3,13 @@
 
 #include "LedController.h"
 
+#include "SystemError.h"
+
 #include <QDir>
 #include <QFile>
 #include <QLoggingCategory>
 
 #include <cerrno>
-#include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -126,7 +127,7 @@ bool LedController::writeAttribute(const QString &role, const QString &attribute
     } else {
         qCWarning(lcLeds).noquote() << QStringLiteral("%1: cannot write %2: %3")
                                            .arg(m_model.name(), QString::fromLocal8Bit(path),
-                                                QString::fromLocal8Bit(std::strerror(err)));
+                                                SystemError::text(err));
     }
     return false;
 }

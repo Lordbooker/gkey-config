@@ -5,12 +5,14 @@
 
 #include "Autostart.h"
 #include "GroupAccess.h"
+#include "SystemError.h"
 
 #include <QDir>
 #include <QFile>
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <cerrno>
 #include <memory>
 
 #include <grp.h>
@@ -44,6 +46,7 @@ private slots:
     void noSystemEntry();
     void gnomeDisabledEntry();
     void groupStates();
+    void errorText();
 
 private:
     std::unique_ptr<QTemporaryDir> m_dir;
@@ -110,6 +113,15 @@ void TestSession::groupStates()
         QSKIP("own group not in the group database");
     QCOMPARE(GroupAccess::state(QString::fromLocal8Bit(own->gr_name)), GroupAccess::State::Active);
     QVERIFY(!GroupAccess::userName().isEmpty());
+}
+
+// The errno description from strerror_r() (text depends on the locale).
+void TestSession::errorText()
+{
+    const QString denied = SystemError::text(EACCES);
+    QVERIFY(!denied.isEmpty());
+    QVERIFY(denied != SystemError::text(ENOENT));
+    QVERIFY(!SystemError::text(99999).isEmpty());   // unknown number
 }
 
 QTEST_GUILESS_MAIN(TestSession)

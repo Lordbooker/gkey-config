@@ -57,6 +57,8 @@ add_library(gkey-core STATIC
     StickProcessor.h
     StickSettings.cpp
     StickSettings.h
+    SystemError.cpp
+    SystemError.h
     SystemStats.cpp
     SystemStats.h
 )

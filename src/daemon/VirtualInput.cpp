@@ -4,13 +4,13 @@
 #include "VirtualInput.h"
 
 #include "OutputCodes.h"
+#include "SystemError.h"
 
 #include <libevdev/libevdev-uinput.h>
 #include <libevdev/libevdev.h>
 
 #include <QLoggingCategory>
 
-#include <cstring>
 
 Q_LOGGING_CATEGORY(lcOutput, "gkey.output")
 
@@ -49,7 +49,7 @@ bool VirtualInput::create(QString *error)
         m_permissionDenied = rc == -EACCES || rc == -EPERM;
         if (error) {
             *error = QStringLiteral("cannot create the virtual input device (/dev/uinput): %1")
-                         .arg(QString::fromLocal8Bit(std::strerror(-rc)));
+                         .arg(SystemError::text(-rc));
             if (rc == -EACCES)
                 *error += QStringLiteral(" - is the udev rule 70-gkey-config.rules installed?");
         }
@@ -81,7 +81,7 @@ void VirtualInput::write(unsigned int type, int code, int value)
     // Logged once per kind of error, so a broken device cannot flood the journal.
     if (rc < 0 && rc != m_lastError) {
         qCWarning(lcOutput).noquote() << QStringLiteral("writing to the virtual input device failed: %1")
-                                             .arg(QString::fromLocal8Bit(std::strerror(-rc)));
+                                             .arg(SystemError::text(-rc));
     }
     m_lastError = rc < 0 ? rc : 0;
 }

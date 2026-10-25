@@ -3,10 +3,11 @@
 
 #include "LcdWriter.h"
 
+#include "SystemError.h"
+
 #include <QDir>
 
 #include <cerrno>
-#include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -72,7 +73,7 @@ bool LcdWriter::open()
         if (!m_errorLogged) {
             m_errorLogged = true;
             qCWarning(lcLcd).noquote() << QStringLiteral("%1: cannot open %2 for the LCD: %3%4")
-                                              .arg(m_deviceName, node, QString::fromLocal8Bit(std::strerror(err)),
+                                              .arg(m_deviceName, node, SystemError::text(err),
                                                    err == EACCES ? QStringLiteral(" - is the udev rule installed?")
                                                                  : QString());
         }
@@ -93,7 +94,7 @@ void LcdWriter::write(const QByteArray &report)
     if (!m_errorLogged) {
         m_errorLogged = true;
         qCWarning(lcLcd).noquote() << QStringLiteral("%1: LCD write failed: %2")
-                                          .arg(m_deviceName, QString::fromLocal8Bit(std::strerror(err)));
+                                          .arg(m_deviceName, SystemError::text(err));
     }
     ::close(m_fd);   // reopen for the next report
     m_fd = -1;
