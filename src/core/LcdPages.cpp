@@ -215,12 +215,18 @@ void renderCpu(LcdFrame &frame, const SystemStats::CpuDetail &cpu)
     frame.drawText(1, Top, gigahertz(cpu.maxMHz));
     frame.drawText(1, frame.height() - LcdFont::Height, gigahertz(cpu.minMHz));
 
-    const int count = static_cast<int>(cpu.coreMHz.size());
-    const int pitch = qMax(1, width / count);
+    // More cores than columns: one column shows the highest clock of the
+    // cores it stands for.
+    const int cores = static_cast<int>(cpu.coreMHz.size());
+    const int count = qMin(cores, width);
+    const int pitch = width / count;
     const int gap = pitch >= 3 ? 1 : 0;
     const int start = Left + (width - pitch * count) / 2;   // centre the group
     for (int i = 0; i < count; ++i) {
-        const double share = std::clamp(double(cpu.coreMHz.at(i) - cpu.minMHz) / (cpu.maxMHz - cpu.minMHz), 0.0, 1.0);
+        const int first = i * cores / count;
+        const int last = (i + 1) * cores / count;
+        const int mhz = *std::max_element(cpu.coreMHz.cbegin() + first, cpu.coreMHz.cbegin() + last);
+        const double share = std::clamp(double(mhz - cpu.minMHz) / (cpu.maxMHz - cpu.minMHz), 0.0, 1.0);
         const int barHeight = qMax(1, qRound(share * height));
         frame.fillRect(start + i * pitch, frame.height() - barHeight, pitch - gap, barHeight);
     }

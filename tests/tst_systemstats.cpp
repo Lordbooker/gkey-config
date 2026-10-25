@@ -237,6 +237,10 @@ void TestSystemStats::renderCpuBars()
             (frame.pixel(x, 10) ? tall : low) += 1;
         inBar = lit;
     }
+    // Nothing between the clock labels and the bars.
+    for (int y = 10; y < 43; ++y)
+        for (int x = 25; x < 28; ++x)
+            QVERIFY2(!frame.pixel(x, y), qPrintable(QStringLiteral("pixel %1,%2").arg(x).arg(y)));
     if (cores <= 130 / 3) {   // with gaps every bar is a separate run
         QCOMPARE(tall + low, cores);
         QCOMPARE(tall, cores / 2);
