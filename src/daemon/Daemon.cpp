@@ -248,14 +248,15 @@ Daemon::ModelContext *Daemon::context(const QString &modelId)
 
 void Daemon::selectProfile(ModelContext &ctx, const QString &requested)
 {
-    const QStringList names = ctx.store->names();
-    QString name;
-    if (ctx.store->profile(requested))
-        name = requested;
-    else if (!names.isEmpty())
-        name = names.first();
+    // The requested profile, else the first one; the pointer is only used after the check.
+    const Profile *profile = ctx.store->profile(requested);
+    if (!profile) {
+        const QStringList names = ctx.store->names();
+        if (!names.isEmpty())
+            profile = ctx.store->profile(names.first());
+    }
 
-    ctx.profile = name.isEmpty() ? Profile() : *ctx.store->profile(name);
+    ctx.profile = profile ? *profile : Profile();
     m_state.setProfile(ctx.model.id(), ctx.profile.name());
     saveState();
 }
