@@ -88,6 +88,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.4.1" date="2026-10-26">
+      <description>
+        <p>CPU page on Intel CPUs: next to the package temperature only the hottest core is shown, and the clock scale uses the highest clock of all cores (P- and E-cores of hybrid CPUs).</p>
+      </description>
+    </release>
     <release version="1.4.0" date="2026-10-25">
       <description>
         <p>New LCD pages for the CPU (load, temperatures, clock of each thread), the AMD GPU and the NVIDIA GPU (load, clocks, temperatures, VRAM, power, fan); they are off by default and can be enabled in the LCD tab. A degree sign in text from scripts is shown correctly. Error messages are produced thread-safely.</p>

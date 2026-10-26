@@ -6,6 +6,14 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-10-26
+
+### Changed
+
+- CPU page on Intel CPUs (untested): of the per-core temperatures of `coretemp` only the hottest
+  is shown next to the package temperature (`Pkg 61° Max 68°`), and the clock scale uses the
+  highest clock of all cores (P- and E-cores of hybrid CPUs differ).
+
 ## [1.4.0] - 2026-10-25
 
 ### Added
@@ -153,7 +161,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/Lordbooker/gkey-config/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/Lordbooker/gkey-config/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/Lordbooker/gkey-config/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/Lordbooker/gkey-config/compare/v1.2.0...v1.2.1
