@@ -21,20 +21,49 @@ REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
 OUT_DIR=${1:-"$REPO_DIR/dist"}
 BUILD_DIR=$(mktemp -d)
 
+# Ubuntu mirrors, tried in this order (the first one is inside Azure, where the
+# GitHub runners are). Debian uses its own mirror (deb.debian.org) every time.
+UBUNTU_MIRRORS="http://azure.archive.ubuntu.com/ubuntu/ http://archive.ubuntu.com/ubuntu/ http://us.archive.ubuntu.com/ubuntu/"
+
+# Points the Ubuntu archive (not the security archive) to the given mirror.
+apt_set_mirror() {
+    sed -i "s#^URIs: http://[a-z.]*archive\.ubuntu\.com/ubuntu/*\$#URIs: $1#" \
+        /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
+}
+
+# Installs packages with apt. A mirror can be so slow that the CI job runs into
+# its time limit although data keeps arriving (no timeout of apt applies): the
+# index and the downloads get 5 minutes per mirror, then the next mirror is
+# tried. Packages already downloaded stay in the cache. Installing from the
+# cache has no time limit (a killed dpkg could leave the system half set up).
+apt_install() {
+    if [ "$ID" = ubuntu ]; then
+        mirrors=$UBUNTU_MIRRORS
+    else
+        mirrors="current current current"
+    fi
+    for mirror in $mirrors; do
+        [ "$mirror" = current ] || apt_set_mirror "$mirror"
+        if timeout 300 apt-get update -q &&
+            timeout 300 apt-get install -y -q --no-install-recommends --download-only "$@"; then
+            apt-get install -y -q --no-install-recommends "$@"
+            return
+        fi
+        echo "apt: mirror $mirror too slow or failing, trying the next one" >&2
+        sleep 10
+    done
+    echo "apt: no mirror delivered the packages" >&2
+    return 1
+}
+
 case "$ID" in
     debian|ubuntu)
         export DEBIAN_FRONTEND=noninteractive
         # Retry: a mirror in sync can serve inconsistent index files for a while.
-        # Timeout: a download that stalls (no data for 30 s) fails and is retried
-        # instead of hanging until the CI job is cancelled.
+        # Timeout: a download that stalls (no data for 30 s) fails and is retried.
         printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' \
             > /etc/apt/apt.conf.d/80-retries
-        for attempt in 1 2 3; do
-            apt-get update -q && break
-            [ "$attempt" = 3 ] && exit 1
-            sleep 60
-        done
-        apt-get install -y -q --no-install-recommends \
+        apt_install \
             build-essential cmake pkg-config git ca-certificates file dpkg-dev \
             qt6-base-dev qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools libgl-dev \
             libevdev-dev libudev-dev
@@ -74,7 +103,7 @@ PACKAGE=$(find "$BUILD_DIR" -maxdepth 1 \( -name '*.deb' -o -name '*.rpm' \) | h
 case "$GENERATOR" in
     DEB)
         dpkg-deb -I "$PACKAGE"
-        apt-get install -y -q --no-install-recommends "$PACKAGE"
+        apt_install "$PACKAGE"
         for dep in $(dpkg-deb -f "$PACKAGE" Recommends | tr -d ' ' | tr ',' ' '); do
             apt-cache show "$dep" >/dev/null 2>&1 || { echo "Recommended package not found: $dep" >&2; exit 1; }
         done
