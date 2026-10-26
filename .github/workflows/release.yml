@@ -38,7 +38,8 @@ jobs:
     needs: checks
     runs-on: ubuntu-latest
     # A normal build takes 2-5 minutes; a hanging mirror must not block for 6 hours.
-    timeout-minutes: 30
+    # Room for switching to other mirrors (up to 10 minutes per mirror).
+    timeout-minutes: 60
     container: ${{ matrix.image }}
     strategy:
       fail-fast: false
@@ -53,19 +54,25 @@ jobs:
       - name: Install git
         run: |
           if command -v apt-get >/dev/null; then
-            # Ubuntu mirror inside Azure (as on the GitHub runners): faster than
-            # archive.ubuntu.com. Retry: a mirror in sync can serve
-            # inconsistent index files for a while; a stalled download fails
-            # after 30 s and is retried.
-            sed -i 's#http://archive.ubuntu.com/#http://azure.archive.ubuntu.com/#' \
-              /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
-            grep -h '^URIs' /etc/apt/sources.list.d/*.sources 2>/dev/null || true
+            # Mirrors in this order (the first inside Azure, where the runners
+            # are): one that is too slow (5 minutes for the index or the
+            # downloads, although data keeps arriving) is replaced by the next.
+            # Retry: a mirror in sync can serve inconsistent index files for a
+            # while; a stalled download fails after 30 s and is retried.
+            # packaging/build-package.sh does the same for the build packages.
             printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' \
               > /etc/apt/apt.conf.d/80-retries
-            for attempt in 1 2 3; do
-              apt-get update -q && break
-              [ "$attempt" = 3 ] && exit 1
-              sleep 60
+            for mirror in http://azure.archive.ubuntu.com/ubuntu/ http://archive.ubuntu.com/ubuntu/ \
+                          http://us.archive.ubuntu.com/ubuntu/ ""; do
+              [ -n "$mirror" ] || exit 1
+              sed -i "s#^URIs: http://[a-z.]*archive\.ubuntu\.com/ubuntu/*\$#URIs: $mirror#" \
+                /etc/apt/sources.list.d/ubuntu.sources
+              grep -h '^URIs' /etc/apt/sources.list.d/*.sources
+              timeout 300 apt-get update -q &&
+                timeout 300 apt-get install -y -q --no-install-recommends --download-only git ca-certificates &&
+                break
+              echo "apt: mirror $mirror too slow or failing, trying the next one" >&2
+              sleep 10
             done
             apt-get install -y -q --no-install-recommends git ca-certificates
           else
