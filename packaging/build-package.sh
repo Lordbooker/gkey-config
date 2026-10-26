@@ -21,29 +21,54 @@ REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
 OUT_DIR=${1:-"$REPO_DIR/dist"}
 BUILD_DIR=$(mktemp -d)
 
-# Ubuntu mirrors, tried in this order (the first one is inside Azure, where the
-# GitHub runners are). Debian uses its own mirror (deb.debian.org) every time.
-UBUNTU_MIRRORS="http://azure.archive.ubuntu.com/ubuntu/ http://archive.ubuntu.com/ubuntu/ http://us.archive.ubuntu.com/ubuntu/"
+# Ubuntu mirrors in the order they are tried: archive.ubuntu.com (the default
+# of the Ubuntu images), then the mirror inside Azure (where the GitHub runners
+# are) and us.archive.ubuntu.com. Debian uses its own mirror (deb.debian.org).
+UBUNTU_MIRRORS="http://archive.ubuntu.com/ubuntu/ http://azure.archive.ubuntu.com/ubuntu/ http://us.archive.ubuntu.com/ubuntu/"
+UBUNTU_SOURCES=/etc/apt/sources.list.d/ubuntu.sources
+
+# The Ubuntu archive mirror currently set (not the security archive).
+apt_current_mirror() {
+    sed -n 's#^URIs: \(http://[a-z.]*archive\.ubuntu\.com/ubuntu/*\)$#\1#p' "$UBUNTU_SOURCES" 2>/dev/null | head -n 1
+}
 
 # Points the Ubuntu archive (not the security archive) to the given mirror.
 apt_set_mirror() {
-    sed -i "s#^URIs: http://[a-z.]*archive\.ubuntu\.com/ubuntu/*\$#URIs: $1#" \
-        /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
+    sed -i "s#^URIs: http://[a-z.]*archive\.ubuntu\.com/ubuntu/*\$#URIs: $1#" "$UBUNTU_SOURCES" 2>/dev/null || true
+}
+
+# The mirrors to try, starting with the one currently set: a mirror that worked
+# (also one chosen by the CI workflow before) is kept, the others follow in
+# their order.
+apt_mirror_order() {
+    current=$(apt_current_mirror)
+    first=""
+    rest=""
+    for mirror in $UBUNTU_MIRRORS; do
+        if [ "$mirror" = "$current" ]; then
+            first=$mirror
+        else
+            rest="$rest $mirror"
+        fi
+    done
+    echo "$first$rest"
 }
 
 # Installs packages with apt. A mirror can be so slow that the CI job runs into
 # its time limit although data keeps arriving (no timeout of apt applies): the
 # index and the downloads get 5 minutes per mirror, then the next mirror is
-# tried. Packages already downloaded stay in the cache. Installing from the
-# cache has no time limit (a killed dpkg could leave the system half set up).
+# tried and stays set for later calls. Packages already downloaded stay in the
+# cache. Installing from the cache has no time limit (a killed dpkg could leave
+# the system half set up).
 apt_install() {
     if [ "$ID" = ubuntu ]; then
-        mirrors=$UBUNTU_MIRRORS
+        mirrors=$(apt_mirror_order)
     else
         mirrors="current current current"
     fi
     for mirror in $mirrors; do
         [ "$mirror" = current ] || apt_set_mirror "$mirror"
+        echo "apt: mirror $mirror"
         if timeout 300 apt-get update -q &&
             timeout 300 apt-get install -y -q --no-install-recommends --download-only "$@"; then
             apt-get install -y -q --no-install-recommends "$@"

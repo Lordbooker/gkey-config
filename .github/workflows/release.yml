@@ -54,15 +54,16 @@ jobs:
       - name: Install git
         run: |
           if command -v apt-get >/dev/null; then
-            # Mirrors in this order (the first inside Azure, where the runners
-            # are): one that is too slow (5 minutes for the index or the
-            # downloads, although data keeps arriving) is replaced by the next.
-            # Retry: a mirror in sync can serve inconsistent index files for a
-            # while; a stalled download fails after 30 s and is retried.
-            # packaging/build-package.sh does the same for the build packages.
+            # Mirrors in this order (archive.ubuntu.com is the default of the
+            # image, the second one is inside Azure, where the runners are): one
+            # that is too slow (5 minutes for the index or the downloads,
+            # although data keeps arriving) is replaced by the next, which then
+            # stays set: packaging/build-package.sh starts with the mirror set
+            # here. Retry: a mirror in sync can serve inconsistent index files
+            # for a while; a stalled download fails after 30 s and is retried.
             printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' \
               > /etc/apt/apt.conf.d/80-retries
-            for mirror in http://azure.archive.ubuntu.com/ubuntu/ http://archive.ubuntu.com/ubuntu/ \
+            for mirror in http://archive.ubuntu.com/ubuntu/ http://azure.archive.ubuntu.com/ubuntu/ \
                           http://us.archive.ubuntu.com/ubuntu/ ""; do
               [ -n "$mirror" ] || exit 1
               sed -i "s#^URIs: http://[a-z.]*archive\.ubuntu\.com/ubuntu/*\$#URIs: $mirror#" \
