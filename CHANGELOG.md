@@ -6,6 +6,12 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Changed
+
+- CPU page on Intel CPUs (untested): of the per-core temperatures of `coretemp` only the hottest
+  is shown next to the package temperature (`Pkg 61° Max 68°`), and the clock scale uses the
+  highest clock of all cores (P- and E-cores of hybrid CPUs differ).
+
 ## [1.4.0] - 2026-10-25
 
 ### Added

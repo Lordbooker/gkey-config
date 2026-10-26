@@ -213,10 +213,11 @@ SystemStats::CpuDetail SystemStats::cpuDetail()
     for (const QString &cpufreq : std::as_const(m_cpufreq))
         detail.cpuMHz.append(
             static_cast<int>(readNumber(cpufreq + QStringLiteral("/scaling_cur_freq")).value_or(0) / 1000));
-    if (!m_cpufreq.isEmpty()) {
-        const QString &first = m_cpufreq.first();
-        detail.maxMHz = static_cast<int>(readNumber(first + QStringLiteral("/cpuinfo_max_freq")).value_or(0) / 1000);
-    }
+    // Highest clock of all CPUs: on Intel hybrid CPUs P- and E-cores differ.
+    qint64 maxKHz = 0;
+    for (const QString &cpufreq : std::as_const(m_cpufreq))
+        maxKHz = std::max(maxKHz, readNumber(cpufreq + QStringLiteral("/cpuinfo_max_freq")).value_or(0));
+    detail.maxMHz = static_cast<int>(maxKHz / 1000);
     return detail;
 }
 

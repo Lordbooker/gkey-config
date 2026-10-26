@@ -463,10 +463,13 @@ buttons are left to the system as well.
 * Hardware pages *(added after 1.3.0, decided 2026-10-24)*, redrawn once per second while shown:
   * cpu: load and all CPU temperatures in the top row (hwmon `k10temp`/`zenpower`/`coretemp`;
     `Tccd1` shortened to `CCD1`; if they do not fit, the values after the first are combined as
-    `61/63/60°`, without the first name if needed). Below, over the whole width, one bar per
+    `61/63/60°`, without the first name if needed). Intel *(added 2026-10-26, untested)*:
+    `coretemp` has one value per core besides `Package id 0`; of the cores only the hottest is
+    shown, as `Max` (`CPU 23% Pkg 61° Max 68°`). Below, over the whole width, one bar per
     **logical CPU** (each SMT thread, in the order of the CPU numbers; `cpufreq`
-    `scaling_cur_freq`), scaled from 0 to `cpuinfo_max_freq`, without clock labels *(changed
-    2026-10-25: first one bar per physical core, scaled from `cpuinfo_min_freq`, with labels)*.
+    `scaling_cur_freq`), scaled from 0 to the highest `cpuinfo_max_freq` of all CPUs (Intel
+    hybrid CPUs: P- and E-cores differ), without clock labels *(changed 2026-10-25: first one bar
+    per physical core, scaled from `cpuinfo_min_freq`, with labels)*.
     The bar width follows the number of CPUs (one-pixel gap up to 52 CPUs, single pixels up to
     158); with more CPUs than pixel columns a column stands for several CPUs and shows the
     highest clock.

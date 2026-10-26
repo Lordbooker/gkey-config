@@ -9,6 +9,7 @@
 #include <QLocale>
 
 #include <algorithm>
+#include <optional>
 
 namespace LcdPages {
 
@@ -33,9 +34,20 @@ QString percentText(const std::optional<int> &percent)
 
 // CPU temperatures as short as needed: all with their names if they fit, else
 // the first (Tctl, Tdie or package) with its name and the others combined,
-// else only the values.
-QString cpuTemperatures(const QList<SystemStats::Temperature> &temperatures, int maxWidth)
+// else only the values. Intel (coretemp) has one value per core besides the
+// package: of those only the hottest is shown, as "Max".
+QString cpuTemperatures(const QList<SystemStats::Temperature> &sensors, int maxWidth)
 {
+    QList<SystemStats::Temperature> temperatures;
+    std::optional<double> hottestCore;
+    for (const SystemStats::Temperature &t : sensors) {
+        if (t.label.startsWith(u"Core "))
+            hottestCore = std::max(hottestCore.value_or(t.celsius), t.celsius);
+        else
+            temperatures.append(t);
+    }
+    if (hottestCore)
+        temperatures.append({QStringLiteral("Max"), *hottestCore});
     if (temperatures.isEmpty())
         return {};
     const auto shortLabel = [](QString label) {

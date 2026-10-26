@@ -27,11 +27,13 @@ private slots:
     void amdGpuAndTemperatures();
     void withoutGpu();
     void cpuDetail();
+    void cpuDetailIntelHybrid();
     void amdGpuDetail();
     void nvidiaWithoutDriver();
     void renderCpuBars_data();
     void renderCpuBars();
     void renderCpuTemperatures();
+    void renderCpuTemperaturesIntel();
     void renderGpu();
     void renderGpuMissingValues();
     void renderGpuWithoutGpu();
@@ -161,6 +163,36 @@ void TestSystemStats::cpuDetail()
     QCOMPARE(detail.temperatures.at(1).label, QStringLiteral("Tccd1"));
     QCOMPARE(detail.temperatures.at(1).celsius, 31.75);
     QVERIFY(!detail.percent);   // first call
+}
+
+// Intel hybrid CPU (coretemp, P- and E-cores with different highest clocks):
+// the package and every core have a temperature; the scale is the highest
+// clock of all CPUs, not of cpu0.
+void TestSystemStats::cpuDetailIntelHybrid()
+{
+    QVERIFY(QDir(sys() + QStringLiteral("/class/hwmon/hwmon4")).removeRecursively());   // no k10temp
+    const QString hwmon = sys() + QStringLiteral("/class/hwmon/hwmon2/");
+    write(hwmon + QStringLiteral("name"), "coretemp\n");
+    write(hwmon + QStringLiteral("temp1_label"), "Package id 0\n");
+    write(hwmon + QStringLiteral("temp1_input"), "61000\n");
+    write(hwmon + QStringLiteral("temp2_label"), "Core 0\n");
+    write(hwmon + QStringLiteral("temp2_input"), "58000\n");
+    write(hwmon + QStringLiteral("temp3_label"), "Core 4\n");
+    write(hwmon + QStringLiteral("temp3_input"), "68000\n");
+    const QString cpu = sys() + QStringLiteral("/devices/system/cpu/cpu%1/cpufreq/");
+    const char *maxFreqs[] = {"4300000\n", "5800000\n", "4300000\n"};   // E, P, E
+    for (int i = 0; i < 3; ++i) {
+        write(cpu.arg(i) + QStringLiteral("scaling_cur_freq"), "1200000\n");
+        write(cpu.arg(i) + QStringLiteral("cpuinfo_max_freq"), maxFreqs[i]);
+    }
+
+    SystemStats stats(proc(), sys());
+    const SystemStats::CpuDetail detail = stats.cpuDetail();
+    QCOMPARE(detail.maxMHz, 5800);
+    QCOMPARE(detail.cpuMHz.size(), 3);
+    QCOMPARE(detail.temperatures.size(), 3);
+    QCOMPARE(detail.temperatures.at(0).label, QStringLiteral("Package id 0"));
+    QCOMPARE(stats.sample().cpuTemperature, std::optional<double>(61.0));   // system page: the package
 }
 
 // Values as on an RX 7900 XTX (amdgpu hwmon: clocks in Hz, power in µW).
@@ -386,6 +418,25 @@ void TestSystemStats::renderGpuWithoutGpu()
     expected.drawText(1, 1, QStringLiteral("NV"));
     expected.drawText((160 - LcdFrame::textWidth(QStringLiteral("no NVML"))) / 2, 20, QStringLiteral("no NVML"));
     QVERIFY(sameRows(frame, expected, 0, 43));
+}
+
+// coretemp: the package and the hottest core, whatever the number of cores.
+void TestSystemStats::renderCpuTemperaturesIntel()
+{
+    SystemStats::CpuDetail cpu;
+    cpu.percent = 100;
+    cpu.maxMHz = 5800;
+    cpu.cpuMHz = {4000};
+    cpu.temperatures = {{QStringLiteral("Package id 0"), 61}};
+    for (int core = 0; core < 24; ++core)
+        cpu.temperatures.append({QStringLiteral("Core %1").arg(core), core == 17 ? 68.4 : 55.0});
+    LcdFrame frame(160, 43);
+    LcdPages::renderCpu(frame, cpu);
+    LcdFrame expected(160, 43);
+    expected.drawText(1, 1, QStringLiteral("CPU 100% Pkg 61\u00b0 Max 68\u00b0"));
+    for (int y = 0; y < 8; ++y)
+        for (int x = 0; x < 160; ++x)
+            QCOMPARE(frame.pixel(x, y), expected.pixel(x, y));
 }
 
 void TestSystemStats::formatSize()
