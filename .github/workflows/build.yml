@@ -59,6 +59,12 @@ jobs:
             install: >-
               pacman -Syu --noconfirm --needed
               base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
+          # Package set of SteamOS (Steam Deck): Valve's repositories replace
+          # Arch's after the checkout (packaging/steamos/setup-container.sh).
+          - distro: SteamOS
+            image: archlinux:latest
+            steamos: true
+            install: pacman -Syu --noconfirm --needed git
           - distro: Fedora
             image: fedora:latest
             install: >-
@@ -78,6 +84,12 @@ jobs:
         run: ${{ matrix.install }}
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Switch to the SteamOS packages
+        if: matrix.steamos
+        run: >-
+          packaging/steamos/setup-container.sh
+          base-devel cmake git pkgconf qt6-base qt6-tools qt6-declarative libevdev systemd dbus glib2
 
       - name: Configure
         run: >-
