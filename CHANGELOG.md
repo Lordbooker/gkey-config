@@ -6,6 +6,13 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Added
+
+- SteamOS (Steam Deck): archive `gkey-config-<version>-steamos-x86_64.tar.gz` with an install
+  script. SteamOS replaces `/usr` with every update, so the programs go into the home directory;
+  the udev rule is kept over updates through `/etc/atomic-update.conf.d`. Built and installation
+  tested against the packages of SteamOS 3.9 in CI, untested on a Steam Deck.
+
 ## [1.4.1] - 2026-10-26
 
 ### Changed

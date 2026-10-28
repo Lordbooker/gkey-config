@@ -52,6 +52,7 @@ tags the workflow *Release packages* runs them first and builds packages only wh
 | Check | Where | Run it locally |
 |---|---|---|
 | Build and tests with GCC, warnings as errors | Arch Linux, Fedora, Debian testing; Arch also in Release mode | `-DENABLE_WERROR=ON`, `ctest` |
+| Build and tests with the packages of SteamOS | Arch Linux container switched to SteamOS's repositories | `packaging/steamos/setup-container.sh` (in a container) |
 | Build and tests with Clang | Arch Linux | `-DCMAKE_CXX_COMPILER=clang++` |
 | clang-tidy (`.clang-tidy`, `tests/.clang-tidy`) | Arch Linux | `scripts/clang-tidy.sh build` (after a build) |
 | Tests with AddressSanitizer and UndefinedBehaviorSanitizer | Arch Linux | `-DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON`, `ctest` |
@@ -137,6 +138,19 @@ docker run --rm -v "$PWD:/src" -w /src fedora:44    packaging/build-package.sh d
 
 The AUR package `gkey-config` (releases only) is in `packaging/arch/`; on every push to `dev` the
 workflow builds it from the pushed commit as a test.
+
+The SteamOS archive is built in an Arch Linux container switched to the package repositories of
+SteamOS (`packaging/steamos/setup-container.sh`; the release is set in `STEAMOS_VERSION` and has
+to be raised when Valve releases a new stable SteamOS):
+
+```bash
+docker run --rm -v "$PWD:/src" -w /src archlinux:latest sh -c 'pacman -Sy --noconfirm git &&
+    packaging/steamos/setup-container.sh base-devel cmake git pkgconf qt6-base qt6-tools libevdev systemd &&
+    packaging/steamos/build-package.sh dist'
+```
+
+`packaging/steamos/test-install.sh` installs the archive as the user `deck` in such a container,
+checks it and uninstalls it again (CI runs it before every release).
 
 ## Releases
 

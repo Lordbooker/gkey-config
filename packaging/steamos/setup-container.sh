@@ -40,7 +40,9 @@ for repo in core extra; do
 done
 rm -rf "$work"
 
-pacman -Syuu --noconfirm
+# -yy: the package lists of SteamOS are older than those of Arch already in the
+# container, so they have to be downloaded by force; -uu: downgrade to them.
+pacman -Syyuu --noconfirm
 if [ "$#" -gt 0 ]; then
     pacman -S --noconfirm --needed "$@"
 fi
