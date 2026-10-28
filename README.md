@@ -53,6 +53,7 @@ please [report](https://github.com/Lordbooker/gkey-config/issues) whether it wor
 | Arch Linux and derivatives | AUR: [`gkey-config`](https://aur.archlinux.org/packages/gkey-config) |
 | Ubuntu 26.04 and derivatives | `.deb` from the [releases](https://github.com/Lordbooker/gkey-config/releases) |
 | Fedora 44 | `.rpm` from the [releases](https://github.com/Lordbooker/gkey-config/releases) |
+| SteamOS 3.9 or newer (Steam Deck) | archive with install script from the [releases](https://github.com/Lordbooker/gkey-config/releases), [untested](https://github.com/Lordbooker/gkey-config/wiki/Steam-Deck) |
 
 Then open *G-Key Configuration* from the application menu; on its first start it sets up the
 daemon autostart and LED access. Details in the

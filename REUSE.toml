@@ -9,6 +9,7 @@ version = 1
 path = [
     "*.md",
     "docs/**.md",
+    "packaging/**.md",
     "docs/images/**.png",
     "data/icons/**.svg",
     "data/models/**.json",

@@ -88,6 +88,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.5.0" date="2026-10-28">
+      <description>
+        <p>SteamOS (Steam Deck): an archive with an install script that installs gkey-config into the home directory and keeps the device access over SteamOS updates. Untested on a Steam Deck.</p>
+      </description>
+    </release>
     <release version="1.4.1" date="2026-10-26">
       <description>
         <p>CPU page on Intel CPUs: next to the package temperature only the hottest core is shown, and the clock scale uses the highest clock of all cores (P- and E-cores of hybrid CPUs).</p>

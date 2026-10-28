@@ -6,6 +6,20 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-28
+
+### Added
+
+- SteamOS (Steam Deck): archive `gkey-config-<version>-steamos-x86_64.tar.gz` with an install
+  script. SteamOS replaces `/usr` with every update, so the programs go into the home directory;
+  the udev rule is kept over updates through `/etc/atomic-update.conf.d`. Built and installation
+  tested against the packages of SteamOS 3.9 in CI, untested on a Steam Deck.
+
+### Changed
+
+- Package build: the Ubuntu package starts with `archive.ubuntu.com` and keeps a mirror that
+  worked instead of trying the slow one again in every step.
+
 ## [1.4.1] - 2026-10-26
 
 ### Changed
@@ -161,7 +175,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/Lordbooker/gkey-config/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/Lordbooker/gkey-config/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/Lordbooker/gkey-config/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/Lordbooker/gkey-config/compare/v1.2.1...v1.3.0

@@ -160,11 +160,74 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
 
+  # SteamOS archive, built against the package versions of SteamOS
+  # (packaging/steamos/).
+  steamos:
+    name: Build SteamOS
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container: archlinux:latest
+    steps:
+      - name: Install git
+        run: pacman -Syu --noconfirm --needed git
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Switch to the SteamOS packages
+        run: packaging/steamos/setup-container.sh base-devel cmake git pkgconf qt6-base qt6-tools libevdev systemd
+
+      - name: Build archive
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            export GKEY_PACKAGE_VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          packaging/steamos/build-package.sh dist
+
+      - name: Upload archive
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package-steamos
+          path: dist/*
+          if-no-files-found: error
+
+  # The archive installed as on a Steam Deck: a fresh container with only the
+  # runtime packages of SteamOS, the user "deck" with sudo. Without a device,
+  # udev and a systemd session; the kernel driver is checked separately
+  # (SteamOS kernel package).
+  steamos-install:
+    name: Test SteamOS installation
+    needs: steamos
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container: archlinux:latest
+    steps:
+      - name: Install git
+        run: pacman -Syu --noconfirm --needed git
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Switch to the SteamOS packages
+        run: packaging/steamos/setup-container.sh qt6-base libevdev systemd sudo
+
+      - name: Download archive
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: package-steamos
+          path: dist
+
+      - name: Install, check and uninstall as user deck
+        run: packaging/steamos/test-install.sh dist/gkey-config-*-steamos-x86_64.tar.gz
+
   # Runs on every push so that the release notes and the download are tested;
   # the GitHub release itself is only created for tags.
   release:
     name: Publish release
-    needs: [packages, arch]
+    needs: [packages, arch, steamos-install]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -206,6 +269,7 @@ jobs:
             echo "| Ubuntu 26.04 (and Linux Mint, Pop!_OS, ... based on it) | \`gkey-config_*.ubuntu26.04_amd64.deb\` |"
             echo "| Fedora 44 | \`gkey-config-*.fc44.x86_64.rpm\` |"
             echo "| Arch Linux | AUR: \`gkey-config\` |"
+            echo "| SteamOS 3.9 or newer (Steam Deck, untested) | \`gkey-config-*-steamos-x86_64.tar.gz\`, see README-SteamOS.md inside |"
             echo
             echo '```bash'
             echo '# Ubuntu'
