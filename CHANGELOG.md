@@ -6,6 +6,13 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Changed
+
+- G13: keys without effect in the stick mode of the profile are greyed out in the device picture
+  and cannot be selected, with the reason as tooltip: in mode *Joystick* the three stick buttons
+  (they go to games unchanged) and in all modes except *Keys* the four stick directions. Until
+  now they could be bound without anything happening.
+
 ## [1.5.0] - 2026-10-28
 
 ### Added

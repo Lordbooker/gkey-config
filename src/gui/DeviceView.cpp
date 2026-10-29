@@ -26,6 +26,7 @@ void DeviceView::setModel(const DeviceModel &model)
     const QList<QString> ids = model.bindableKeyIds();
     m_bindable = QSet<QString>(ids.begin(), ids.end());
     m_bound.clear();
+    m_inactive.clear();
     m_pressed.clear();
     m_selected.clear();
     m_hover.clear();
@@ -36,6 +37,14 @@ void DeviceView::setModel(const DeviceModel &model)
 void DeviceView::setBoundKeys(const QSet<QString> &keys)
 {
     m_bound = keys;
+    update();
+}
+
+void DeviceView::setInactiveKeys(const QHash<QString, QString> &keysWithReason)
+{
+    m_inactive = keysWithReason;
+    if (m_inactive.contains(m_selected))
+        m_selected.clear();
     update();
 }
 
@@ -98,7 +107,7 @@ QPainterPath DeviceView::pathFor(const DeviceModel::Shape &shape)
 
 bool DeviceView::isBindable(const QString &key) const
 {
-    return m_bindable.contains(key);
+    return m_bindable.contains(key) && !m_inactive.contains(key);
 }
 
 QString DeviceView::keyAt(const QPointF &widgetPos) const
@@ -181,12 +190,17 @@ void DeviceView::paintEvent(QPaintEvent *)
         painter.setPen(QPen(selected ? highlight : keyLine, selected ? 3 : 1.2));
         painter.drawPath(path);
 
-        if (bindable && m_bound.contains(area.key)) {
-            // Small dot in the corner: the key has a binding in this mode.
+        const bool inactive = m_inactive.contains(area.key);
+        if ((bindable || inactive) && m_bound.contains(area.key)) {
+            // Small dot in the corner: the key has a binding in this mode
+            // (grey while the binding has no effect).
             const QRectF r = path.boundingRect();
             const qreal size = qMin<qreal>(7, qMin(r.width(), r.height()) / 3);
+            QColor dot = inactive ? text : accent;
+            if (inactive)
+                dot.setAlpha(90);
             painter.setPen(Qt::NoPen);
-            painter.setBrush(accent);
+            painter.setBrush(dot);
             painter.drawEllipse(QPointF(r.right() - size, r.top() + size), size / 2, size / 2);
         }
 
@@ -234,6 +248,8 @@ bool DeviceView::event(QEvent *event)
         const QString key = keyAt(help->pos());
         if (key.isEmpty())
             QToolTip::hideText();
+        else if (m_inactive.contains(key))
+            QToolTip::showText(help->globalPos(), QStringLiteral("%1: %2").arg(key, m_inactive.value(key)), this);
         else
             QToolTip::showText(help->globalPos(), isBindable(key) ? key : tr("%1 (fixed function)").arg(key), this);
         return true;

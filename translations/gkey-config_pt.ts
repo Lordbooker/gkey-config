@@ -790,6 +790,14 @@
         <translation>Não foi possível abrir a pasta. Ela fica em:
 %1</translation>
     </message>
+    <message>
+        <source>In the stick mode &quot;Joystick&quot; this button belongs to the joystick (games). Bindings take effect in the other stick modes.</source>
+        <translation>No modo do stick «Joystick», este botão pertence ao joystick (jogos). As atribuições funcionam nos outros modos do stick.</translation>
+    </message>
+    <message>
+        <source>The stick directions are only used in the stick mode &quot;Keys (four directions)&quot;.</source>
+        <translation>As direções do stick só são usadas no modo «Teclas (quatro direções)».</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

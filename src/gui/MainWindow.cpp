@@ -369,6 +369,8 @@ void MainWindow::reloadView()
             bound.insert(it.key());
     }
     m_view->setBoundKeys(bound);
+    m_inactiveKeys = inactiveKeys(profile);
+    m_view->setInactiveKeys(m_inactiveKeys);
 
     QColor accent;
     if (profile && profile->backlight())
@@ -388,21 +390,44 @@ void MainWindow::reloadView()
     selectKey(m_selectedKey);
 }
 
+QHash<QString, QString> MainWindow::inactiveKeys(const Profile *profile) const
+{
+    QHash<QString, QString> inactive;
+    if (!m_model.stick())
+        return inactive;
+    const StickSettings::Mode mode = profile ? profile->stickSettings().mode : StickSettings().mode;
+    if (mode == StickSettings::Mode::Passthrough) {
+        // The stick device is left to the system: its buttons go to games unchanged.
+        for (const DeviceModel::Key &key : m_model.keys()) {
+            if (key.input == m_model.stick()->input && key.role == DeviceModel::KeyRole::Bindable)
+                inactive.insert(key.id, tr("In the stick mode \"Joystick\" this button belongs to the joystick "
+                                           "(games). Bindings take effect in the other stick modes."));
+        }
+    }
+    if (mode != StickSettings::Mode::Keys) {
+        for (const QString &id : DeviceModel::stickDirectionKeys())
+            inactive.insert(id, tr("The stick directions are only used in the stick mode \"Keys (four directions)\"."));
+    }
+    return inactive;
+}
+
 void MainWindow::selectKey(const QString &keyId)
 {
     // Keys with a fixed function (M1-M3, MR, BD, light) have nothing to edit.
     if (!keyId.isEmpty() && !m_model.bindableKeyIds().contains(keyId))
         return;
-    m_selectedKey = keyId;
-    m_view->setSelectedKey(keyId);
+    // Keys without effect in the current stick mode are greyed out, not edited.
+    m_selectedKey = m_inactiveKeys.contains(keyId) ? QString() : keyId;
+    const QString &key = m_selectedKey;
+    m_view->setSelectedKey(key);
     std::optional<Action> action;
     if (const Profile *profile = currentProfile()) {
         const auto &bindings = profile->bindings(m_mode);
-        if (bindings.contains(keyId))
-            action = bindings.value(keyId);
+        if (bindings.contains(key))
+            action = bindings.value(key);
     }
-    const QString title = keyId.isEmpty() ? QString() : tr("%1 — layer M%2").arg(keyTitle(m_model, keyId)).arg(m_mode);
-    m_bindingEditor->setKey(keyId, title, action);
+    const QString title = key.isEmpty() ? QString() : tr("%1 — layer M%2").arg(keyTitle(m_model, key)).arg(m_mode);
+    m_bindingEditor->setKey(key, title, action);
 }
 
 bool MainWindow::saveProfile(const Profile &profile)

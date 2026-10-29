@@ -790,6 +790,14 @@
         <translation>Impossibile aprire la cartella. Si trova qui:
 %1</translation>
     </message>
+    <message>
+        <source>In the stick mode &quot;Joystick&quot; this button belongs to the joystick (games). Bindings take effect in the other stick modes.</source>
+        <translation>Nella modalità stick «Joystick» questo pulsante appartiene al joystick (giochi). Le assegnazioni valgono nelle altre modalità dello stick.</translation>
+    </message>
+    <message>
+        <source>The stick directions are only used in the stick mode &quot;Keys (four directions)&quot;.</source>
+        <translation>Le direzioni dello stick si usano solo nella modalità «Tasti (quattro direzioni)».</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

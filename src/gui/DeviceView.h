@@ -6,6 +6,7 @@
 #include "DeviceModel.h"
 
 #include <QColor>
+#include <QHash>
 #include <QSet>
 #include <QWidget>
 
@@ -19,6 +20,10 @@ public:
 
     void setModel(const DeviceModel &model);
     void setBoundKeys(const QSet<QString> &keys);
+    // Bindable keys that have no effect in the current settings (e.g. the stick
+    // buttons in stick mode Joystick): drawn greyed out, not selectable; the
+    // text is shown as tooltip.
+    void setInactiveKeys(const QHash<QString, QString> &keysWithReason);
     void setSelectedKey(const QString &key);
     void setKeyPressed(const QString &key, bool pressed);
     void setAccentColor(const QColor &color);   // backlight colour of the profile
@@ -48,6 +53,7 @@ private:
     DeviceModel m_model;
     QSet<QString> m_bindable;
     QSet<QString> m_bound;
+    QHash<QString, QString> m_inactive;   // key -> reason
     QSet<QString> m_pressed;
     QString m_selected;
     QString m_hover;
