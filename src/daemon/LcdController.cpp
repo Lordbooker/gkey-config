@@ -29,9 +29,9 @@ LcdController::LcdController(const DeviceModel &model, const QString &hidSyspath
         // Re-align with the start of the next second.
         m_clockTimer->start(1000 - QTime::currentTime().msec());
     });
-    m_textTimer = new QTimer(this);
-    m_textTimer->setSingleShot(true);
-    connect(m_textTimer, &QTimer::timeout, this, &LcdController::returnFromText);
+    m_returnTimer = new QTimer(this);
+    m_returnTimer->setSingleShot(true);
+    connect(m_returnTimer, &QTimer::timeout, this, &LcdController::returnFromTemporaryPage);
     m_introTimer = new QTimer(this);
     m_introTimer->setTimerType(Qt::PreciseTimer);
     m_introTimer->setInterval(LcdIntro::FrameMs);
@@ -54,8 +54,8 @@ void LcdController::setPages(const QStringList &pages)
 {
     m_pages = pages.isEmpty() ? LcdPages::defaultPages() : pages;
     const QStringList rotation = LcdPages::rotation(m_pages);
-    const bool temporaryText = m_page == u"text" && m_textTimer && m_textTimer->isActive();
-    if (!m_pages.contains(m_page) && !temporaryText)
+    const bool temporary = m_returnTimer && m_returnTimer->isActive();
+    if (!m_pages.contains(m_page) && !temporary)
         m_page = rotation.isEmpty() ? LcdPages::IntroPage : rotation.first();
     refresh();
 }
@@ -72,8 +72,8 @@ void LcdController::start()
 
 void LcdController::playIntro()
 {
-    if (m_textTimer)
-        m_textTimer->stop();
+    if (m_returnTimer)
+        m_returnTimer->stop();
     m_intro = std::make_unique<LcdIntro>(m_model.id());
     m_page = LcdPages::IntroPage;
     refresh();   // starts the frame timer
@@ -81,8 +81,15 @@ void LcdController::playIntro()
 
 void LcdController::setStatus(const LcdPages::Status &status)
 {
+    // A change of the profile (not the first one when the device connects)
+    // shows the profile page for a moment.
+    const bool profileChanged = !m_status.profile.isEmpty() && status.profile != m_status.profile;
     m_status = status;
-    if (m_page == u"status")
+    if (profileChanged && m_pages.contains(LcdPages::ProfilePage)) {
+        showTemporarily(LcdPages::ProfilePage, ProfileSeconds * 1000);
+        return;
+    }
+    if (m_page == u"status" || m_page == LcdPages::ProfilePage)
         refresh();
 }
 
@@ -108,8 +115,8 @@ void LcdController::showPage(const QString &page)
     }
     if (!LcdPages::allPages().contains(target))
         return;
-    if (m_textTimer)
-        m_textTimer->stop();
+    if (m_returnTimer)
+        m_returnTimer->stop();
     m_page = std::move(target);
     refresh();
 }
@@ -117,28 +124,39 @@ void LcdController::showPage(const QString &page)
 void LcdController::setText(const QString &text, int seconds)
 {
     m_textLines = text.split(u'\n');
-    const bool temporaryTextShown = m_textTimer && m_textTimer->isActive();
-    if (!temporaryTextShown && m_page != u"text")
-        m_pageBeforeText = m_page;   // where to return after a temporary text
-    m_page = QStringLiteral("text");
-    if (m_textTimer) {
-        if (seconds > 0 && !m_pageBeforeText.isEmpty())
-            m_textTimer->start(seconds * 1000);
-        else
-            m_textTimer->stop();
+    const bool temporaryShown = m_returnTimer && m_returnTimer->isActive();
+    if (seconds > 0 && (temporaryShown || m_page != u"text")) {
+        showTemporarily(QStringLiteral("text"), seconds * 1000);
+        return;
     }
+    // Without a duration (or onto the text page shown for good) the text stays.
+    if (m_returnTimer)
+        m_returnTimer->stop();
+    m_page = QStringLiteral("text");
     refresh();
 }
 
-void LcdController::returnFromText()
+void LcdController::showTemporarily(const QString &page, int milliseconds)
 {
-    if (m_pageBeforeText == LcdPages::IntroPage) {
+    // A temporary page that replaces another one keeps the original return page.
+    const bool temporaryShown = m_returnTimer && m_returnTimer->isActive();
+    if (!temporaryShown)
+        m_returnPage = m_page;
+    m_page = page;
+    if (m_returnTimer)
+        m_returnTimer->start(milliseconds);
+    refresh();
+}
+
+void LcdController::returnFromTemporaryPage()
+{
+    if (m_returnPage == LcdPages::IntroPage) {
         // Back to the start animation where it was (or its final image), not a replay.
         m_page = LcdPages::IntroPage;
         refresh();
         return;
     }
-    showPage(m_pageBeforeText);
+    showPage(m_returnPage);
 }
 
 void LcdController::refresh()
@@ -161,6 +179,8 @@ void LcdController::refresh()
         LcdPages::renderGpu(m_frame, QStringLiteral("NV"), gpu, m_nvidia.problem());
     } else if (m_page == u"text")
         LcdPages::renderText(m_frame, m_textLines);
+    else if (m_page == LcdPages::ProfilePage)
+        LcdPages::renderProfile(m_frame, m_status.profile);
     else
         LcdPages::renderStatus(m_frame, m_status);
 

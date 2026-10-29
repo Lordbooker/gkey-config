@@ -50,7 +50,7 @@ public slots:
     // returns to the previous page afterwards.
     void LcdText(const QString &text, int seconds);
     // "next", "previous", "status", "system", "cpu", "amdgpu", "nvidia",
-    // "clock", "text" or "intro" (plays the start animation).
+    // "clock", "text", "profile" or "intro" (plays the start animation).
     void LcdPage(const QString &page);
     // Takes the current stick position as its rest position.
     bool CalibrateStick(const QString &model);

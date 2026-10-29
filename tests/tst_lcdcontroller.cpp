@@ -21,6 +21,8 @@ private slots:
     void textInterruptsIntro();
     void hardwarePages();
     void defaultPages();
+    void profilePageOnChange();
+    void profilePageDisabled();
 
 private:
     std::unique_ptr<LcdController> controller(const QStringList &pages);
@@ -127,6 +129,39 @@ void TestLcdController::defaultPages()
         QVERIFY(LcdPages::defaultPages().contains(lcd->currentPage()));
         lcd->showPage(QStringLiteral("next"));
     }
+}
+
+// A change of the profile shows the profile page for a few seconds; the first
+// profile after connecting and a change of the layer do not.
+void TestLcdController::profilePageOnChange()
+{
+    auto lcd = controller({QStringLiteral("profile"), QStringLiteral("status"), QStringLiteral("clock")});
+    QCOMPARE(lcd->currentPage(), QStringLiteral("status"));   // not part of the rotation
+    LcdPages::Status status{QStringLiteral("Logitech G13"), QStringLiteral("Default"), 1, false};
+    lcd->setStatus(status);
+    QCOMPARE(lcd->currentPage(), QStringLiteral("status"));
+    status.mode = 2;
+    lcd->setStatus(status);
+    QCOMPARE(lcd->currentPage(), QStringLiteral("status"));
+
+    lcd->showPage(QStringLiteral("clock"));
+    status.profile = QStringLiteral("Raid");
+    lcd->setStatus(status);
+    QCOMPARE(lcd->currentPage(), QStringLiteral("profile"));
+    LcdFrame expected(160, 43);
+    LcdPages::renderProfile(expected, QStringLiteral("Raid"));
+    QVERIFY(lcd->frame() == expected);
+    QTRY_COMPARE_WITH_TIMEOUT(lcd->currentPage(), QStringLiteral("clock"), (LcdController::ProfileSeconds + 2) * 1000);
+}
+
+void TestLcdController::profilePageDisabled()
+{
+    auto lcd = controller({QStringLiteral("status"), QStringLiteral("clock")});
+    LcdPages::Status status{QStringLiteral("Logitech G13"), QStringLiteral("Default"), 1, false};
+    lcd->setStatus(status);
+    status.profile = QStringLiteral("Raid");
+    lcd->setStatus(status);
+    QCOMPARE(lcd->currentPage(), QStringLiteral("status"));
 }
 
 QTEST_GUILESS_MAIN(TestLcdController)

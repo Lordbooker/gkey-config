@@ -322,6 +322,10 @@
         <source>NVIDIA GPU (load, clocks, temperature, VRAM, power, fan)</source>
         <translation>GPU NVIDIA (charge, fréquences, température, VRAM, puissance, ventilateur)</translation>
     </message>
+    <message>
+        <source>Profile name (for 3 seconds when the profile changes)</source>
+        <translation>Nom du profil (3 secondes lors d’un changement de profil)</translation>
+    </message>
 </context>
 <context>
     <name>MacroEditor</name>
@@ -789,6 +793,14 @@
 %1</source>
         <translation>Le dossier n’a pas pu être ouvert. Il se trouve ici&#xa0;:
 %1</translation>
+    </message>
+    <message>
+        <source>In the stick mode &quot;Joystick&quot; this button belongs to the joystick (games). Bindings take effect in the other stick modes.</source>
+        <translation>En mode joystick « Joystick », ce bouton appartient au joystick (jeux). Les affectations agissent dans les autres modes du joystick.</translation>
+    </message>
+    <message>
+        <source>The stick directions are only used in the stick mode &quot;Keys (four directions)&quot;.</source>
+        <translation>Les directions du joystick ne sont utilisées que dans le mode « Touches (quatre directions) ».</translation>
     </message>
 </context>
 <context>

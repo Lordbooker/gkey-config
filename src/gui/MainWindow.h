@@ -67,6 +67,8 @@ private:
     void reloadProfiles();
     void reloadView();
     void selectKey(const QString &keyId);
+    // Bindable keys without effect in the stick mode of the profile, with the reason.
+    QHash<QString, QString> inactiveKeys(const Profile *profile) const;
     const Profile *currentProfile() const;
     bool saveProfile(const Profile &profile);
 
@@ -100,6 +102,7 @@ private:
     QString m_profileName;
     int m_mode = 1;
     QString m_selectedKey;
+    QHash<QString, QString> m_inactiveKeys;
 
     QComboBox *m_modelCombo = nullptr;
     QComboBox *m_profileCombo = nullptr;

@@ -19,6 +19,10 @@ namespace LcdPages {
 // enabled; not part of the pages the device pages through.
 inline const QString IntroPage = QStringLiteral("intro");
 
+// The name of the profile, large: shown for a few seconds when the profile
+// changes, if it is enabled; not part of the pages the device pages through.
+inline const QString ProfilePage = QStringLiteral("profile");
+
 // Page names in their default order.
 const QStringList &allPages();
 
@@ -27,7 +31,7 @@ const QStringList &allPages();
 const QStringList &defaultPages();
 
 // The pages that "next" and "previous" go through: the enabled pages without
-// the start animation.
+// the start animation and the profile page.
 QStringList rotation(const QStringList &pages);
 
 struct Status {
@@ -39,6 +43,10 @@ struct Status {
 
 void renderStatus(LcdFrame &frame, const Status &status);
 void renderClock(LcdFrame &frame, const QDateTime &time);
+// The profile name as large as it fits: one line in scale 5 down to 2, else two
+// lines in scale 2 (broken at a space), else one line in scale 1 (cut after 26
+// characters).
+void renderProfile(LcdFrame &frame, const QString &name);
 // Up to five lines; longer lines are cut.
 void renderText(LcdFrame &frame, const QStringList &lines);
 // CPU, RAM, GPU and VRAM with bar, percent and temperature or amount; without

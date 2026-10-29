@@ -22,6 +22,8 @@ class QTimer;
 // thread of its own). Shows one of
 // the enabled pages (status, system, cpu, amdgpu, nvidia, clock, text); text
 // sent over D-Bus is shown on the text page, optionally only for some seconds.
+// When the profile changes, the profile page (if enabled) shows its name for
+// a few seconds.
 // The clock and the pages with system values are redrawn every second while
 // they are shown.
 class LcdController : public QObject {
@@ -48,6 +50,9 @@ public:
     // Shows text on the text page; seconds > 0 returns to the previous page afterwards.
     void setText(const QString &text, int seconds);
 
+    // How long the profile page is shown after a change of the profile.
+    static constexpr int ProfileSeconds = 3;
+
     void refresh();
 
     // Current frame, e.g. for tests.
@@ -56,7 +61,8 @@ public:
 private:
     void write();
     void playIntro();
-    void returnFromText();
+    void showTemporarily(const QString &page, int milliseconds);
+    void returnFromTemporaryPage();
 
     DeviceModel m_model;
     bool m_available = false;
@@ -64,13 +70,13 @@ private:
     LcdFrame m_frame;
     QStringList m_pages;
     QString m_page;
-    QString m_pageBeforeText;
+    QString m_returnPage;   // page shown again after a temporary page
     LcdPages::Status m_status;
     QStringList m_textLines;
     SystemStats m_stats;
     NvidiaStats m_nvidia;
     QTimer *m_clockTimer = nullptr;   // ticks while the clock or a page with system values is shown
-    QTimer *m_textTimer = nullptr;
+    QTimer *m_returnTimer = nullptr;   // runs while a temporary page is shown
     std::unique_ptr<LcdIntro> m_intro;   // start animation (kept for its final image)
     QTimer *m_introTimer = nullptr;      // next animation frame
 };
