@@ -6,6 +6,13 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Added
+
+- LCD page *Profile name*: when the profile changes, its name is shown for 3 seconds, as large as it
+  fits (up to the size of the G13 logo of the start animation, two lines for longer names), then
+  the previous page returns. It can be switched off in the LCD tab; existing settings list it
+  unchecked.
+
 ### Changed
 
 - G13: keys without effect in the stick mode of the profile are greyed out in the device picture

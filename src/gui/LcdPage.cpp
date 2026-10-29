@@ -129,6 +129,8 @@ QString LcdPage::title(const QString &page)
 {
     if (page == LcdPages::IntroPage)
         return tr("Start animation (flames, when the device connects)");
+    if (page == LcdPages::ProfilePage)
+        return tr("Profile name (for 3 seconds when the profile changes)");
     if (page == u"status")
         return tr("Status (profile and layer)");
     if (page == u"system")
@@ -202,7 +204,9 @@ void LcdPage::updatePreview()
         if (!m_intro)
             m_intro = std::make_unique<LcdIntro>(m_modelId);
         m_intro->render(frame);
-    } else if (page == u"clock")
+    } else if (page == LcdPages::ProfilePage)
+        LcdPages::renderProfile(frame, m_status.profile);
+    else if (page == u"clock")
         LcdPages::renderClock(frame, QDateTime::currentDateTime());
     else if (page == u"system")
         LcdPages::renderSystem(frame, m_stats.sample());

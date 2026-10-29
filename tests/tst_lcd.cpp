@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Lordbooker
 // SPDX-License-Identifier: GPL-2.0-only
 
+#include "LcdFont.h"
 #include "LcdFrame.h"
 #include "LcdIntro.h"
 #include "LcdIntroImages.h"
@@ -18,6 +19,8 @@ private slots:
     void asciiTwice();
     void elide();
     void pages();
+    void profilePage_data();
+    void profilePage();
     void introAnimation();
     void introStartsDarkWithoutFirmwareLogo();
 };
@@ -126,6 +129,50 @@ void TestLcd::pages()
     QVERIFY(litPixels(frame) > 20);
     LcdPages::renderText(frame, {});
     QCOMPARE(litPixels(frame), 0);
+}
+
+void TestLcd::profilePage_data()
+{
+    QTest::addColumn<QString>("name");
+    QTest::addColumn<QStringList>("lines");
+    QTest::addColumn<int>("scale");
+    // Scale 5 (about the G13 logo) for up to 5 characters, then smaller.
+    QTest::newRow("5 characters") << QStringLiteral("Raid") << QStringList{QStringLiteral("Raid")} << 5;
+    QTest::newRow("6 characters") << QStringLiteral("Gaming") << QStringList{QStringLiteral("Gaming")} << 4;
+    QTest::newRow("8 characters") << QStringLiteral("Shooter2") << QStringList{QStringLiteral("Shooter2")} << 3;
+    QTest::newRow("13 characters") << QStringLiteral("Flight Sim XL") << QStringList{QStringLiteral("Flight Sim XL")}
+                                   << 2;
+    // Too long for one line in scale 2: two lines, broken at the balancing space.
+    QTest::newRow("two lines") << QStringLiteral("Elite Dangerous")
+                               << QStringList{QStringLiteral("Elite"), QStringLiteral("Dangerous")} << 2;
+    QTest::newRow("balanced") << QStringLiteral("World of Warcraft")
+                              << QStringList{QStringLiteral("World of"), QStringLiteral("Warcraft")} << 2;
+    // No part fits into 13 characters: one small line, cut after 26.
+    QTest::newRow("no space") << QStringLiteral("Supercalifragilistic")
+                              << QStringList{QStringLiteral("Supercalifragilistic")} << 1;
+    QTest::newRow("cut") << QStringLiteral("Microsoft Flight Simulator 2024")
+                         << QStringList{QStringLiteral("Microsoft Flight Simulato~")} << 1;
+}
+
+// The profile page draws the expected lines, centred, in the expected scale.
+void TestLcd::profilePage()
+{
+    QFETCH(QString, name);
+    QFETCH(QStringList, lines);
+    QFETCH(int, scale);
+    LcdFrame frame(160, 43);
+    LcdPages::renderProfile(frame, name);
+
+    LcdFrame expected(160, 43);
+    const int lineHeight = LcdFont::Height * scale;
+    const int total = static_cast<int>(lines.size()) * lineHeight + (static_cast<int>(lines.size()) - 1) * 4;
+    int y = (43 - total) / 2;
+    for (const QString &line : lines) {
+        expected.drawText((160 - LcdFrame::textWidth(line, scale)) / 2, y, line, scale);
+        y += lineHeight + 4;
+    }
+    QVERIFY(frame == expected);
+    QVERIFY(!LcdPages::rotation(LcdPages::allPages()).contains(LcdPages::ProfilePage));
 }
 
 // The start animation from linux-g13-driver: about 9 s at 20 frames per second;

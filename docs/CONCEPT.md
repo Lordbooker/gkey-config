@@ -428,12 +428,21 @@ buttons are left to the system as well.
   its final image stays until the page is changed. It is not part of the rotation of "next" and
   "previous". A text sent over D-Bus interrupts it; after a temporary text the animation continues
   where it was. `LcdPage intro` plays it again. At least one other page always stays enabled.
+* Profile page *(added after 1.5.0, decided 2026-10-29)*: the page `profile` shows the name of the
+  profile for 3 seconds when the profile changes (not for the first profile after connecting and
+  not for a change of the layer), then the previous page returns, like a text with a duration; a
+  text or a further change in that time keeps the original return page. It is not part of the
+  rotation and can be switched off in the LCD tab like all pages; enabled by default for new
+  installations, unchecked in existing settings. The name is drawn as large as it fits: one line
+  in scale 5 (5 characters, about the size of the G13 logo of the start animation), 4 (6), 3 (8)
+  or 2 (13); else two lines in scale 2, broken at the space that balances them; else one line in
+  scale 1, cut with "~" after 26 characters. Profile names have no length limit.
 * Pages: status (device, profile, layer M1–M3, "REC" while recording), system (see below), cpu,
   amdgpu, nvidia (see below), clock (time, seconds, day and date in the user's locale), text (set
   via D-Bus `LcdText`, up to five lines).
 * Enabled pages and their order are global settings in `~/.config/gkey-config/settings.json`
   (`{ "lcd": { "pages": ["status", "system", "clock", "text"] } }`), edited in the GUI's LCD tab.
-  Without the file the pages intro, status, system, clock and text are enabled in this order
+  Without the file the pages intro, profile, status, system, clock and text are enabled in this order
   (`LcdPages::defaultPages()`); the hardware pages cpu, amdgpu and nvidia are off, as they are
   only useful with that hardware. A page added in a later version appears unchecked in existing
   settings.

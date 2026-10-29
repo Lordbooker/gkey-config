@@ -322,6 +322,10 @@
         <source>NVIDIA GPU (load, clocks, temperature, VRAM, power, fan)</source>
         <translation>GPU NVIDIA (charge, fréquences, température, VRAM, puissance, ventilateur)</translation>
     </message>
+    <message>
+        <source>Profile name (for 3 seconds when the profile changes)</source>
+        <translation>Nom du profil (3 secondes lors d’un changement de profil)</translation>
+    </message>
 </context>
 <context>
     <name>MacroEditor</name>

@@ -106,6 +106,7 @@ void drawRight(LcdFrame &frame, int y, const QString &text)
 const QStringList &allPages()
 {
     static const QStringList pages = {IntroPage,
+                                      ProfilePage,
                                       QStringLiteral("status"),
                                       QStringLiteral("system"),
                                       QStringLiteral("cpu"),
@@ -118,8 +119,12 @@ const QStringList &allPages()
 
 const QStringList &defaultPages()
 {
-    static const QStringList pages = {IntroPage, QStringLiteral("status"), QStringLiteral("system"),
-                                      QStringLiteral("clock"), QStringLiteral("text")};
+    static const QStringList pages = {IntroPage,
+                                      ProfilePage,
+                                      QStringLiteral("status"),
+                                      QStringLiteral("system"),
+                                      QStringLiteral("clock"),
+                                      QStringLiteral("text")};
     return pages;
 }
 
@@ -127,6 +132,7 @@ QStringList rotation(const QStringList &pages)
 {
     QStringList result = pages;
     result.removeAll(IntroPage);
+    result.removeAll(ProfilePage);
     return result;
 }
 
@@ -180,6 +186,49 @@ void renderClock(LcdFrame &frame, const QDateTime &time)
     const QString day = locale.toString(time.date(), QStringLiteral("dddd"));
     const QString line = LcdFrame::elided(day + QStringLiteral(", ") + date, frame.width());
     frame.drawText(centeredX(frame, line, 1), 35, line);
+}
+
+void renderProfile(LcdFrame &frame, const QString &name)
+{
+    frame.clear();
+    const QString text = LcdFrame::toAscii(name.isEmpty() ? QStringLiteral("-") : name);
+    const int maxWidth = frame.width() - 2;
+    const auto drawCentered = [&frame](const QStringList &lines, int scale) {
+        constexpr int Gap = 4;   // between two lines in scale 2
+        const int lineHeight = LcdFont::Height * scale;
+        const int total = static_cast<int>(lines.size()) * lineHeight + (static_cast<int>(lines.size()) - 1) * Gap;
+        int y = (frame.height() - total) / 2;
+        for (const QString &line : lines) {
+            frame.drawText(centeredX(frame, line, scale), y, line, scale);
+            y += lineHeight + Gap;
+        }
+    };
+
+    // One line, as large as possible (scale 5 is about the size of the G13 logo).
+    for (int scale = 5; scale >= 2; --scale) {
+        if (LcdFrame::textWidth(text, scale) <= maxWidth) {
+            drawCentered({text}, scale);
+            return;
+        }
+    }
+    // Two lines in scale 2, broken at the space that balances them best.
+    QStringList best;
+    int bestWidth = maxWidth + 1;
+    for (qsizetype i = text.indexOf(u' '); i >= 0; i = text.indexOf(u' ', i + 1)) {
+        const QString first = text.left(i).trimmed();
+        const QString second = text.mid(i + 1).trimmed();
+        const int width = qMax(LcdFrame::textWidth(first, 2), LcdFrame::textWidth(second, 2));
+        if (!first.isEmpty() && !second.isEmpty() && width < bestWidth) {
+            best = {first, second};
+            bestWidth = width;
+        }
+    }
+    if (!best.isEmpty()) {
+        drawCentered(best, 2);
+        return;
+    }
+    const QString shown = LcdFrame::elided(text, maxWidth);
+    drawCentered({shown}, 1);
 }
 
 void renderText(LcdFrame &frame, const QStringList &lines)
