@@ -6,6 +6,8 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-29
+
 ### Added
 
 - LCD page *Profile name*: when the profile changes, its name is shown for 3 seconds, as large as it
@@ -189,7 +191,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/Lordbooker/gkey-config/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/Lordbooker/gkey-config/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/Lordbooker/gkey-config/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/Lordbooker/gkey-config/compare/v1.3.0...v1.4.0
