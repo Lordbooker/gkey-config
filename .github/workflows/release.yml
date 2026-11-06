@@ -78,7 +78,8 @@ jobs:
             done
             apt-get install -y -q --no-install-recommends git ca-certificates
           elif command -v zypper >/dev/null; then
-            zypper --non-interactive --quiet install --no-recommends git
+            # gawk: else zypper picks busybox-gawk, which conflicts with rpm-build
+            zypper --non-interactive --quiet install --no-recommends git gawk
           else
             dnf install -y -q git
           fi

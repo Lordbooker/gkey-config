@@ -105,7 +105,9 @@ case "$ID" in
         RELEASE="1"          # CPack appends %{?dist} (e.g. .fc44)
         ;;
     opensuse-tumbleweed)
-        zypper --non-interactive --quiet install --no-recommends \
+        # --force-resolution: the image may have busybox variants of tools
+        # (e.g. busybox-gawk) that conflict with the real ones the build needs.
+        zypper --non-interactive --quiet install --no-recommends --force-resolution \
             gcc-c++ make cmake pkgconf git rpm-build \
             qt6-base-devel qt6-tools-devel qt6-linguist-devel libevdev-devel systemd-devel
         GENERATOR=RPM
