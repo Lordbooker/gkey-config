@@ -71,6 +71,12 @@ jobs:
               dnf install -y
               gcc-c++ cmake git pkgconf-pkg-config qt6-qtbase-devel qt6-qttools-devel libevdev-devel
               systemd-devel systemd-udev dbus-daemon dbus-tools glib2
+          - distro: openSUSE Tumbleweed
+            image: opensuse/tumbleweed:latest
+            install: >-
+              zypper --non-interactive install --no-recommends
+              gcc-c++ make cmake git pkgconf qt6-base-devel qt6-tools-devel qt6-linguist-devel libevdev-devel
+              systemd-devel udev dbus-1 dbus-1-daemon glib2-tools desktop-file-utils AppStream tar gzip
           - distro: Debian testing
             image: debian:testing
             install: >-
