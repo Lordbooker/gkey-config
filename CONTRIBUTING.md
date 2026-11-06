@@ -14,14 +14,14 @@ Pull requests go against `dev`. Code, comments, commit messages and pull request
 
 Dependencies:
 
-| | Arch Linux | Fedora | Debian / Ubuntu |
-|---|---|---|---|
-| Build tools | `base-devel cmake pkgconf` | `gcc-c++ cmake pkgconf-pkg-config` | `build-essential cmake pkg-config` |
-| Qt6 | `qt6-base` | `qt6-qtbase-devel` | `qt6-base-dev` |
-| Qt6 Linguist | `qt6-tools` (+ `qt6-declarative` for `lupdate`) | `qt6-qttools-devel` | `qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools` |
-| libevdev | `libevdev` | `libevdev-devel` | `libevdev-dev` |
-| libudev | `systemd-libs` | `systemd-devel` | `libudev-dev` |
-| Tests (D-Bus) | `dbus glib2` | `dbus-daemon dbus-tools glib2` | `dbus-daemon libglib2.0-bin` |
+| | Arch Linux | Fedora | openSUSE Tumbleweed | Debian / Ubuntu |
+|---|---|---|---|---|
+| Build tools | `base-devel cmake pkgconf` | `gcc-c++ cmake pkgconf-pkg-config` | `gcc-c++ make cmake pkgconf` | `build-essential cmake pkg-config` |
+| Qt6 | `qt6-base` | `qt6-qtbase-devel` | `qt6-base-devel` | `qt6-base-dev` |
+| Qt6 Linguist | `qt6-tools` (+ `qt6-declarative` for `lupdate`) | `qt6-qttools-devel` | `qt6-tools-devel qt6-linguist-devel` | `qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools` |
+| libevdev | `libevdev` | `libevdev-devel` | `libevdev-devel` | `libevdev-dev` |
+| libudev | `systemd-libs` | `systemd-devel` | `systemd-devel` | `libudev-dev` |
+| Tests (D-Bus) | `dbus glib2` | `dbus-daemon dbus-tools glib2` | `dbus-1-daemon glib2-tools` | `dbus-daemon libglib2.0-bin` |
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
@@ -51,7 +51,7 @@ tags the workflow *Release packages* runs them first and builds packages only wh
 
 | Check | Where | Run it locally |
 |---|---|---|
-| Build and tests with GCC, warnings as errors | Arch Linux, Fedora, Debian testing; Arch also in Release mode | `-DENABLE_WERROR=ON`, `ctest` |
+| Build and tests with GCC, warnings as errors | Arch Linux, Fedora, openSUSE Tumbleweed, Debian testing; Arch also in Release mode | `-DENABLE_WERROR=ON`, `ctest` |
 | Build and tests with the packages of SteamOS | Arch Linux container switched to SteamOS's repositories | `packaging/steamos/setup-container.sh` (in a container) |
 | Build and tests with Clang | Arch Linux | `-DCMAKE_CXX_COMPILER=clang++` |
 | clang-tidy (`.clang-tidy`, `tests/.clang-tidy`) | Arch Linux | `scripts/clang-tidy.sh build` (after a build) |
@@ -134,7 +134,12 @@ distribution, the same way the release workflow does:
 ```bash
 docker run --rm -v "$PWD:/src" -w /src ubuntu:26.04 packaging/build-package.sh dist
 docker run --rm -v "$PWD:/src" -w /src fedora:44    packaging/build-package.sh dist
+docker run --rm -v "$PWD:/src" -w /src opensuse/tumbleweed packaging/build-package.sh dist
 ```
+
+The RPM dependencies are named differently on Fedora and openSUSE; `build-package.sh` passes the
+openSUSE names through the CMake settings `GKEY_RPM_REQUIRES`, `GKEY_RPM_RECOMMENDS` and
+`GKEY_RPM_SUGGESTS` (defaults: Fedora).
 
 The AUR package `gkey-config` (releases only) is in `packaging/arch/`; on every push to `dev` the
 workflow builds it from the pushed commit as a test.
