@@ -88,6 +88,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.7.0" date="2026-11-06">
+      <description>
+        <p>Package for openSUSE Tumbleweed.</p>
+      </description>
+    </release>
     <release version="1.6.0" date="2026-10-29">
       <description>
         <p>New LCD page: the name of the profile is shown large for 3 seconds when the profile changes; it can be switched off in the LCD tab. G13: stick keys without effect in the selected stick mode are greyed out.</p>
