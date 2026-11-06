@@ -51,20 +51,25 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     "${GKEY_PACKAGING_DIR}/deb/postrm")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_STRICT_PERMISSION ON)
 
-# --- Fedora ---------------------------------------------------------------------
+# --- Fedora, openSUSE -----------------------------------------------------------
+# Package names differ between Fedora (defaults) and openSUSE, which
+# packaging/build-package.sh passes in.
+set(GKEY_RPM_REQUIRES   "systemd, systemd-udev"                CACHE STRING "RPM Requires")
+set(GKEY_RPM_RECOMMENDS "polkit, qt6-qtwayland, xdg-utils"     CACHE STRING "RPM Recommends")
+set(GKEY_RPM_SUGGESTS   "qt6-qttranslations"                   CACHE STRING "RPM Suggests")
 set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
 set(CPACK_RPM_PACKAGE_RELEASE "${GKEY_PACKAGE_RELEASE}")
-set(CPACK_RPM_PACKAGE_RELEASE_DIST ON)   # appends %{?dist}, e.g. .fc44
+set(CPACK_RPM_PACKAGE_RELEASE_DIST ON)   # appends %{?dist}, e.g. .fc44 (empty on openSUSE)
 # Not relocatable: the systemd unit and the D-Bus service contain absolute paths.
 set(CPACK_PACKAGE_RELOCATABLE OFF)
 set(CPACK_RPM_PACKAGE_LICENSE "GPL-2.0-only")
 set(CPACK_RPM_PACKAGE_GROUP "Applications/System")
-set(CPACK_RPM_PACKAGE_REQUIRES "systemd, systemd-udev")
+set(CPACK_RPM_PACKAGE_REQUIRES "${GKEY_RPM_REQUIRES}")
 set(CPACK_RPM_PACKAGE_CONFLICTS "linux-g13-driver")
 # Weak dependencies, see Debian above (Recommends needs CMake >= 4.1, older
 # versions ignore it).
-set(CPACK_RPM_PACKAGE_RECOMMENDS "polkit, qt6-qtwayland, xdg-utils")
-set(CPACK_RPM_PACKAGE_SUGGESTS "qt6-qttranslations")
+set(CPACK_RPM_PACKAGE_RECOMMENDS "${GKEY_RPM_RECOMMENDS}")
+set(CPACK_RPM_PACKAGE_SUGGESTS "${GKEY_RPM_SUGGESTS}")
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE   "${GKEY_PACKAGING_DIR}/rpm/post")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${GKEY_PACKAGING_DIR}/rpm/postun")
 # Directories owned by the base system must not be claimed by the package.

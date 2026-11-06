@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 #
-# Builds a .deb (Ubuntu) or .rpm (Fedora) for the running system. Intended for
-# a fresh container of the target distribution (as root):
+# Builds a .deb (Ubuntu) or .rpm (Fedora, openSUSE Tumbleweed) for the running
+# system. Intended for a fresh container of the target distribution (as root):
 #
 #   docker run --rm -v "$PWD:/src" -w /src ubuntu:26.04 packaging/build-package.sh dist
 #   docker run --rm -v "$PWD:/src" -w /src fedora:44    packaging/build-package.sh dist
+#   docker run --rm -v "$PWD:/src" -w /src opensuse/tumbleweed packaging/build-package.sh dist
 #
 # Argument: output directory (default: dist/ in the repository)
 # Optional: GKEY_PACKAGE_VERSION, e.g. 1.0.0 (default: from the git tag)
@@ -103,6 +104,20 @@ case "$ID" in
         GENERATOR=RPM
         RELEASE="1"          # CPack appends %{?dist} (e.g. .fc44)
         ;;
+    opensuse-tumbleweed)
+        # --force-resolution: the image may have busybox variants of tools
+        # (e.g. busybox-gawk) that conflict with the real ones the build needs.
+        zypper --non-interactive --quiet install --no-recommends --force-resolution \
+            gcc-c++ make cmake pkgconf git rpm-build \
+            qt6-base-devel qt6-tools-devel qt6-linguist-devel libevdev-devel systemd-devel
+        GENERATOR=RPM
+        # openSUSE has no %{?dist}: the name says it (e.g. 1.tumbleweed).
+        RELEASE="1.tumbleweed"
+        # openSUSE names of the dependencies (Fedora: systemd-udev, qt6-qtwayland, ...)
+        RPM_REQUIRES="-DGKEY_RPM_REQUIRES=systemd, udev"
+        RPM_RECOMMENDS="-DGKEY_RPM_RECOMMENDS=polkit, qt6-wayland, xdg-utils"
+        RPM_SUGGESTS="-DGKEY_RPM_SUGGESTS=qt6-translations"
+        ;;
     *)
         echo "Unsupported distribution: $ID" >&2
         exit 1
@@ -114,6 +129,9 @@ git config --global --add safe.directory '*'
 
 set -- -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTS=OFF \
        -DGKEY_PACKAGE_RELEASE="$RELEASE"
+if [ -n "${RPM_REQUIRES:-}" ]; then
+    set -- "$@" "$RPM_REQUIRES" "$RPM_RECOMMENDS" "$RPM_SUGGESTS"
+fi
 if [ -n "${GKEY_PACKAGE_VERSION:-}" ]; then
     set -- "$@" -DGKEY_PACKAGE_VERSION="$GKEY_PACKAGE_VERSION" -DGKEY_VERSION="$GKEY_PACKAGE_VERSION"
 fi
@@ -138,9 +156,17 @@ case "$GENERATOR" in
         echo "Requires:";   rpm -qp --requires "$PACKAGE"
         echo "Recommends:"; rpm -qp --recommends "$PACKAGE"
         echo "Suggests:";   rpm -qp --suggests "$PACKAGE"
-        dnf install -y -q --setopt=install_weak_deps=False "$PACKAGE"
+        if [ "$ID" = fedora ]; then
+            dnf install -y -q --setopt=install_weak_deps=False "$PACKAGE"
+        else
+            zypper --non-interactive --quiet install --no-recommends --allow-unsigned-rpm "$PACKAGE"
+        fi
         for dep in $(rpm -qp --recommends "$PACKAGE") $(rpm -qp --suggests "$PACKAGE"); do
-            dnf -q repoquery --whatprovides "$dep" | grep -q . || { echo "Recommended package not found: $dep" >&2; exit 1; }
+            if [ "$ID" = fedora ]; then
+                dnf -q repoquery --whatprovides "$dep" | grep -q .
+            else
+                zypper --non-interactive --quiet search --provides --match-exact "$dep" >/dev/null
+            fi || { echo "Recommended package not found: $dep" >&2; exit 1; }
         done
         ;;
 esac

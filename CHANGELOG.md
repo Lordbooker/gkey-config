@@ -6,6 +6,12 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Added
+
+- openSUSE Tumbleweed: RPM package `gkey-config-<version>-1.tumbleweed.x86_64.rpm`, built,
+  installed and tested in CI. openSUSE Leap 16 has Linux 6.12, which drives G11, G15 and G510 but
+  not the G13 (Linux 6.19 or newer).
+
 ## [1.6.0] - 2026-10-29
 
 ### Added

@@ -47,6 +47,7 @@ jobs:
         include:
           - { name: ubuntu26.04, image: "ubuntu:26.04" }
           - { name: fedora44,    image: "fedora:44" }
+          - { name: opensuse-tumbleweed, image: "opensuse/tumbleweed:latest" }
 
     steps:
       # git before the checkout, so that the full history including tags
@@ -76,6 +77,9 @@ jobs:
               sleep 10
             done
             apt-get install -y -q --no-install-recommends git ca-certificates
+          elif command -v zypper >/dev/null; then
+            # gawk: else zypper picks busybox-gawk, which conflicts with rpm-build
+            zypper --non-interactive --quiet install --no-recommends git gawk
           else
             dnf install -y -q git
           fi
@@ -268,6 +272,7 @@ jobs:
             # GitHub replaces "~" in file names of release assets with "."
             echo "| Ubuntu 26.04 (and Linux Mint, Pop!_OS, ... based on it) | \`gkey-config_*.ubuntu26.04_amd64.deb\` |"
             echo "| Fedora 44 | \`gkey-config-*.fc44.x86_64.rpm\` |"
+            echo "| openSUSE Tumbleweed | \`gkey-config-*.tumbleweed.x86_64.rpm\` |"
             echo "| Arch Linux | AUR: \`gkey-config\` |"
             echo "| SteamOS 3.9 or newer (Steam Deck, untested) | \`gkey-config-*-steamos-x86_64.tar.gz\`, see README-SteamOS.md inside |"
             echo
@@ -276,6 +281,8 @@ jobs:
             echo 'sudo apt install ./gkey-config_<version>-1.ubuntu26.04_amd64.deb'
             echo '# Fedora'
             echo 'sudo dnf install ./gkey-config-<version>-1.fc44.x86_64.rpm'
+            echo '# openSUSE Tumbleweed'
+            echo 'sudo zypper install --allow-unsigned-rpm ./gkey-config-<version>-1.tumbleweed.x86_64.rpm'
             echo '```'
             echo
             echo "Then start *G-Key Configuration* from the application menu: on its first start it"
