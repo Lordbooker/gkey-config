@@ -159,5 +159,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # A fixed version, like clang-format: a new release must not change the
+      # result of a run without a change in the repository.
       - name: Check copyright and license information
-        run: pipx run reuse lint
+        run: pipx run --spec reuse==6.3.0 reuse lint
