@@ -8,6 +8,9 @@
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <limits>
+#include <memory>
+
 // Page logic of the LCD with the start animation. The device has no hidraw
 // node here, so nothing is written; only the pages are checked.
 class TestLcdController : public QObject {
@@ -19,6 +22,7 @@ private slots:
     void introDisabled();
     void introRemovedWhileShown();
     void textInterruptsIntro();
+    void textWithHugeDuration();
     void hardwarePages();
     void defaultPages();
     void profilePageOnChange();
@@ -94,6 +98,18 @@ void TestLcdController::textInterruptsIntro()
 
 // CPU and GPU pages are in the rotation and show their title; the GPU pages
 // show it with and without that GPU (the test machine may have neither).
+// A duration from a script (D-Bus) that does not fit into the timer's
+// milliseconds is limited instead of ending the text at once.
+void TestLcdController::textWithHugeDuration()
+{
+    auto lcd = controller({QStringLiteral("status"), QStringLiteral("text")});
+    QCOMPARE(lcd->currentPage(), QStringLiteral("status"));
+    lcd->setText(QStringLiteral("hello"), std::numeric_limits<int>::max());
+    QCOMPARE(lcd->currentPage(), QStringLiteral("text"));
+    QTest::qWait(50);
+    QCOMPARE(lcd->currentPage(), QStringLiteral("text"));
+}
+
 void TestLcdController::hardwarePages()
 {
     auto lcd = controller({QStringLiteral("cpu"), QStringLiteral("amdgpu"), QStringLiteral("nvidia")});

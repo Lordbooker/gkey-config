@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include <QTimer>
 
+#include <algorithm>
 #include <utility>
 
 LcdController::LcdController(const DeviceModel &model, const QString &hidSyspath, QObject *parent)
@@ -124,6 +125,7 @@ void LcdController::showPage(const QString &page)
 void LcdController::setText(const QString &text, int seconds)
 {
     m_textLines = text.split(u'\n');
+    seconds = std::min(seconds, MaxTextSeconds);
     const bool temporaryShown = m_returnTimer && m_returnTimer->isActive();
     if (seconds > 0 && (temporaryShown || m_page != u"text")) {
         showTemporarily(QStringLiteral("text"), seconds * 1000);
