@@ -63,6 +63,9 @@ protected:
 
 private:
     void setupUi();
+    // Ends the program (window and tray icon); asks first if a macro has unsaved changes.
+    void quit();
+    bool confirmUnsavedMacro();
     void selectModel(const QString &modelId);
     void reloadProfiles();
     void reloadView();
