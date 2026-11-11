@@ -69,6 +69,11 @@ public:
         int maximum = 255;
     };
 
+    // Limits for values of a model file that sizes memory or enters
+    // calculations; far above anything a real device has.
+    static constexpr int MaxLcdSize = 1024;       // pixels per side
+    static constexpr int MaxStickValue = 65535;   // absolute value of an axis limit
+
     struct Lcd {
         QString type;      // protocol, e.g. "g13-hidraw"
         int width = 0;

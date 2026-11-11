@@ -228,6 +228,16 @@ void TestDeviceModel::invalidModels_data()
     QTest::newRow("view without size") << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
                                                        R"(, "view": { "keys": [] })")
                                        << QStringLiteral("width");
+    // Values that size memory (the LCD frame) or enter calculations are limited.
+    QTest::newRow("huge lcd") << minimalModel(R"([{ "id": "G1", "code": "KEY_MACRO1" }])",
+                                              R"(, "lcd": { "type": "g13-hidraw", "width": 100000, "height": 100000 })")
+                              << QStringLiteral("at most");
+    QTest::newRow("huge stick range")
+        << QByteArray(R"({ "id": "test", "name": "Test", "usb": [{ "vendor": "046d", "product": "ffff" }],
+                         "inputs": { "keys": "x", "stick": "y" }, "keys": [{ "id": "G1", "code": "KEY_MACRO1" }],
+                         "stick": { "input": "stick", "axisX": "ABS_X", "axisY": "ABS_Y",
+                                    "min": 0, "max": 2147483647 } })")
+        << QStringLiteral("within");
     QTest::newRow("bad usb id")
         << QByteArray(R"({ "id": "test", "name": "Test", "usb": [{ "vendor": "46d", "product": "ffff" }],
                          "inputs": { "keys": "x" }, "keys": [{ "id": "G1", "code": "KEY_MACRO1" }] })")
