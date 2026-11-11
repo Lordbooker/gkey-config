@@ -9,6 +9,8 @@
 #include <QSaveFile>
 #include <QStandardPaths>
 
+#include <algorithm>
+
 namespace {
 
 // Entry of an autostart file that is active: not hidden and not disabled for GNOME.
@@ -49,6 +51,29 @@ QString systemFile(const QString &fileName, const Autostart::Paths &paths)
     return {};
 }
 
+// One argument of an Exec value: quoted if it contains a reserved character;
+// inside the quotes ", `, $ and \ are escaped. Then the escaping of every
+// string value (\ doubled) and of field codes (% doubled).
+QString execArgument(const QString &argument)
+{
+    static const QString reserved = QStringLiteral(" \t\n\"'\\><~|&;$*?#()`");
+    QString result = argument;
+    const bool quote =
+        argument.isEmpty() || std::ranges::any_of(argument, [](const QChar c) { return reserved.contains(c); });
+    if (quote) {
+        result.clear();
+        for (const QChar c : argument) {
+            if (c == u'"' || c == u'`' || c == u'$' || c == u'\\')
+                result += u'\\';
+            result += c;
+        }
+        result = u'"' + result + u'"';
+        result.replace(u'\\', QStringLiteral("\\\\"));
+    }
+    result.replace(u'%', QStringLiteral("%%"));
+    return result;
+}
+
 bool writeFile(const QString &path, const QString &content, QString *error)
 {
     QDir().mkpath(QFileInfo(path).absolutePath());
@@ -76,6 +101,14 @@ Paths defaultPaths()
     for (const QString &dir : configDirs.split(u':', Qt::SkipEmptyParts))
         paths.systemDirs.append(dir + QStringLiteral("/autostart"));
     return paths;
+}
+
+QString execLine(const QString &program, const QStringList &arguments)
+{
+    QStringList parts{execArgument(program)};
+    for (const QString &argument : arguments)
+        parts.append(execArgument(argument));
+    return parts.join(u' ');
 }
 
 bool isEnabled(const QString &fileName, const Paths &paths)

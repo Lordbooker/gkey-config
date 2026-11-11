@@ -18,6 +18,11 @@ struct Paths {
 
 Paths defaultPaths();
 
+// Exec value of a desktop entry for a program and its arguments, quoted and
+// escaped as the Desktop Entry Specification demands (a path with spaces
+// would otherwise be split into several arguments).
+QString execLine(const QString &program, const QStringList &arguments = {});
+
 // Whether the entry starts at login for this user.
 bool isEnabled(const QString &fileName, const Paths &paths = defaultPaths());
 
