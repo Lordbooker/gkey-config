@@ -10,6 +10,7 @@
 #include <QLoggingCategory>
 
 #include <algorithm>
+#include <optional>
 #include <ranges>
 #include <utility>
 
@@ -111,15 +112,18 @@ void BindingEngine::handle(const QString &keyId, DeviceModel::KeyRole role, bool
             run->stop();   // a new press stops a running macro
             return;
         }
+        // A copy: a profile or mode action replaces m_profile (through the
+        // daemon) while press() still runs, which would leave a reference
+        // into the old profile dangling.
+        std::optional<Action> action;
         const auto &bindings = m_profile.bindings(m_mode);
-        const auto it = bindings.constFind(keyId);
-        if (it != bindings.constEnd()) {
-            press(keyId, it.value());
-        } else if (const DeviceModel::Key *key = m_model.keyById(keyId); key && key->defaultAction) {
-            press(keyId, *key->defaultAction);
-        } else {
+        if (const auto it = bindings.constFind(keyId); it != bindings.constEnd())
+            action = it.value();
+        else if (const DeviceModel::Key *key = m_model.keyById(keyId); key && key->defaultAction)
+            action = key->defaultAction;
+        if (!action)
             return;   // unbound in this mode
-        }
+        press(keyId, *action);
     } else {
         if (MacroRun *run = m_runs.value(keyId)) {
             if (m_runRepeat.value(keyId) == Action::Repeat::WhileHeld)

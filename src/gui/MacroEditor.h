@@ -31,6 +31,11 @@ public:
     MacroEditor(MacroStore *store, DaemonClient *client, QWidget *parent = nullptr);
 
     bool isRecording() const { return m_recording; }
+    // Steps or a description that have not been saved yet.
+    bool hasUnsavedChanges() const { return m_dirty; }
+    // Asks whether unsaved changes may be discarded; true if there are none or
+    // the user agrees.
+    bool confirmDiscard();
 
 public slots:
     // Called when MR on the device toggles the recording state.
@@ -47,7 +52,6 @@ private:
     void setSteps(const QList<Macro::Step> &steps);
     void appendStep(const Macro::Step &step);
     void setDirty(bool dirty);
-    bool confirmDiscard();
     void updateButtons();
 
     void onNew();

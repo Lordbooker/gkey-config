@@ -27,6 +27,12 @@
 template <typename T>
 class JsonFileStore {
 public:
+    // Larger files are not read (reported in messages()): a profile or macro
+    // has some kilobytes, and a file of any size in the directory must not
+    // exhaust the memory of the daemon.
+    static constexpr qint64 MaxFileMiB = 4;
+    static constexpr qint64 MaxFileSize = MaxFileMiB * 1024 * 1024;
+
     // Called for every item read; may adjust it and add messages (e.g. warnings).
     using ReadHook = std::function<void(T &item, const QString &path, QStringList &messages)>;
 
@@ -56,7 +62,13 @@ public:
                 m_messages.append(QStringLiteral("%1: %2").arg(path, file.errorString()));
                 continue;
             }
-            auto item = T::fromJson(file.readAll());
+            // read() instead of size(): also bounded for files without a size (devices).
+            const QByteArray content = file.read(MaxFileSize + 1);
+            if (content.size() > MaxFileSize) {
+                m_messages.append(QStringLiteral("%1: larger than %2 MiB; file ignored").arg(path).arg(MaxFileMiB));
+                continue;
+            }
+            auto item = T::fromJson(content);
             if (!item) {
                 m_messages.append(QStringLiteral("%1: %2").arg(path, item.error()));
                 continue;

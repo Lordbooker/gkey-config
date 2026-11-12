@@ -47,6 +47,7 @@ private slots:
     void systemEntry();
     void noSystemEntry();
     void gnomeDisabledEntry();
+    void execLineIsQuoted();
     void groupStates();
     void errorText();
 
@@ -105,6 +106,20 @@ void TestSession::gnomeDisabledEntry()
     // Keys of other groups do not count.
     write(QDir(m_paths.userDir).filePath(FileName), "[Desktop Entry]\nExec=x\n[Desktop Action a]\nHidden=true\n");
     QVERIFY(Autostart::isEnabled(FileName, m_paths));
+}
+
+// Desktop Entry Specification, "The Exec key": arguments with reserved
+// characters are quoted; ", `, $ and \ are escaped inside the quotes, a
+// backslash once more as in every string value, and % is doubled.
+void TestSession::execLineIsQuoted()
+{
+    QCOMPARE(Autostart::execLine(QStringLiteral("gkey-config"), {QStringLiteral("--tray")}),
+             QStringLiteral("gkey-config --tray"));
+    QCOMPARE(Autostart::execLine(QStringLiteral("/opt/my apps/gkey-config"), {QStringLiteral("--tray")}),
+             QStringLiteral("\"/opt/my apps/gkey-config\" --tray"));
+    QCOMPARE(Autostart::execLine(QStringLiteral("/opt/a$b/c\"d/e\\f")),
+             QStringLiteral("\"/opt/a\\\\$b/c\\\\\"d/e\\\\\\\\f\""));
+    QCOMPARE(Autostart::execLine(QStringLiteral("/opt/100%/gkey-config")), QStringLiteral("/opt/100%%/gkey-config"));
 }
 
 void TestSession::groupStates()

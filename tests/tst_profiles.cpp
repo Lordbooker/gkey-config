@@ -29,6 +29,7 @@ private slots:
     void invalidBindingsAreKept();
     void storeLoadSaveAndReload();
     void storeDuplicateNames();
+    void storeIgnoresHugeFiles();
     void storeRenameAndRemove();
     void state();
 
@@ -293,6 +294,23 @@ void TestProfiles::storeDuplicateNames()
     ProfileStore store(*g13(), path);
     QCOMPARE(store.names(), QStringList{QStringLiteral("Same")});
     QCOMPARE(store.messages().size(), 2);
+}
+
+void TestProfiles::storeIgnoresHugeFiles()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = dir.filePath(QStringLiteral("g13"));
+    QDir().mkpath(path);
+    writeFile(path + QStringLiteral("/a.json"), R"({"name":"Small"})");
+    // Valid JSON, but far larger than any profile.
+    const QByteArray padding(static_cast<qsizetype>(JsonFileStore<Profile>::MaxFileSize), ' ');
+    writeFile(path + QStringLiteral("/b.json"), R"({"name":"Huge"})" + padding);
+
+    ProfileStore store(*g13(), path);
+    QCOMPARE(store.names(), QStringList{QStringLiteral("Small")});
+    QCOMPARE(store.messages().size(), 1);
+    QVERIFY2(store.messages().first().contains(QStringLiteral("larger than")), qPrintable(store.messages().first()));
 }
 
 void TestProfiles::storeRenameAndRemove()

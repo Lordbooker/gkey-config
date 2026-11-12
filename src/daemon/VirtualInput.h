@@ -35,7 +35,7 @@ private:
     void write(unsigned int type, int code, int value);
 
     libevdev *m_device = nullptr;
-    int m_lastError = 0;
-    bool m_permissionDenied = false;   // last failed write (negative errno), 0 after a success
+    int m_lastError = 0;   // last failed write (negative errno), 0 after a success
+    bool m_permissionDenied = false;
     libevdev_uinput *m_uinput = nullptr;
 };

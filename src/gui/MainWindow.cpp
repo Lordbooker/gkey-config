@@ -280,10 +280,7 @@ void MainWindow::setupUi()
     });
     fileMenu->addAction(tr("Open macro folder"), this, [this] { openFolder(m_macros->directory()); });
     fileMenu->addSeparator();
-    fileMenu->addAction(tr("&Quit"), QKeySequence::Quit, this, [this] {
-        m_quitting = true;
-        qApp->quit();
-    });
+    fileMenu->addAction(tr("&Quit"), QKeySequence::Quit, this, &MainWindow::quit);
     QMenu *settingsMenu = menuBar()->addMenu(tr("&Settings"));
     m_daemonAutostartAction = settingsMenu->addAction(tr("Start the daemon at login"));
     m_daemonAutostartAction->setCheckable(true);
@@ -820,10 +817,7 @@ bool MainWindow::setupTray()
     menu->addAction(tr("Restart daemon"), this, [this] { runSystemctl(QStringLiteral("restart")); });
     menu->addAction(m_daemonAutostartAction);
     menu->addSeparator();
-    menu->addAction(tr("Quit tray icon"), this, [this] {
-        m_quitting = true;
-        qApp->quit();
-    });
+    menu->addAction(tr("Quit tray icon"), this, &MainWindow::quit);
     m_tray->setContextMenu(menu);
     connect(m_tray, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason reason) {
         if (reason == QSystemTrayIcon::Trigger) {
@@ -850,6 +844,27 @@ void MainWindow::showWindow()
         QTimer::singleShot(300, this, &MainWindow::askFirstRunSetup);
 }
 
+// Unsaved steps of a macro would be lost when the program ends: show them and ask.
+bool MainWindow::confirmUnsavedMacro()
+{
+    if (m_macroEditor->isRecording())
+        m_macroEditor->setRecordingFromDevice(false);
+    if (!m_macroEditor->hasUnsavedChanges())
+        return true;
+    if (!isVisible() || isMinimized())
+        showWindow();
+    m_tabs->setCurrentWidget(m_macroEditor);
+    return m_macroEditor->confirmDiscard();
+}
+
+void MainWindow::quit()
+{
+    if (!confirmUnsavedMacro())
+        return;
+    m_quitting = true;
+    qApp->quit();
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     if (m_macroEditor->isRecording())
@@ -862,6 +877,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
                                 tr("Still running in the system tray. The daemon keeps working without it."),
                                 QSystemTrayIcon::Information, 4000);
         }
+        event->ignore();
+        return;
+    }
+    // Without a tray icon closing the window ends the program.
+    if (!m_quitting && !confirmUnsavedMacro()) {
         event->ignore();
         return;
     }

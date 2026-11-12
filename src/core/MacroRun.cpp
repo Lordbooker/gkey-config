@@ -7,6 +7,8 @@
 
 #include <QTimer>
 
+#include <algorithm>
+
 MacroRun::MacroRun(const Macro &macro, Action::Repeat repeat, int count, KeyOutput &output, QObject *parent)
     : QObject(parent), m_macro(macro), m_repeat(repeat), m_count(count), m_output(output)
 {
@@ -15,10 +17,8 @@ MacroRun::MacroRun(const Macro &macro, Action::Repeat repeat, int count, KeyOutp
     m_timer->setTimerType(Qt::PreciseTimer);
     // A repeating macro without any wait would flood the output and keep the
     // event loop busy: give such macros a short pause between passes.
-    int totalWait = 0;
-    for (const Macro::Step &step : m_macro.steps())
-        totalWait += step.duration;
-    m_passGap = totalWait > 0 ? 0 : 10;
+    const bool waits = std::ranges::any_of(m_macro.steps(), [](const Macro::Step &step) { return step.duration > 0; });
+    m_passGap = waits ? 0 : 10;
 
     connect(m_timer, &QTimer::timeout, this, [this] {
         if (m_pendingTap) {

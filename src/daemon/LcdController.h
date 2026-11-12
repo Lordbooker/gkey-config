@@ -47,8 +47,11 @@ public:
     void showPage(const QString &page);
     const QString &currentPage() const { return m_page; }
 
-    // Shows text on the text page; seconds > 0 returns to the previous page afterwards.
+    // Shows text on the text page; seconds > 0 returns to the previous page
+    // afterwards (at most MaxTextSeconds).
     void setText(const QString &text, int seconds);
+    // Longest duration of a text; also keeps the timer's milliseconds in range.
+    static constexpr int MaxTextSeconds = 24 * 60 * 60;
 
     // How long the profile page is shown after a change of the profile.
     static constexpr int ProfileSeconds = 3;

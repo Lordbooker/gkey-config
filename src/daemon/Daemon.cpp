@@ -318,8 +318,17 @@ bool Daemon::setMode(const QString &modelId, int mode)
 bool Daemon::setProfile(const QString &modelId, const QString &name)
 {
     ModelContext *ctx = context(modelId);
-    if (!ctx || !ctx->store->profile(name))
+    if (!ctx)
         return false;
+    // The configuration tool creates, copies or renames a profile and selects it
+    // at once, before the file watcher (which waits a moment) has reported the
+    // new file: look again before the name counts as unknown.
+    if (!ctx->store->profile(name)) {
+        ctx->store->reload();
+        logStoreMessages(*ctx);
+        if (!ctx->store->profile(name))
+            return false;
+    }
     if (name != ctx->profile.name()) {
         selectProfile(*ctx, name);
         applyProfile(*ctx);
