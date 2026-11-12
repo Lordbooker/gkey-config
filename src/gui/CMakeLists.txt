@@ -26,6 +26,8 @@ add_executable(gkey-config
     SessionSetup.h
     StickPage.cpp
     StickPage.h
+    TrayIcon.cpp
+    TrayIcon.h
 )
 
 target_link_libraries(gkey-config PRIVATE

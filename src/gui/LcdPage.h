@@ -14,13 +14,15 @@
 
 #include <memory>
 
+class QComboBox;
 class QLabel;
 class QListWidget;
 class QListWidgetItem;
 class QPushButton;
 class QTimer;
 
-// LCD settings: which pages are shown (in order) and a preview of each page.
+// LCD settings: which pages are shown (in order), a preview of each page and
+// the page that follows the start animation.
 // The start animation is the first entry and cannot be moved: it is only shown
 // when the device connects, not while paging.
 class LcdPage : public QWidget {
@@ -29,6 +31,8 @@ public:
     explicit LcdPage(QWidget *parent = nullptr);
 
     void setPages(const QStringList &enabled);
+    // Page that follows the start animation; empty: its final image stays.
+    void setAfterIntro(const QString &page);
     void setStatus(const LcdPages::Status &status);
     // Model whose start animation the preview shows.
     void setModelId(const QString &modelId);
@@ -39,11 +43,13 @@ protected:
 
 signals:
     void pagesChanged(const QStringList &pages);
+    void afterIntroChanged(const QString &page);
     void showOnDevice(const QString &page);
 
 private:
     QStringList enabledPages() const;
     void updatePreview();
+    void updateAfterIntroChoices();
     void keepIntroFirst();
     QListWidgetItem *addItem(const QString &page, bool enabled);
     static QString title(const QString &page);
@@ -51,6 +57,10 @@ private:
     bool m_updating = false;
     LcdPages::Status m_status;
     QListWidget *m_list;
+    QComboBox *m_afterIntroBox;
+    // The setting, also while its page is not enabled (the box then shows
+    // that the final image stays, which is what the device does).
+    QString m_afterIntro;
     QLabel *m_preview;
     QPushButton *m_show;
     QTimer *m_clock;   // redraws the preview of the clock and the system values every second

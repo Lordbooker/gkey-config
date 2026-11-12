@@ -26,6 +26,11 @@ QStringList validPages(const QStringList &pages)
     return result.isEmpty() ? LcdPages::defaultPages() : result;
 }
 
+QString validAfterIntro(const QString &page)
+{
+    return LcdPages::rotation(LcdPages::allPages()).contains(page) ? page : QString();
+}
+
 }
 
 Settings::Settings(const QString &filePath, QObject *parent) : QObject(parent), m_filePath(filePath)
@@ -34,9 +39,10 @@ Settings::Settings(const QString &filePath, QObject *parent) : QObject(parent), 
     QDir().mkpath(dir);
     m_watcher = new DirectoryWatcher(dir, this);
     connect(m_watcher, &DirectoryWatcher::changed, this, [this] {
-        const QStringList before = m_lcdPages;
+        const QStringList pagesBefore = m_lcdPages;
+        const QString afterIntroBefore = m_lcdAfterIntro;
         reload();
-        if (m_lcdPages != before)
+        if (m_lcdPages != pagesBefore || m_lcdAfterIntro != afterIntroBefore)
             emit changed();
     });
     reload();
@@ -48,16 +54,23 @@ void Settings::reload()
     QJsonObject root;
     if (file.open(QIODevice::ReadOnly))
         root = QJsonDocument::fromJson(file.readAll()).object();
+    const QJsonObject lcd = root.value(u"lcd").toObject();
     QStringList pages;
-    for (const auto &page : root.value(u"lcd").toObject().value(u"pages").toArray())
+    for (const auto &page : lcd.value(u"pages").toArray())
         pages.append(page.toString());
     m_lcdPages = validPages(pages);
+    m_lcdAfterIntro = validAfterIntro(lcd.value(u"afterIntro").toString());
     m_watcher->setFiles(QFile::exists(m_filePath) ? QStringList{m_filePath} : QStringList{});
 }
 
 void Settings::setLcdPages(const QStringList &pages)
 {
     m_lcdPages = validPages(pages);
+}
+
+void Settings::setLcdAfterIntro(const QString &page)
+{
+    m_lcdAfterIntro = validAfterIntro(page);
 }
 
 bool Settings::save(QString *error)
@@ -69,6 +82,10 @@ bool Settings::save(QString *error)
     existing.close();
     QJsonObject lcd = root.value(u"lcd").toObject();
     lcd.insert(QStringLiteral("pages"), QJsonArray::fromStringList(m_lcdPages));
+    if (m_lcdAfterIntro.isEmpty())
+        lcd.remove(QStringLiteral("afterIntro"));
+    else
+        lcd.insert(QStringLiteral("afterIntro"), m_lcdAfterIntro);
     root.insert(QStringLiteral("lcd"), lcd);
 
     QSaveFile file(m_filePath);

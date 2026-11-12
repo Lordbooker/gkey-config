@@ -6,6 +6,17 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-12
+
+### Added
+
+- LCD tab: *After the start animation* chooses the page that follows the animation (2 seconds
+  after it has ended). By default its final image stays as before, until you switch to the next
+  page. ([#29](https://github.com/Lordbooker/gkey-config/issues/29))
+- *Settings > Tray icon* (also in the menu of the tray icon): the icon in colour as before, or in
+  one colour, light for dark panels or dark for light panels, to match desktops whose panel shows
+  only such icons. ([#30](https://github.com/Lordbooker/gkey-config/issues/30))
+
 ## [1.7.1] - 2026-11-12
 
 ### Fixed
@@ -221,7 +232,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.7.1...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/Lordbooker/gkey-config/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/Lordbooker/gkey-config/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/Lordbooker/gkey-config/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/Lordbooker/gkey-config/compare/v1.5.0...v1.6.0

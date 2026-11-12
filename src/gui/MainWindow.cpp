@@ -17,8 +17,10 @@
 #include "SessionSetup.h"
 #include "Settings.h"
 #include "StickPage.h"
+#include "TrayIcon.h"
 
 #include <QAction>
+#include <QActionGroup>
 #include <QApplication>
 #include <QButtonGroup>
 #include <QCheckBox>
@@ -249,7 +251,17 @@ void MainWindow::setupUi()
             QMessageBox::warning(this, tr("LCD"), error);
     });
     connect(m_lcdPage, &LcdPage::showOnDevice, m_client, &DaemonClient::lcdPage);
-    connect(m_settings, &Settings::changed, this, [this] { m_lcdPage->setPages(m_settings->lcdPages()); });
+    m_lcdPage->setAfterIntro(m_settings->lcdAfterIntro());
+    connect(m_lcdPage, &LcdPage::afterIntroChanged, this, [this](const QString &page) {
+        m_settings->setLcdAfterIntro(page);
+        QString error;
+        if (!m_settings->save(&error))
+            QMessageBox::warning(this, tr("LCD"), error);
+    });
+    connect(m_settings, &Settings::changed, this, [this] {
+        m_lcdPage->setPages(m_settings->lcdPages());
+        m_lcdPage->setAfterIntro(m_settings->lcdAfterIntro());
+    });
     tabs->addTab(m_lcdPage, tr("LCD"));
 
     m_macroEditor = new MacroEditor(m_macros, m_client, tabs);
@@ -295,6 +307,26 @@ void MainWindow::setupUi()
             QMessageBox::warning(this, tr("Tray icon at login"), error);
         m_trayAutostartAction->setChecked(m_session->trayAutostart());
     });
+    // Panels that show only one-colour icons (e.g. GNOME): a matching variant.
+    m_trayIconMenu = settingsMenu->addMenu(tr("Tray icon"));
+    auto *trayIconGroup = new QActionGroup(this);
+    const TrayIcon::Style current = TrayIcon::styleFromName(QSettings().value(QStringLiteral("tray/icon")).toString());
+    const std::pair<TrayIcon::Style, QString> styles[] = {
+        {TrayIcon::Style::Colour, tr("In colour")},
+        {TrayIcon::Style::Light, tr("One colour, light (for dark panels)")},
+        {TrayIcon::Style::Dark, tr("One colour, dark (for light panels)")},
+    };
+    for (const auto &[style, text] : styles) {
+        QAction *action = m_trayIconMenu->addAction(text);
+        action->setCheckable(true);
+        action->setChecked(style == current);
+        trayIconGroup->addAction(action);
+        connect(action, &QAction::triggered, this, [this, style] {
+            QSettings().setValue(QStringLiteral("tray/icon"), TrayIcon::styleName(style));
+            if (m_tray)
+                m_tray->setIcon(trayIcon());
+        });
+    }
     settingsMenu->addSeparator();
     m_ledAccessAction = settingsMenu->addAction(tr("Allow LED control..."), m_session, &SessionSetup::requestLedAccess);
 
@@ -804,7 +836,7 @@ bool MainWindow::setupTray()
     if (!QSystemTrayIcon::isSystemTrayAvailable())
         return false;
 
-    m_tray = new QSystemTrayIcon(appIcon(), this);
+    m_tray = new QSystemTrayIcon(trayIcon(), this);
     m_tray->setToolTip(tr("G-Key Configuration"));
     auto *menu = new QMenu(this);
     menu->addAction(tr("Open configuration"), this, &MainWindow::showWindow);
@@ -816,6 +848,7 @@ bool MainWindow::setupTray()
     });
     menu->addAction(tr("Restart daemon"), this, [this] { runSystemctl(QStringLiteral("restart")); });
     menu->addAction(m_daemonAutostartAction);
+    menu->addMenu(m_trayIconMenu);
     menu->addSeparator();
     menu->addAction(tr("Quit tray icon"), this, &MainWindow::quit);
     m_tray->setContextMenu(menu);
@@ -830,6 +863,13 @@ bool MainWindow::setupTray()
     m_tray->show();
     updateDaemonState();
     return true;
+}
+
+// The tray icon in the variant chosen under Settings > Tray icon.
+QIcon MainWindow::trayIcon() const
+{
+    const QString name = QSettings().value(QStringLiteral("tray/icon")).toString();
+    return TrayIcon::icon(TrayIcon::styleFromName(name), appIcon());
 }
 
 void MainWindow::showWindow()

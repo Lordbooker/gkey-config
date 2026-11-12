@@ -303,10 +303,6 @@
         <translation>Sistema (CPU, RAM, GPU, VRAM)</translation>
     </message>
     <message>
-        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page. The start animation plays when the device connects and stays until you switch to the next page.</source>
-        <translation>Páginas exibidas no LCD, nesta ordem. O botão redondo ao lado das teclas do LCD passa para a próxima página. A animação inicial é exibida quando o dispositivo é conectado e permanece até você passar para a próxima página.</translation>
-    </message>
-    <message>
         <source>Start animation (flames, when the device connects)</source>
         <translation>Animação inicial (chamas, ao conectar o dispositivo)</translation>
     </message>
@@ -325,6 +321,22 @@
     <message>
         <source>Profile name (for 3 seconds when the profile changes)</source>
         <translation>Nome do perfil (3 segundos ao mudar de perfil)</translation>
+    </message>
+    <message>
+        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page. The start animation plays when the device connects.</source>
+        <translation>Páginas exibidas no LCD, nesta ordem. O botão redondo ao lado das teclas do LCD passa para a próxima página. A animação inicial é exibida quando o dispositivo é conectado.</translation>
+    </message>
+    <message>
+        <source>After the start animation:</source>
+        <translation>Após a animação inicial:</translation>
+    </message>
+    <message>
+        <source>What the LCD shows when the start animation has ended: its final image until you switch to the next page, or one of the enabled pages.</source>
+        <translation>O que o LCD exibe ao final da animação inicial: a imagem final até você passar para a próxima página, ou uma das páginas ativadas.</translation>
+    </message>
+    <message>
+        <source>The final image stays</source>
+        <translation>A imagem final permanece</translation>
     </message>
 </context>
 <context>
@@ -801,6 +813,22 @@
     <message>
         <source>The stick directions are only used in the stick mode &quot;Keys (four directions)&quot;.</source>
         <translation>As direções do stick só são usadas no modo «Teclas (quatro direções)».</translation>
+    </message>
+    <message>
+        <source>Tray icon</source>
+        <translation>Ícone da bandeja</translation>
+    </message>
+    <message>
+        <source>In colour</source>
+        <translation>Colorido</translation>
+    </message>
+    <message>
+        <source>One colour, light (for dark panels)</source>
+        <translation>Monocromático claro (para painéis escuros)</translation>
+    </message>
+    <message>
+        <source>One colour, dark (for light panels)</source>
+        <translation>Monocromático escuro (para painéis claros)</translation>
     </message>
 </context>
 <context>

@@ -41,6 +41,13 @@ LcdController::LcdController(const DeviceModel &model, const QString &hidSyspath
             m_intro->step();
         refresh();
     });
+    m_introEndTimer = new QTimer(this);
+    m_introEndTimer->setSingleShot(true);
+    m_introEndTimer->setInterval(IntroEndSeconds * 1000);
+    connect(m_introEndTimer, &QTimer::timeout, this, [this] {
+        if (m_page == LcdPages::IntroPage && leavesIntro())
+            showPage(m_afterIntro);
+    });
 }
 
 LcdController::~LcdController()
@@ -59,6 +66,18 @@ void LcdController::setPages(const QStringList &pages)
     if (!m_pages.contains(m_page) && !temporary)
         m_page = rotation.isEmpty() ? LcdPages::IntroPage : rotation.first();
     refresh();
+}
+
+void LcdController::setPageAfterIntro(const QString &page)
+{
+    m_afterIntro = page;
+    refresh();   // also applies to a final image that is shown right now
+}
+
+// True if a page follows the final image of the start animation.
+bool LcdController::leavesIntro() const
+{
+    return !m_afterIntro.isEmpty() && LcdPages::rotation(m_pages).contains(m_afterIntro);
 }
 
 void LcdController::start()
@@ -202,6 +221,13 @@ void LcdController::refresh()
             m_introTimer->start();
         else if (!animating)
             m_introTimer->stop();
+        // The final image waits for the page after it; also when it is shown
+        // again after a temporary page (text, profile name).
+        const bool ending = m_page == LcdPages::IntroPage && m_intro && m_intro->finished() && leavesIntro();
+        if (ending && !m_introEndTimer->isActive())
+            m_introEndTimer->start();
+        else if (!ending)
+            m_introEndTimer->stop();
     }
     write();
 }
