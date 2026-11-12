@@ -637,6 +637,10 @@ Qt6 Widgets application `gkey-config` (implemented in milestone 4):
   (also started/stopped with MR on the device), playback on the device.
 * Status bar and tray icon show whether the daemon runs; it can be started, stopped and
   restarted (`systemctl --user`). Single instance; closing the window keeps the tray icon.
+* Tray icon variants *(1.8.0, issue #30)*: *Settings > Tray icon* offers the application icon in
+  colour (default) or its motif in one colour, light for dark panels or dark for light panels
+  (`TrayIcon`, drawn in code; QSettings key `tray/icon` = `colour`, `light`, `dark`). The user
+  chooses because the colour of the panel cannot be found out reliably.
 * Translations via Qt Linguist, chosen by the system language (`LANGUAGE`, `LC_ALL`, `LC_MESSAGES`,
   `LANG`) without a language setting of its own: English (source and fallback), German, French,
   Italian, Spanish and Portuguese (Brazilian), built into the binary. The desktop files carry the

@@ -814,6 +814,22 @@
         <source>The stick directions are only used in the stick mode &quot;Keys (four directions)&quot;.</source>
         <translation>Les directions du joystick ne sont utilisées que dans le mode « Touches (quatre directions) ».</translation>
     </message>
+    <message>
+        <source>Tray icon</source>
+        <translation>Icône de notification</translation>
+    </message>
+    <message>
+        <source>In colour</source>
+        <translation>En couleur</translation>
+    </message>
+    <message>
+        <source>One colour, light (for dark panels)</source>
+        <translation>Monochrome claire (pour les barres sombres)</translation>
+    </message>
+    <message>
+        <source>One colour, dark (for light panels)</source>
+        <translation>Monochrome sombre (pour les barres claires)</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

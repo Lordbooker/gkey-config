@@ -11,6 +11,9 @@ All notable changes to gkey-config are documented in this file. The format follo
 - LCD tab: *After the start animation* chooses the page that follows the animation (2 seconds
   after it has ended). By default its final image stays as before, until you switch to the next
   page. ([#29](https://github.com/Lordbooker/gkey-config/issues/29))
+- *Settings > Tray icon* (also in the menu of the tray icon): the icon in colour as before, or in
+  one colour, light for dark panels or dark for light panels, to match desktops whose panel shows
+  only such icons. ([#30](https://github.com/Lordbooker/gkey-config/issues/30))
 
 ## [1.7.1] - 2026-11-12
 

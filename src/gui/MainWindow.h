@@ -29,6 +29,7 @@ class QButtonGroup;
 class QCheckBox;
 class QComboBox;
 class QLabel;
+class QMenu;
 class QPushButton;
 class QToolButton;
 
@@ -65,6 +66,7 @@ private:
     void setupUi();
     // Ends the program (window and tray icon); asks first if a macro has unsaved changes.
     void quit();
+    QIcon trayIcon() const;
     bool confirmUnsavedMacro();
     void selectModel(const QString &modelId);
     void reloadProfiles();
@@ -122,6 +124,7 @@ private:
     SessionSetup *m_session = nullptr;
     QAction *m_daemonAutostartAction = nullptr;
     QAction *m_trayAutostartAction = nullptr;
+    QMenu *m_trayIconMenu = nullptr;   // colour or one-colour variant of the tray icon
     QAction *m_ledAccessAction = nullptr;
     bool m_firstRunPending = false;
     QLabel *m_daemonLabel = nullptr;

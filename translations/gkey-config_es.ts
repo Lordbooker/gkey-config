@@ -814,6 +814,22 @@
         <source>The stick directions are only used in the stick mode &quot;Keys (four directions)&quot;.</source>
         <translation>Las direcciones del stick solo se usan en el modo «Teclas (cuatro direcciones)».</translation>
     </message>
+    <message>
+        <source>Tray icon</source>
+        <translation>Icono de la bandeja</translation>
+    </message>
+    <message>
+        <source>In colour</source>
+        <translation>En color</translation>
+    </message>
+    <message>
+        <source>One colour, light (for dark panels)</source>
+        <translation>Monocromo claro (para paneles oscuros)</translation>
+    </message>
+    <message>
+        <source>One colour, dark (for light panels)</source>
+        <translation>Monocromo oscuro (para paneles claros)</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>

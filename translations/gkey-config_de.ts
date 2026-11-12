@@ -814,6 +814,22 @@
         <source>The stick directions are only used in the stick mode &quot;Keys (four directions)&quot;.</source>
         <translation>Die Stick-Richtungen werden nur im Stick-Modus „Tasten (vier Richtungen)“ verwendet.</translation>
     </message>
+    <message>
+        <source>Tray icon</source>
+        <translation>Tray-Symbol</translation>
+    </message>
+    <message>
+        <source>In colour</source>
+        <translation>Farbig</translation>
+    </message>
+    <message>
+        <source>One colour, light (for dark panels)</source>
+        <translation>Einfarbig hell (für dunkle Leisten)</translation>
+    </message>
+    <message>
+        <source>One colour, dark (for light panels)</source>
+        <translation>Einfarbig dunkel (für helle Leisten)</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>
