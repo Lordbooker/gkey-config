@@ -6,6 +6,26 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Fixed
+
+- A profile created, duplicated or renamed in the configuration tool is active on the device at
+  once. Until now the daemon did not know the new file yet when it was asked to select it: a new
+  profile was not activated, and after renaming the active profile the device fell back to the
+  first profile.
+- *Quit* (File menu, tray menu) and closing the window without a tray icon ask before unsaved
+  changes of a macro are lost.
+- *Show the tray icon at login* writes a valid autostart entry when the program lies in a path
+  with spaces (installation outside `PATH`).
+- D-Bus `LcdText`: a duration of more than 24 hours is limited to 24 hours; very large values
+  overflowed.
+
+### Security
+
+- Model files with an absurd LCD size or stick range are rejected, and profile and macro files
+  larger than 4 MiB are ignored, instead of exhausting the memory of the daemon.
+- CI: the workflow token is no longer kept in the checked-out repository, and the REUSE tool has a
+  fixed version.
+
 ## [1.7.0] - 2026-11-06
 
 ### Added

@@ -19,7 +19,7 @@ QString trayExec()
     const QString installed = QStandardPaths::findExecutable(QStringLiteral("gkey-config"));
     const QString self = QCoreApplication::applicationFilePath();
     const QString program = installed == self ? QStringLiteral("gkey-config") : self;
-    return program + QStringLiteral(" --tray");
+    return Autostart::execLine(program, {QStringLiteral("--tray")});
 }
 
 }

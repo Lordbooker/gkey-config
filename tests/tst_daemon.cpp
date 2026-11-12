@@ -52,6 +52,8 @@ private slots:
     void modeSwitching();
     void stateIsRemembered();
     void reloadAfterExternalChanges();
+    void profileWrittenJustBeforeTheCall();
+    void renamedProfileStaysActive();
     void macroThroughDBusFunction();
 
 private:
@@ -140,6 +142,36 @@ void TestDaemon::stateIsRemembered()
     const QJsonObject g13 = status().value(u"models").toObject().value(u"g13").toObject();
     QCOMPARE(g13.value(u"profile").toString(), QStringLiteral("Beta"));
     QCOMPARE(g13.value(u"mode").toInt(), 2);
+}
+
+// The configuration tool writes a profile and selects it at once, before the
+// daemon's file watcher has noticed the new file.
+void TestDaemon::profileWrittenJustBeforeTheCall()
+{
+    QVERIFY(m_daemon->setProfile(QStringLiteral("g13"), QStringLiteral("Alpha")));   // creates the model context
+    writeFile(m_dir->filePath(QStringLiteral("config/gkey-config/profiles/g13/c.json")), R"({"name":"Gamma"})");
+    QSignalSpy changed(m_daemon.get(), &Daemon::profileChanged);
+    QVERIFY(m_daemon->setProfile(QStringLiteral("g13"), QStringLiteral("Gamma")));
+    QCOMPARE(changed.count(), 1);
+    const QJsonObject g13 = status().value(u"models").toObject().value(u"g13").toObject();
+    QCOMPARE(g13.value(u"profile").toString(), QStringLiteral("Gamma"));
+    QCOMPARE(g13.value(u"profiles").toArray().size(), 3);
+    QVERIFY(!m_daemon->setProfile(QStringLiteral("g13"), QStringLiteral("Delta")));   // still unknown
+}
+
+// Renaming the active profile (new file, old one removed) and selecting the
+// new name must not fall back to the first profile.
+void TestDaemon::renamedProfileStaysActive()
+{
+    QVERIFY(m_daemon->setProfile(QStringLiteral("g13"), QStringLiteral("Beta")));
+    writeFile(m_dir->filePath(QStringLiteral("config/gkey-config/profiles/g13/z.json")), R"({"name":"Zeta"})");
+    QVERIFY(QFile::remove(m_dir->filePath(QStringLiteral("config/gkey-config/profiles/g13/b.json"))));
+    QVERIFY(m_daemon->setProfile(QStringLiteral("g13"), QStringLiteral("Zeta")));
+    // The file watcher reports the change afterwards.
+    QTest::qWait(400);
+    const QJsonObject g13 = status().value(u"models").toObject().value(u"g13").toObject();
+    QCOMPARE(g13.value(u"profile").toString(), QStringLiteral("Zeta"));
+    QCOMPARE(g13.value(u"profiles").toArray().size(), 2);
 }
 
 void TestDaemon::reloadAfterExternalChanges()

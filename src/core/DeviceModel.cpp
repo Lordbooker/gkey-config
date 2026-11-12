@@ -227,6 +227,8 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
         stick.maximum = object.value(u"max").toInt(255);
         if (stick.minimum >= stick.maximum)
             return error(QStringLiteral("stick: \"min\" must be lower than \"max\""));
+        if (stick.minimum < -MaxStickValue || stick.maximum > MaxStickValue)
+            return error(QStringLiteral("stick: \"min\" and \"max\" must be within +/-%1").arg(MaxStickValue));
         model.m_stick = stick;
     }
 
@@ -239,6 +241,8 @@ std::expected<DeviceModel, QString> DeviceModel::fromJson(const QByteArray &json
         lcd.height = object.value(u"height").toInt();
         if (lcd.type.isEmpty() || lcd.width <= 0 || lcd.height <= 0)
             return error(QStringLiteral("lcd: needs \"type\", \"width\" and \"height\""));
+        if (lcd.width > MaxLcdSize || lcd.height > MaxLcdSize)
+            return error(QStringLiteral("lcd: \"width\" and \"height\" must be at most %1").arg(MaxLcdSize));
         model.m_lcd = lcd;
     }
 
