@@ -88,6 +88,12 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.8.0" date="2026-11-12">
+      <description>
+        <p>A chosen LCD page can follow the start animation; tray icon in one colour for panels that
+          show only such icons.</p>
+      </description>
+    </release>
     <release version="1.7.1" date="2026-11-12">
       <description>
         <p>Fixes: a profile created, duplicated or renamed in the configuration tool is active on the

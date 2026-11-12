@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project(gkey-config VERSION 1.7.1 LANGUAGES CXX)
+project(gkey-config VERSION 1.8.0 LANGUAGES CXX)
 
 # --- Version ------------------------------------------------------------------
 # GKEY_VERSION: displayed version. Default: "git describe" without the leading
