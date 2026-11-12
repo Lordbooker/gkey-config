@@ -303,10 +303,6 @@
         <translation>Sistema (CPU, RAM, GPU, VRAM)</translation>
     </message>
     <message>
-        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page. The start animation plays when the device connects and stays until you switch to the next page.</source>
-        <translation>Pagine mostrate sul display LCD, in quest&apos;ordine. Il tasto rotondo accanto ai tasti LCD passa alla pagina successiva. L&apos;animazione iniziale viene riprodotta quando il dispositivo si connette e rimane finché non si passa alla pagina successiva.</translation>
-    </message>
-    <message>
         <source>Start animation (flames, when the device connects)</source>
         <translation>Animazione iniziale (fiamme, alla connessione del dispositivo)</translation>
     </message>
@@ -325,6 +321,22 @@
     <message>
         <source>Profile name (for 3 seconds when the profile changes)</source>
         <translation>Nome del profilo (3 secondi al cambio di profilo)</translation>
+    </message>
+    <message>
+        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page. The start animation plays when the device connects.</source>
+        <translation>Pagine mostrate sul display LCD, in quest&apos;ordine. Il tasto rotondo accanto ai tasti LCD passa alla pagina successiva. L&apos;animazione iniziale viene riprodotta quando il dispositivo si connette.</translation>
+    </message>
+    <message>
+        <source>After the start animation:</source>
+        <translation>Dopo l&apos;animazione iniziale:</translation>
+    </message>
+    <message>
+        <source>What the LCD shows when the start animation has ended: its final image until you switch to the next page, or one of the enabled pages.</source>
+        <translation>Ciò che il display LCD mostra al termine dell&apos;animazione iniziale: la sua immagine finale finché non si passa alla pagina successiva, oppure una delle pagine attivate.</translation>
+    </message>
+    <message>
+        <source>The final image stays</source>
+        <translation>L&apos;immagine finale rimane</translation>
     </message>
 </context>
 <context>

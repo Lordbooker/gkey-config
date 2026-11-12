@@ -4,6 +4,7 @@
 #include "LcdController.h"
 #include "LcdIntro.h"
 #include "ModelRegistry.h"
+#include "Settings.h"
 
 #include <QTemporaryDir>
 #include <QTest>
@@ -22,6 +23,8 @@ private slots:
     void introDisabled();
     void introRemovedWhileShown();
     void textInterruptsIntro();
+    void pageAfterIntro();
+    void settingsAfterIntro();
     void textWithHugeDuration();
     void hardwarePages();
     void defaultPages();
@@ -98,6 +101,54 @@ void TestLcdController::textInterruptsIntro()
 
 // CPU and GPU pages are in the rotation and show their title; the GPU pages
 // show it with and without that GPU (the test machine may have neither).
+// The chosen page follows the final image of the start animation.
+void TestLcdController::pageAfterIntro()
+{
+    auto lcd = controller({QStringLiteral("intro"), QStringLiteral("status"), QStringLiteral("clock")});
+    QCOMPARE(lcd->currentPage(), QStringLiteral("intro"));
+
+    // A page that is not enabled does not follow: the final image stays.
+    lcd->setPageAfterIntro(QStringLiteral("system"));
+    const int animation = LcdIntro::frameCount() * LcdIntro::FrameMs;
+    const int finalImage = LcdController::IntroEndSeconds * 1000;
+    QTest::qWait(animation + finalImage + 1000);
+    QCOMPARE(lcd->currentPage(), QStringLiteral("intro"));
+
+    // Chosen while the final image is shown: follows after the usual time.
+    lcd->setPageAfterIntro(QStringLiteral("clock"));
+    QCOMPARE(lcd->currentPage(), QStringLiteral("intro"));
+    QTRY_COMPARE_WITH_TIMEOUT(lcd->currentPage(), QStringLiteral("clock"), finalImage * 3);
+
+    // Not while the animation still runs.
+    lcd->showPage(QStringLiteral("intro"));
+    QTest::qWait(finalImage + 500);
+    QCOMPARE(lcd->currentPage(), QStringLiteral("intro"));
+}
+
+void TestLcdController::settingsAfterIntro()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = dir.filePath(QStringLiteral("settings.json"));
+    {
+        Settings settings(path);
+        QCOMPARE(settings.lcdAfterIntro(), QString());   // default: the final image stays
+        settings.setLcdAfterIntro(QStringLiteral("clock"));
+        QVERIFY(settings.save());
+    }
+    {
+        Settings settings(path);
+        QCOMPARE(settings.lcdAfterIntro(), QStringLiteral("clock"));
+        // Only pages of the rotation.
+        for (const QString &page : {QStringLiteral("intro"), QStringLiteral("profile"), QStringLiteral("nonsense")}) {
+            settings.setLcdAfterIntro(page);
+            QCOMPARE(settings.lcdAfterIntro(), QString());
+        }
+        QVERIFY(settings.save());
+    }
+    QCOMPARE(Settings(path).lcdAfterIntro(), QString());
+}
+
 // A duration from a script (D-Bus) that does not fit into the timer's
 // milliseconds is limited instead of ending the text at once.
 void TestLcdController::textWithHugeDuration()

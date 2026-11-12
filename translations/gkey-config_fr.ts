@@ -303,10 +303,6 @@
         <translation>Système (CPU, RAM, GPU, VRAM)</translation>
     </message>
     <message>
-        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page. The start animation plays when the device connects and stays until you switch to the next page.</source>
-        <translation>Pages affichées sur l&apos;écran LCD, dans cet ordre. Le bouton rond à côté des touches LCD passe à la page suivante. L&apos;animation de démarrage s&apos;affiche à la connexion de l&apos;appareil et reste jusqu&apos;au passage à la page suivante.</translation>
-    </message>
-    <message>
         <source>Start animation (flames, when the device connects)</source>
         <translation>Animation de démarrage (flammes, à la connexion de l&apos;appareil)</translation>
     </message>
@@ -325,6 +321,22 @@
     <message>
         <source>Profile name (for 3 seconds when the profile changes)</source>
         <translation>Nom du profil (3 secondes lors d’un changement de profil)</translation>
+    </message>
+    <message>
+        <source>Pages shown on the LCD, in this order. The round button next to the LCD keys switches to the next page. The start animation plays when the device connects.</source>
+        <translation>Pages affichées sur l&apos;écran LCD, dans cet ordre. Le bouton rond à côté des touches LCD passe à la page suivante. L&apos;animation de démarrage s&apos;affiche à la connexion de l&apos;appareil.</translation>
+    </message>
+    <message>
+        <source>After the start animation:</source>
+        <translation>Après l&apos;animation de démarrage :</translation>
+    </message>
+    <message>
+        <source>What the LCD shows when the start animation has ended: its final image until you switch to the next page, or one of the enabled pages.</source>
+        <translation>Ce que l&apos;écran LCD affiche à la fin de l&apos;animation de démarrage : son image finale jusqu&apos;au passage à la page suivante, ou l&apos;une des pages activées.</translation>
+    </message>
+    <message>
+        <source>The final image stays</source>
+        <translation>L&apos;image finale reste affichée</translation>
     </message>
 </context>
 <context>

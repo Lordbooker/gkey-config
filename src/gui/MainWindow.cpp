@@ -249,7 +249,17 @@ void MainWindow::setupUi()
             QMessageBox::warning(this, tr("LCD"), error);
     });
     connect(m_lcdPage, &LcdPage::showOnDevice, m_client, &DaemonClient::lcdPage);
-    connect(m_settings, &Settings::changed, this, [this] { m_lcdPage->setPages(m_settings->lcdPages()); });
+    m_lcdPage->setAfterIntro(m_settings->lcdAfterIntro());
+    connect(m_lcdPage, &LcdPage::afterIntroChanged, this, [this](const QString &page) {
+        m_settings->setLcdAfterIntro(page);
+        QString error;
+        if (!m_settings->save(&error))
+            QMessageBox::warning(this, tr("LCD"), error);
+    });
+    connect(m_settings, &Settings::changed, this, [this] {
+        m_lcdPage->setPages(m_settings->lcdPages());
+        m_lcdPage->setAfterIntro(m_settings->lcdAfterIntro());
+    });
     tabs->addTab(m_lcdPage, tr("LCD"));
 
     m_macroEditor = new MacroEditor(m_macros, m_client, tabs);

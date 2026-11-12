@@ -425,7 +425,8 @@ buttons are left to the system as well.
   (`tools/make-lcd-intro-images.py`). It is the page `intro` in the page list: always first in the
   LCD tab and not movable; enabled by default for new installations, unchecked in existing
   settings. When enabled it plays every time a device connects (daemon start, replug, wake-up);
-  its final image stays until the page is changed. It is not part of the rotation of "next" and
+  its final image stays until the page is changed (or a chosen page follows, see `afterIntro`
+  below). It is not part of the rotation of "next" and
   "previous". A text sent over D-Bus interrupts it; after a temporary text the animation continues
   where it was. `LcdPage intro` plays it again. At least one other page always stays enabled.
 * Profile page *(added after 1.5.0, decided 2026-10-29)*: the page `profile` shows the name of the
@@ -446,6 +447,11 @@ buttons are left to the system as well.
   (`LcdPages::defaultPages()`); the hardware pages cpu, amdgpu and nvidia are off, as they are
   only useful with that hardware. A page added in a later version appears unchecked in existing
   settings.
+* `"afterIntro"` in the same `lcd` object *(1.8.0, issue #29)* names the page of the rotation that
+  follows the start animation: 2 seconds (`LcdController::IntroEndSeconds`) after the animation
+  has ended, also when its final image is shown again after a temporary page. Without the member
+  (the default), or while the named page is not enabled, the final image stays. The GUI's LCD tab
+  offers the enabled pages in a list "After the start animation".
 * The round button (BD) always shows the next page *(fixed after 1.1.1, decided 2026-10-22: it is the
   only way through the pages on the device)*; it has the role `lcd` and cannot be bound. Model
   files can still give a bindable key a `default` action that applies while the key is unbound in

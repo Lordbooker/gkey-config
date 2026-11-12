@@ -5,6 +5,7 @@
 
 #include "LcdFrame.h"
 
+#include <QComboBox>
 #include <QDateTime>
 #include <QHBoxLayout>
 #include <QImage>
@@ -25,8 +26,8 @@ LcdPage::LcdPage(QWidget *parent) : QWidget(parent)
 {
     auto *layout = new QVBoxLayout(this);
     auto *hint = new QLabel(tr("Pages shown on the LCD, in this order. The round button next to the LCD keys "
-                               "switches to the next page. The start animation plays when the device connects "
-                               "and stays until you switch to the next page."),
+                               "switches to the next page. The start animation plays when the device "
+                               "connects."),
                             this);
     hint->setWordWrap(true);
     layout->addWidget(hint);
@@ -37,6 +38,21 @@ LcdPage::LcdPage(QWidget *parent) : QWidget(parent)
     for (const QString &page : LcdPages::allPages())
         addItem(page, true);
     layout->addWidget(m_list);
+
+    auto *afterIntroRow = new QHBoxLayout;
+    auto *afterIntroLabel = new QLabel(tr("After the start animation:"), this);
+    m_afterIntroBox = new QComboBox(this);
+    m_afterIntroBox->setToolTip(tr("What the LCD shows when the start animation has ended: its final image until "
+                                   "you switch to the next page, or one of the enabled pages."));
+    afterIntroLabel->setBuddy(m_afterIntroBox);
+    afterIntroRow->addWidget(afterIntroLabel);
+    afterIntroRow->addWidget(m_afterIntroBox);
+    afterIntroRow->addStretch();
+    layout->addLayout(afterIntroRow);
+    connect(m_afterIntroBox, &QComboBox::activated, this, [this] {
+        m_afterIntro = m_afterIntroBox->currentData().toString();
+        emit afterIntroChanged(m_afterIntro);
+    });
 
     m_preview = new QLabel(this);
     m_preview->setAlignment(Qt::AlignCenter);
@@ -84,12 +100,14 @@ LcdPage::LcdPage(QWidget *parent) : QWidget(parent)
             }
             m_updating = false;
         }
+        updateAfterIntroChoices();
         emit pagesChanged(enabledPages());
     });
     connect(m_list->model(), &QAbstractItemModel::rowsMoved, this, [this] {
         if (m_updating)
             return;
         keepIntroFirst();
+        updateAfterIntroChoices();
         emit pagesChanged(enabledPages());
     });
     connect(m_show, &QPushButton::clicked, this, [this] {
@@ -98,6 +116,7 @@ LcdPage::LcdPage(QWidget *parent) : QWidget(parent)
     });
 
     m_list->setCurrentRow(0);
+    updateAfterIntroChoices();
 }
 
 QListWidgetItem *LcdPage::addItem(const QString &page, bool enabled)
@@ -167,7 +186,26 @@ void LcdPage::setPages(const QStringList &enabled)
     if (!m_list->currentItem())
         m_list->setCurrentRow(0);
     m_updating = false;
+    updateAfterIntroChoices();
     updatePreview();
+}
+
+void LcdPage::setAfterIntro(const QString &page)
+{
+    m_afterIntro = page;
+    updateAfterIntroChoices();
+}
+
+// The final image or one of the enabled pages, in their order.
+void LcdPage::updateAfterIntroChoices()
+{
+    const QStringList pages = enabledPages();
+    m_afterIntroBox->clear();
+    m_afterIntroBox->addItem(tr("The final image stays"), QString());
+    for (const QString &page : LcdPages::rotation(pages))
+        m_afterIntroBox->addItem(title(page), page);
+    m_afterIntroBox->setCurrentIndex(qMax(0, m_afterIntroBox->findData(m_afterIntro)));
+    m_afterIntroBox->setEnabled(pages.contains(LcdPages::IntroPage));
 }
 
 QStringList LcdPage::enabledPages() const

@@ -22,6 +22,8 @@ class QTimer;
 // thread of its own). Shows one of
 // the enabled pages (status, system, cpu, amdgpu, nvidia, clock, text); text
 // sent over D-Bus is shown on the text page, optionally only for some seconds.
+// The start animation ends with its final image, which stays until the page
+// is changed, or is followed by a chosen page after a few seconds.
 // When the profile changes, the profile page (if enabled) shows its name for
 // a few seconds.
 // The clock and the pages with system values are redrawn every second while
@@ -37,9 +39,14 @@ public:
     bool available() const { return m_available; }
 
     void setPages(const QStringList &pages);
+    // Page shown IntroEndSeconds after the start animation has ended; empty
+    // (or a page that is not enabled): the final image stays.
+    void setPageAfterIntro(const QString &page);
+    // How long the final image is shown before the page after it.
+    static constexpr int IntroEndSeconds = 2;
     // First content after the device connected: the start animation if it is
-    // enabled (its final image stays until the page is changed), else the
-    // first page. Call after setPages().
+    // enabled (see setPageAfterIntro() for what follows it), else the first
+    // page. Call after setPages().
     void start();
     void setStatus(const LcdPages::Status &status);
 
@@ -66,6 +73,7 @@ private:
     void playIntro();
     void showTemporarily(const QString &page, int milliseconds);
     void returnFromTemporaryPage();
+    bool leavesIntro() const;
 
     DeviceModel m_model;
     bool m_available = false;
@@ -74,6 +82,7 @@ private:
     QStringList m_pages;
     QString m_page;
     QString m_returnPage;   // page shown again after a temporary page
+    QString m_afterIntro;   // page that follows the start animation, or empty
     LcdPages::Status m_status;
     QStringList m_textLines;
     SystemStats m_stats;
@@ -82,4 +91,5 @@ private:
     QTimer *m_returnTimer = nullptr;   // runs while a temporary page is shown
     std::unique_ptr<LcdIntro> m_intro;   // start animation (kept for its final image)
     QTimer *m_introTimer = nullptr;      // next animation frame
+    QTimer *m_introEndTimer = nullptr;   // runs while the final image waits for the page after it
 };

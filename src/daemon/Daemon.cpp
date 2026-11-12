@@ -89,8 +89,10 @@ bool Daemon::start(QString *error, const DaemonStartOptions &options)
     connect(m_settings, &Settings::changed, this, [this] {
         qCInfo(lcDaemon) << "settings reloaded, LCD pages:" << m_settings->lcdPages();
         for (Device *device : std::as_const(m_devices)) {
-            if (device->lcd())
+            if (device->lcd()) {
                 device->lcd()->setPages(m_settings->lcdPages());
+                device->lcd()->setPageAfterIntro(m_settings->lcdAfterIntro());
+            }
         }
     });
 
@@ -196,6 +198,7 @@ Device *Daemon::createDevice(const DeviceModel &model, const QString &hidSyspath
     device->leds().setRecording(m_recording);
     if (device->lcd()) {
         device->lcd()->setPages(m_settings ? m_settings->lcdPages() : QStringList());
+        device->lcd()->setPageAfterIntro(m_settings ? m_settings->lcdAfterIntro() : QString());
         device->lcd()->start();   // start animation (if enabled) on every connect
     }
     updateLcdStatus(device);
