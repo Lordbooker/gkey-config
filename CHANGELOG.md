@@ -6,6 +6,11 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Changed
+
+- D-Bus `RunMacro`: a macro runs at most once at a time, as on a key. A call while it is still
+  running is ignored; a script calling it in a loop no longer starts it many times in parallel.
+
 ## [1.8.0] - 2026-11-12
 
 ### Added

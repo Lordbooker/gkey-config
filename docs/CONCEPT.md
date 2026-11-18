@@ -603,7 +603,7 @@ session; the systemd unit is `Type=dbus`.
 | Method | `SetBacklight(s model, i r, i g, i b) → b` | temporary, until the next profile change |
 | Method | `ResetBacklight(s model) → b` | back to the profile colour |
 | Method | `Reload()` | re-reads profiles and macros (normally automatic) |
-| Method | `RunMacro(s name) → b` / `StopMacros()` | |
+| Method | `RunMacro(s name) → b` / `StopMacros()` | plays once; a macro runs at most once at a time, a call while it is still running is ignored (true); false if it does not exist |
 | Method | `SetRecording(b)` | MR LED and `RecordingChanged` |
 | Method | `LcdText(s text, i seconds)` | text page; lines are separated by newline characters (a literal backslash-n is not interpreted); seconds 0 = until the page is changed |
 | Method | `LcdPage(s page)` | `next`, `previous`, `status`, `system`, `clock`, `text`, `intro` (plays the start animation) |
