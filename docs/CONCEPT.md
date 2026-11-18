@@ -595,6 +595,10 @@ Service `io.github.lordbooker.GKeyConfig`, object `/io/github/lordbooker/GKeyCon
 `io.github.lordbooker.GKeyConfig1`. Owning the service name also guarantees a single daemon per
 session; the systemd unit is `Type=dbus`.
 
+The GUI calls the daemon only asynchronously (`DaemonClient`, timeout 3 s): a daemon that is busy
+or hangs must not freeze the window. Results arrive in callbacks bound to the window that asked;
+calls reach the daemon in the order they are made.
+
 | Kind | Signature | Notes |
 |---|---|---|
 | Method | `Status() → s` | JSON: `version`, `recording`, `devices[]` (`model`, `syspath`, `ledPermission`), `models{id: {name, tested, profile, mode, profiles[], profileDir}}`, `macros[]`, `macroDir` |

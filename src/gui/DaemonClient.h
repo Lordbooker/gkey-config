@@ -9,11 +9,19 @@
 #include <QString>
 #include <QStringList>
 
+#include <functional>
+
 class QDBusMessage;
 class QDBusServiceWatcher;
 
 // Talks to gkeyd over D-Bus (docs/CONCEPT.md section 10). Works without a
 // running daemon: calls then fail and available() is false.
+//
+// All calls are asynchronous: a daemon that hangs must not freeze the window.
+// Calls that report a result take a callback; it runs when the answer has
+// arrived (false after an error or a timeout of 3 seconds), and is dropped if
+// the context object is destroyed before. Calls reach the daemon in the order
+// they are made.
 class DaemonClient : public QObject {
     Q_OBJECT
 public:
@@ -21,9 +29,13 @@ public:
 
     bool available() const { return m_available; }
 
+    using Done = std::function<void(bool)>;
+
     // Last status returned by the daemon (refreshed by refreshStatus()).
     const QJsonObject &status() const { return m_status; }
-    void refreshStatus();
+    // Asks for the status; statusChanged() follows when it has arrived, then
+    // done (if given) runs with context.
+    void refreshStatus(QObject *context = nullptr, const std::function<void()> &done = {});
 
     QStringList connectedModels() const;
     QString activeProfile(const QString &modelId) const;
@@ -33,14 +45,15 @@ public:
     // Rest position of the stick of a connected device, e.g. "138 / 139"; empty if unknown.
     QString stickCenter(const QString &modelId) const;
 
-    bool setProfile(const QString &modelId, const QString &name);
-    bool setMode(const QString &modelId, int mode);
-    bool setBacklight(const QString &modelId, const QColor &color);
-    bool resetBacklight(const QString &modelId);
-    bool runMacro(const QString &name);
+    void setProfile(const QString &modelId, const QString &name);
+    void setMode(const QString &modelId, int mode);
+    void setBacklight(const QString &modelId, const QColor &color);
+    void resetBacklight(const QString &modelId);
+    void runMacro(const QString &name, QObject *context = nullptr, const Done &done = {});
     void stopMacros();
     void setRecording(bool recording);
-    bool calibrateStick(const QString &modelId);
+    // done runs after the status has been refreshed, so stickCenter() is current.
+    void calibrateStick(const QString &modelId, QObject *context = nullptr, const Done &done = {});
     void lcdPage(const QString &page);
 
 signals:
@@ -64,9 +77,13 @@ private slots:
 
 private:
     void setAvailable(bool available);
-    QDBusMessage call(const QString &method, const QList<QVariant> &arguments = {}) const;
+    // Asynchronous call; onReply gets the reply or the error message.
+    void call(const QString &method, const QList<QVariant> &arguments, QObject *context,
+              const std::function<void(const QDBusMessage &)> &onReply);
     void send(const QString &method, const QList<QVariant> &arguments = {}) const;
-    bool callBool(const QString &method, const QList<QVariant> &arguments);
+    // Call of a method that returns a boolean; done gets false after an error.
+    void callBool(const QString &method, const QList<QVariant> &arguments, QObject *context = nullptr,
+                  const Done &done = {});
 
     QDBusServiceWatcher *m_watcher = nullptr;
     QJsonObject m_status;

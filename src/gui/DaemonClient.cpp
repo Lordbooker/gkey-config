@@ -6,7 +6,8 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QDBusMessage>
-#include <QDBusReply>
+#include <QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
 #include <QDBusServiceWatcher>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -60,15 +61,21 @@ void DaemonClient::setAvailable(bool available)
     emit availableChanged(available);
 }
 
-void DaemonClient::refreshStatus()
+void DaemonClient::refreshStatus(QObject *context, const std::function<void()> &done)
 {
-    if (!m_available)
+    if (!m_available) {
+        if (done)
+            done();
         return;
-    const QDBusReply<QString> reply = call(QStringLiteral("Status"));
-    if (!reply.isValid())
-        return;
-    m_status = QJsonDocument::fromJson(reply.value().toUtf8()).object();
-    emit statusChanged();
+    }
+    call(QStringLiteral("Status"), {}, context, [this, done](const QDBusMessage &reply) {
+        if (reply.type() == QDBusMessage::ReplyMessage && !reply.arguments().isEmpty()) {
+            m_status = QJsonDocument::fromJson(reply.arguments().constFirst().toString().toUtf8()).object();
+            emit statusChanged();
+        }
+        if (done)
+            done();
+    });
 }
 
 QStringList DaemonClient::connectedModels() const
@@ -119,12 +126,23 @@ bool DaemonClient::recording() const
 // Calls never start the daemon through D-Bus activation: the GUI only talks to
 // a daemon that is already running, so "Stop daemon" and a disabled autostart
 // are respected.
-QDBusMessage DaemonClient::call(const QString &method, const QList<QVariant> &arguments) const
+void DaemonClient::call(const QString &method, const QList<QVariant> &arguments, QObject *context,
+                        const std::function<void(const QDBusMessage &)> &onReply)
 {
     QDBusMessage message = QDBusMessage::createMethodCall(Service, Path, Interface, method);
     message.setArguments(arguments);
     message.setAutoStartService(false);
-    return QDBusConnection::sessionBus().call(message, QDBus::Block, CallTimeoutMs);
+    const QDBusPendingCall pending = QDBusConnection::sessionBus().asyncCall(message, CallTimeoutMs);
+    // The watcher deletes itself when the answer has arrived (or the call has
+    // failed); the analyzer does not see that through the connection.
+    // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
+    auto *watcher = new QDBusPendingCallWatcher(pending, this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, watcher, &QObject::deleteLater);
+    // The answer is dropped if the context (e.g. a window) is gone by then.
+    if (onReply)
+        connect(watcher, &QDBusPendingCallWatcher::finished, context ? context : this,
+                [watcher, onReply] { onReply(watcher->reply()); });
+    // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 }
 
 void DaemonClient::send(const QString &method, const QList<QVariant> &arguments) const
@@ -135,37 +153,44 @@ void DaemonClient::send(const QString &method, const QList<QVariant> &arguments)
     QDBusConnection::sessionBus().send(message);
 }
 
-bool DaemonClient::callBool(const QString &method, const QList<QVariant> &arguments)
+void DaemonClient::callBool(const QString &method, const QList<QVariant> &arguments, QObject *context, const Done &done)
 {
-    if (!m_available)
-        return false;
-    const QDBusReply<bool> reply = call(method, arguments);
-    return reply.isValid() && reply.value();
+    if (!m_available) {
+        if (done)
+            done(false);
+        return;
+    }
+    call(method, arguments, context, [done](const QDBusMessage &reply) {
+        const bool result = reply.type() == QDBusMessage::ReplyMessage && !reply.arguments().isEmpty() &&
+                            reply.arguments().constFirst().toBool();
+        if (done)
+            done(result);
+    });
 }
 
-bool DaemonClient::setProfile(const QString &modelId, const QString &name)
+void DaemonClient::setProfile(const QString &modelId, const QString &name)
 {
-    return callBool(QStringLiteral("SetProfile"), {modelId, name});
+    callBool(QStringLiteral("SetProfile"), {modelId, name});
 }
 
-bool DaemonClient::setMode(const QString &modelId, int mode)
+void DaemonClient::setMode(const QString &modelId, int mode)
 {
-    return callBool(QStringLiteral("SetMode"), {modelId, mode});
+    callBool(QStringLiteral("SetMode"), {modelId, mode});
 }
 
-bool DaemonClient::setBacklight(const QString &modelId, const QColor &color)
+void DaemonClient::setBacklight(const QString &modelId, const QColor &color)
 {
-    return callBool(QStringLiteral("SetBacklight"), {modelId, color.red(), color.green(), color.blue()});
+    callBool(QStringLiteral("SetBacklight"), {modelId, color.red(), color.green(), color.blue()});
 }
 
-bool DaemonClient::resetBacklight(const QString &modelId)
+void DaemonClient::resetBacklight(const QString &modelId)
 {
-    return callBool(QStringLiteral("ResetBacklight"), {modelId});
+    callBool(QStringLiteral("ResetBacklight"), {modelId});
 }
 
-bool DaemonClient::runMacro(const QString &name)
+void DaemonClient::runMacro(const QString &name, QObject *context, const Done &done)
 {
-    return callBool(QStringLiteral("RunMacro"), {name});
+    callBool(QStringLiteral("RunMacro"), {name}, context, done);
 }
 
 void DaemonClient::stopMacros()
@@ -180,11 +205,14 @@ void DaemonClient::setRecording(bool recording)
         send(QStringLiteral("SetRecording"), {recording});
 }
 
-bool DaemonClient::calibrateStick(const QString &modelId)
+void DaemonClient::calibrateStick(const QString &modelId, QObject *context, const Done &done)
 {
-    const bool done = callBool(QStringLiteral("CalibrateStick"), {modelId});
-    refreshStatus();
-    return done;
+    callBool(QStringLiteral("CalibrateStick"), {modelId}, context, [this, context, done](bool calibrated) {
+        refreshStatus(context, [done, calibrated] {
+            if (done)
+                done(calibrated);
+        });
+    });
 }
 
 void DaemonClient::lcdPage(const QString &page)

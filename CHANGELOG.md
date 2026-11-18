@@ -6,6 +6,11 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Fixed
+
+- The configuration tool no longer freezes while the daemon is busy or hangs: it calls the daemon
+  asynchronously. Until now every call waited for the answer, up to 3 seconds.
+
 ### Changed
 
 - D-Bus `RunMacro`: a macro runs at most once at a time, as on a key. A call while it is still
