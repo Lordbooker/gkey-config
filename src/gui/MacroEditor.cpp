@@ -405,8 +405,10 @@ void MacroEditor::onSave()
 
 void MacroEditor::onPlay()
 {
-    if (!m_client->runMacro(m_current))
-        m_status->setText(tr("The daemon could not play the macro."));
+    m_client->runMacro(m_current, this, [this](bool started) {
+        if (!started)
+            m_status->setText(tr("The daemon could not play the macro."));
+    });
 }
 
 // --- Recording ------------------------------------------------------------------------

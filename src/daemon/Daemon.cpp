@@ -400,10 +400,13 @@ bool Daemon::runMacro(const QString &name)
     const Macro *macro = m_macros ? m_macros->macro(name) : nullptr;
     if (!macro)
         return false;
+    if (m_freeRuns.contains(name))
+        return true;   // still running: not a second time (scripts calling in a loop)
     auto *run = new MacroRun(*macro, Action::Repeat::Once, 1, *m_output, this);
-    m_freeRuns.append(run);
-    connect(run, &MacroRun::finished, this, [this, run] {
-        m_freeRuns.removeOne(run);
+    m_freeRuns.insert(name, run);
+    connect(run, &MacroRun::finished, this, [this, name, run] {
+        if (m_freeRuns.value(name) == run)
+            m_freeRuns.remove(name);
         run->deleteLater();
     });
     run->start();

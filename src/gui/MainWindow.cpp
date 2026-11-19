@@ -624,11 +624,16 @@ void MainWindow::onStickWasd()
 
 void MainWindow::onStickCalibrate()
 {
-    if (m_client->calibrateStick(m_model.id()))
-        statusBar()->showMessage(tr("Rest position measured: %1").arg(m_client->stickCenter(m_model.id())), 4000);
-    else
-        statusBar()->showMessage(tr("The rest position could not be measured (device connected?)"), 4000);
-    m_stickPage->setRestPosition(m_client->stickCenter(m_model.id()));
+    const QString modelId = m_model.id();
+    m_client->calibrateStick(modelId, this, [this, modelId](bool calibrated) {
+        if (calibrated)
+            statusBar()->showMessage(tr("Rest position measured: %1").arg(m_client->stickCenter(modelId)), 4000);
+        else
+            statusBar()->showMessage(tr("The rest position could not be measured (device connected?)"), 4000);
+        // The device shown may have changed while the daemon measured.
+        if (m_model.id() == modelId)
+            m_stickPage->setRestPosition(m_client->stickCenter(modelId));
+    });
 }
 
 // --- Backlight --------------------------------------------------------------------------------
@@ -825,7 +830,7 @@ void MainWindow::runSystemctl(const QString &verb)
     m_session->runDaemonCommand(verb, [this, verb](int exitCode, const QString &output) {
         if (exitCode != 0)
             statusBar()->showMessage(tr("systemctl --user %1 gkeyd failed: %2").arg(verb, output), 8000);
-        QTimer::singleShot(500, m_client, &DaemonClient::refreshStatus);
+        QTimer::singleShot(500, m_client, [this] { m_client->refreshStatus(); });
     });
 }
 

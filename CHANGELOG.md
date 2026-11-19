@@ -6,6 +6,18 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-11-18
+
+### Fixed
+
+- The configuration tool no longer freezes while the daemon is busy or hangs: it calls the daemon
+  asynchronously. Until now every call waited for the answer, up to 3 seconds.
+
+### Changed
+
+- D-Bus `RunMacro`: a macro runs at most once at a time, as on a key. A call while it is still
+  running is ignored; a script calling it in a loop no longer starts it many times in parallel.
+
 ## [1.8.0] - 2026-11-12
 
 ### Added
@@ -232,7 +244,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/Lordbooker/gkey-config/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/Lordbooker/gkey-config/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/Lordbooker/gkey-config/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/Lordbooker/gkey-config/compare/v1.6.0...v1.7.0

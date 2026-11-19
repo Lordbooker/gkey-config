@@ -15,10 +15,13 @@ compile_commands.json
 *.deb
 *.rpm
 *.pkg.tar.*
-packaging/arch/*/src/
-packaging/arch/*/pkg/
-packaging/arch/*/gkey-config/
-packaging/arch/*/*.tar.gz
+# makepkg in packaging/arch/ (source tarball, build and package directories)
+packaging/arch/src/
+packaging/arch/pkg/
+packaging/arch/*.tar.gz
+packaging/arch/.SRCINFO
+# AUR build directory of the release workflow, when reproduced locally
+/aur/
 
 # Compiled translations (built into the binary)
 *.qm

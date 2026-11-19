@@ -595,6 +595,10 @@ Service `io.github.lordbooker.GKeyConfig`, object `/io/github/lordbooker/GKeyCon
 `io.github.lordbooker.GKeyConfig1`. Owning the service name also guarantees a single daemon per
 session; the systemd unit is `Type=dbus`.
 
+The GUI calls the daemon only asynchronously (`DaemonClient`, timeout 3 s): a daemon that is busy
+or hangs must not freeze the window. Results arrive in callbacks bound to the window that asked;
+calls reach the daemon in the order they are made.
+
 | Kind | Signature | Notes |
 |---|---|---|
 | Method | `Status() → s` | JSON: `version`, `recording`, `devices[]` (`model`, `syspath`, `ledPermission`), `models{id: {name, tested, profile, mode, profiles[], profileDir}}`, `macros[]`, `macroDir` |
@@ -603,7 +607,7 @@ session; the systemd unit is `Type=dbus`.
 | Method | `SetBacklight(s model, i r, i g, i b) → b` | temporary, until the next profile change |
 | Method | `ResetBacklight(s model) → b` | back to the profile colour |
 | Method | `Reload()` | re-reads profiles and macros (normally automatic) |
-| Method | `RunMacro(s name) → b` / `StopMacros()` | |
+| Method | `RunMacro(s name) → b` / `StopMacros()` | plays once; a macro runs at most once at a time, a call while it is still running is ignored (true); false if it does not exist |
 | Method | `SetRecording(b)` | MR LED and `RecordingChanged` |
 | Method | `LcdText(s text, i seconds)` | text page; lines are separated by newline characters (a literal backslash-n is not interpreted); seconds 0 = until the page is changed |
 | Method | `LcdPage(s page)` | `next`, `previous`, `status`, `system`, `clock`, `text`, `intro` (plays the start animation) |

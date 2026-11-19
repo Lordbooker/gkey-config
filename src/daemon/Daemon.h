@@ -55,6 +55,9 @@ public:
     // Temporary colour until the next profile change; nullopt restores the profile's colour.
     bool setBacklight(const QString &modelId, const std::optional<Profile::Rgb> &rgb);
     void reload();
+    // Plays a macro once. Like a macro on a key it runs at most once at a time:
+    // while it is still running, another call for it is ignored (and returns
+    // true). False if the macro does not exist.
     bool runMacro(const QString &name);
     void stopMacros();
     void setRecording(bool recording);
@@ -106,7 +109,7 @@ private:
     // others are added (context() hands out pointers).
     std::map<QString, ModelContext> m_contexts;
     QHash<QString, Device *> m_devices;        // HID syspath -> device
-    QList<MacroRun *> m_freeRuns;              // macros started via D-Bus
+    QHash<QString, MacroRun *> m_freeRuns;     // macro name -> run, macros started via D-Bus
     QSet<QString> m_ignoredRoles;              // logged once: "<model>/<role>"
     bool m_recording = false;
 };

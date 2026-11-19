@@ -55,6 +55,7 @@ private slots:
     void profileWrittenJustBeforeTheCall();
     void renamedProfileStaysActive();
     void macroThroughDBusFunction();
+    void macroThroughDBusRunsOnce();
 
 private:
     QJsonObject status() const;
@@ -198,6 +199,26 @@ void TestDaemon::macroThroughDBusFunction()
     QVERIFY(!m_daemon->runMacro(QStringLiteral("unknown")));
     QVERIFY(m_daemon->runMacro(QStringLiteral("hello")));
     QTRY_COMPARE(m_sink.events, (QStringList{QStringLiteral("+%1").arg(KEY_H), QStringLiteral("-%1").arg(KEY_H)}));
+}
+
+// A script calling RunMacro in a loop must not start the macro many times in
+// parallel: like a macro on a key it runs at most once at a time.
+void TestDaemon::macroThroughDBusRunsOnce()
+{
+    writeFile(m_dir->filePath(QStringLiteral("config/gkey-config/macros/slow.json")),
+              R"({"name":"slow","steps":[{"tap":"KEY_S","hold":0},{"delay":300}]})");
+    m_daemon->reload();
+    QVERIFY(m_daemon->runMacro(QStringLiteral("slow")));
+    QTest::qWait(100);   // the first run waits after its key
+    for (int i = 0; i < 100; ++i)
+        QVERIFY(m_daemon->runMacro(QStringLiteral("slow")));   // ignored, returns true
+    QTest::qWait(500);   // the run has ended
+    QCOMPARE(m_sink.events, (QStringList{QStringLiteral("+%1").arg(KEY_S), QStringLiteral("-%1").arg(KEY_S)}));
+
+    // Afterwards it can be started again.
+    QVERIFY(m_daemon->runMacro(QStringLiteral("slow")));
+    QTRY_COMPARE(m_sink.events.size(), 4);
+    m_daemon->stopMacros();
 }
 
 QTEST_GUILESS_MAIN(TestDaemon)
