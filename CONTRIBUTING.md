@@ -46,8 +46,9 @@ any.
 
 ## Checks
 
-CI runs these on every push and pull request; each one fails the build. On `dev` and for release
-tags the workflow *Release packages* runs them first and builds packages only when all pass:
+CI runs these on every pull request and every push to `dev`; each one fails the build. On `dev`
+and for release tags the workflow *Release packages* runs them first and builds packages only when
+all pass:
 
 | Check | Where | Run it locally |
 |---|---|---|
@@ -165,17 +166,27 @@ checks it and uninstalls it again (CI runs it before every release).
 3. Tag `main` and push the tag:
 
    ```bash
+   scripts/tag-release.sh
+   ```
+
+   The script takes the version from `CMakeLists.txt` on `main` and refuses to tag while `dev`
+   has commits that `main` lacks (pull request not merged yet), the tag exists already, or
+   `CHANGELOG.md` or the AppStream file has no entry for the version. It shows the commit and
+   asks before it tags. By hand, the same is:
+
+   ```bash
    git switch main && git pull
    git tag -a vx.y.z -m "gkey-config x.y.z"
    git push origin vx.y.z
    git push origin main:dev   # dev contains the tag again
    ```
 
-   The last line only fast-forwards `dev` to the merge commit, so that development builds show
-   versions like `x.y.z-3-gabc1234`.
+   The last step only fast-forwards `dev` to the merge commit, so that development builds show
+   versions like `x.y.z-3-gabc1234`. *Release packages* builds nothing for this push: main
+   contains the commit already, and it was checked before the merge and for its tag.
 
-4. The workflow *Release packages* runs all checks (see above), checks that the tag matches the
-   project version, builds the packages, creates the GitHub release and publishes the AUR package `gkey-config`. Publishing to the AUR needs the repository secret `AUR_SSH_PRIVATE_KEY`:
+4. The workflow *Release packages* first checks that the tag matches the project version and is
+   on `main`, then runs all checks (see above), builds the packages, creates the GitHub release and publishes the AUR package `gkey-config`. Publishing to the AUR needs the repository secret `AUR_SSH_PRIVATE_KEY`:
    *Settings → Secrets and variables → Actions → Repository secrets*, the complete private SSH key
    of the AUR account without passphrase, including the `-----BEGIN`/`-----END` lines. Without it
    the AUR step only shows a notice and the files are attached to the run as artifact `aur`; after

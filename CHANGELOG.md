@@ -6,6 +6,14 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Changed
+
+- CI runs each check once per change instead of up to five times per release: no second run on
+  pushes to `main` and for the fast-forward of `dev` after a release, no CodeQL run on pushes to
+  `dev`, and a newer push cancels the run of the older one.
+- Release tags are checked at once: a tag whose version does not match or that is not on `main`
+  fails before the checks. `scripts/tag-release.sh` tags `main` only when the release is complete.
+
 ## [1.8.1] - 2026-11-18
 
 ### Fixed

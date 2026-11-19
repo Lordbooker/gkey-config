@@ -5,9 +5,11 @@
 # Security > Code scanning in the repository.
 name: CodeQL
 
+# Pull requests (dev into main) are analysed before the merge, main after it as
+# the reference state for code scanning; pushes to dev are not analysed again.
 on:
   push:
-    branches: [dev, main]
+    branches: [main]
   pull_request:
   schedule:
     - cron: '17 4 * * 1'   # weekly, for new queries
@@ -15,6 +17,12 @@ on:
 
 permissions:
   contents: read
+
+# A newer push to the same pull request or to main cancels the older analysis;
+# the weekly and manual runs are never cancelled.
+concurrency:
+  group: codeql-${{ (github.event_name == 'pull_request' && github.event.pull_request.number) || (github.event_name == 'push' && github.ref) || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   analyze:

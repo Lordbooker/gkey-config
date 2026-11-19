@@ -2,20 +2,27 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 # Checks: builds and tests with GCC and Clang, clang-tidy, sanitizers,
-# formatting, udev/desktop/AppStream files and REUSE. Runs on its own for main
-# and pull requests; on dev and for release tags "Release packages" runs it
-# first and builds packages only when it passes (no double run on dev).
+# formatting, udev/desktop/AppStream files and REUSE. Runs on its own for pull
+# requests; on dev and for release tags "Release packages" runs it first and
+# builds packages only when it passes (no double run on dev).
 name: Build
 
+# Not on pushes: main only receives pull requests, whose merge result this
+# workflow has checked already; dev is checked by "Release packages".
 on:
-  push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
   workflow_call:
 
 permissions:
   contents: read
+
+# A new push to a pull request cancels the run of the previous one. Runs
+# called by "Release packages" get a group of their own (that workflow
+# cancels its runs itself).
+concurrency:
+  group: build-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   build:

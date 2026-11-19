@@ -7,7 +7,9 @@
 #   them as a GitHub release with a list of changes, and publish the AUR
 #   package gkey-config (when the secret AUR_SSH_PRIVATE_KEY is set).
 # - Push to dev or manually ("Run workflow"): build only; the packages are
-#   available as artifacts of the run for testing.
+#   available as artifacts of the run for testing. A push to dev of a commit
+#   that main contains already ("git push origin main:dev" after a release)
+#   builds nothing: that commit was checked before the merge and for its tag.
 #
 # In both cases the checks (build.yml) run first; packages are only built,
 # released and published when all of them pass.
@@ -28,9 +30,73 @@ on:
 permissions:
   contents: read
 
+# A newer push to dev cancels the build of the older one; a tag's run (the
+# release) is never cancelled.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
 jobs:
+  scope:
+    name: Scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      build: ${{ steps.scope.outputs.build }}
+    steps:
+      - name: Checkout
+        if: github.ref_type == 'tag'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: CMakeLists.txt
+          sparse-checkout-cone-mode: false
+
+      # Before the checks: a wrong tag fails at once, not after 10 minutes.
+      - name: Check tag
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The project version in CMakeLists.txt must match the tag (tarball builds use it).
+          PROJECT=$(sed -n 's/^project(gkey-config VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+          if [ "v$PROJECT" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::CMakeLists.txt has version $PROJECT, the tag is $GITHUB_REF_NAME"
+            exit 1
+          fi
+          # Releases are tagged on main, after the pull request from dev is merged.
+          status=$(gh api "repos/$GITHUB_REPOSITORY/compare/$GITHUB_SHA...main" --jq .status)
+          case $status in
+            identical | ahead) ;;
+            *)
+              echo "::error::$GITHUB_REF_NAME ($GITHUB_SHA) is not on main; merge the pull request first, then tag main"
+              exit 1
+              ;;
+          esac
+
+      - name: Decide what to build
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Does main contain the commit? ("ahead": main has it and more.)
+          # If the question cannot be answered, everything is built.
+          status=$(gh api "repos/$GITHUB_REPOSITORY/compare/$GITHUB_SHA...main" --jq .status) || status=unknown
+          build=true
+          if [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF_TYPE" = branch ]; then
+            case $status in
+              identical | ahead)
+                echo "::notice::$GITHUB_SHA is on main already (released); nothing to build"
+                build=false
+                ;;
+            esac
+          fi
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+
   checks:
     name: Checks
+    needs: scope
+    if: needs.scope.outputs.build == 'true'
     uses: ./.github/workflows/build.yml
 
   packages:
@@ -89,16 +155,6 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-
-      - name: Check version
-        if: github.ref_type == 'tag'
-        run: |
-          # The project version in CMakeLists.txt must match the tag (tarball builds use it).
-          PROJECT=$(sed -n 's/^project(gkey-config VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
-          if [ "v$PROJECT" != "$GITHUB_REF_NAME" ]; then
-            echo "CMakeLists.txt has version $PROJECT, the tag is $GITHUB_REF_NAME" >&2
-            exit 1
-          fi
 
       - name: Build package
         run: |
