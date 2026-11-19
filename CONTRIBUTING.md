@@ -166,13 +166,22 @@ checks it and uninstalls it again (CI runs it before every release).
 3. Tag `main` and push the tag:
 
    ```bash
+   scripts/tag-release.sh
+   ```
+
+   The script takes the version from `CMakeLists.txt` on `main` and refuses to tag while `dev`
+   has commits that `main` lacks (pull request not merged yet), the tag exists already, or
+   `CHANGELOG.md` or the AppStream file has no entry for the version. It shows the commit and
+   asks before it tags. By hand, the same is:
+
+   ```bash
    git switch main && git pull
    git tag -a vx.y.z -m "gkey-config x.y.z"
    git push origin vx.y.z
    git push origin main:dev   # dev contains the tag again
    ```
 
-   The last line only fast-forwards `dev` to the merge commit, so that development builds show
+   The last step only fast-forwards `dev` to the merge commit, so that development builds show
    versions like `x.y.z-3-gabc1234`. *Release packages* builds nothing for this push: main
    contains the commit already, and it was checked before the merge and for its tag.
 
