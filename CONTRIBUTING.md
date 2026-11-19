@@ -46,8 +46,9 @@ any.
 
 ## Checks
 
-CI runs these on every push and pull request; each one fails the build. On `dev` and for release
-tags the workflow *Release packages* runs them first and builds packages only when all pass:
+CI runs these on every pull request and every push to `dev`; each one fails the build. On `dev`
+and for release tags the workflow *Release packages* runs them first and builds packages only when
+all pass:
 
 | Check | Where | Run it locally |
 |---|---|---|

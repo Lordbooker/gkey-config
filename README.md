@@ -6,7 +6,7 @@
 
 **Configure the gaming keys of Logitech G keyboards and keypads on Linux**
 
-[![Build](https://github.com/Lordbooker/gkey-config/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/Lordbooker/gkey-config/actions/workflows/build.yml)
+[![Build](https://github.com/Lordbooker/gkey-config/actions/workflows/release.yml/badge.svg?branch=dev)](https://github.com/Lordbooker/gkey-config/actions/workflows/release.yml)
 [![Release](https://img.shields.io/github/v/release/Lordbooker/gkey-config)](https://github.com/Lordbooker/gkey-config/releases/latest)
 [![AUR](https://img.shields.io/aur/version/gkey-config)](https://aur.archlinux.org/packages/gkey-config)
 [![License: GPL-2.0-only](https://img.shields.io/badge/license-GPL--2.0--only-blue)](LICENSE)

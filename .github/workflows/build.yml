@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 # Checks: builds and tests with GCC and Clang, clang-tidy, sanitizers,
-# formatting, udev/desktop/AppStream files and REUSE. Runs on its own for main
-# and pull requests; on dev and for release tags "Release packages" runs it
-# first and builds packages only when it passes (no double run on dev).
+# formatting, udev/desktop/AppStream files and REUSE. Runs on its own for pull
+# requests; on dev and for release tags "Release packages" runs it first and
+# builds packages only when it passes (no double run on dev).
 name: Build
 
+# Not on pushes: main only receives pull requests, whose merge result this
+# workflow has checked already; dev is checked by "Release packages".
 on:
-  push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
   workflow_call:
