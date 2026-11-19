@@ -176,8 +176,8 @@ checks it and uninstalls it again (CI runs it before every release).
    versions like `x.y.z-3-gabc1234`. *Release packages* builds nothing for this push: main
    contains the commit already, and it was checked before the merge and for its tag.
 
-4. The workflow *Release packages* runs all checks (see above), checks that the tag matches the
-   project version, builds the packages, creates the GitHub release and publishes the AUR package `gkey-config`. Publishing to the AUR needs the repository secret `AUR_SSH_PRIVATE_KEY`:
+4. The workflow *Release packages* first checks that the tag matches the project version and is
+   on `main`, then runs all checks (see above), builds the packages, creates the GitHub release and publishes the AUR package `gkey-config`. Publishing to the AUR needs the repository secret `AUR_SSH_PRIVATE_KEY`:
    *Settings → Secrets and variables → Actions → Repository secrets*, the complete private SSH key
    of the AUR account without passphrase, including the `-----BEGIN`/`-----END` lines. Without it
    the AUR step only shows a notice and the files are attached to the run as artifact `aur`; after

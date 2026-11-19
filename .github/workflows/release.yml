@@ -38,6 +38,36 @@ jobs:
     outputs:
       build: ${{ steps.scope.outputs.build }}
     steps:
+      - name: Checkout
+        if: github.ref_type == 'tag'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: CMakeLists.txt
+          sparse-checkout-cone-mode: false
+
+      # Before the checks: a wrong tag fails at once, not after 10 minutes.
+      - name: Check tag
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The project version in CMakeLists.txt must match the tag (tarball builds use it).
+          PROJECT=$(sed -n 's/^project(gkey-config VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+          if [ "v$PROJECT" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::CMakeLists.txt has version $PROJECT, the tag is $GITHUB_REF_NAME"
+            exit 1
+          fi
+          # Releases are tagged on main, after the pull request from dev is merged.
+          status=$(gh api "repos/$GITHUB_REPOSITORY/compare/$GITHUB_SHA...main" --jq .status)
+          case $status in
+            identical | ahead) ;;
+            *)
+              echo "::error::$GITHUB_REF_NAME ($GITHUB_SHA) is not on main; merge the pull request first, then tag main"
+              exit 1
+              ;;
+          esac
+
       - name: Decide what to build
         id: scope
         env:
@@ -119,16 +149,6 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-
-      - name: Check version
-        if: github.ref_type == 'tag'
-        run: |
-          # The project version in CMakeLists.txt must match the tag (tarball builds use it).
-          PROJECT=$(sed -n 's/^project(gkey-config VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
-          if [ "v$PROJECT" != "$GITHUB_REF_NAME" ]; then
-            echo "CMakeLists.txt has version $PROJECT, the tag is $GITHUB_REF_NAME" >&2
-            exit 1
-          fi
 
       - name: Build package
         run: |
