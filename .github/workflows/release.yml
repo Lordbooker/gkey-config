@@ -7,7 +7,9 @@
 #   them as a GitHub release with a list of changes, and publish the AUR
 #   package gkey-config (when the secret AUR_SSH_PRIVATE_KEY is set).
 # - Push to dev or manually ("Run workflow"): build only; the packages are
-#   available as artifacts of the run for testing.
+#   available as artifacts of the run for testing. A push to dev of a commit
+#   that main contains already ("git push origin main:dev" after a release)
+#   builds nothing: that commit was checked before the merge and for its tag.
 #
 # In both cases the checks (build.yml) run first; packages are only built,
 # released and published when all of them pass.
@@ -29,8 +31,36 @@ permissions:
   contents: read
 
 jobs:
+  scope:
+    name: Scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      build: ${{ steps.scope.outputs.build }}
+    steps:
+      - name: Decide what to build
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Does main contain the commit? ("ahead": main has it and more.)
+          # If the question cannot be answered, everything is built.
+          status=$(gh api "repos/$GITHUB_REPOSITORY/compare/$GITHUB_SHA...main" --jq .status) || status=unknown
+          build=true
+          if [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF_TYPE" = branch ]; then
+            case $status in
+              identical | ahead)
+                echo "::notice::$GITHUB_SHA is on main already (released); nothing to build"
+                build=false
+                ;;
+            esac
+          fi
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+
   checks:
     name: Checks
+    needs: scope
+    if: needs.scope.outputs.build == 'true'
     uses: ./.github/workflows/build.yml
 
   packages:

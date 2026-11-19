@@ -173,7 +173,8 @@ checks it and uninstalls it again (CI runs it before every release).
    ```
 
    The last line only fast-forwards `dev` to the merge commit, so that development builds show
-   versions like `x.y.z-3-gabc1234`.
+   versions like `x.y.z-3-gabc1234`. *Release packages* builds nothing for this push: main
+   contains the commit already, and it was checked before the merge and for its tag.
 
 4. The workflow *Release packages* runs all checks (see above), checks that the tag matches the
    project version, builds the packages, creates the GitHub release and publishes the AUR package `gkey-config`. Publishing to the AUR needs the repository secret `AUR_SSH_PRIVATE_KEY`:
