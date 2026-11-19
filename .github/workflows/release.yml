@@ -30,6 +30,12 @@ on:
 permissions:
   contents: read
 
+# A newer push to dev cancels the build of the older one; a tag's run (the
+# release) is never cancelled.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
 jobs:
   scope:
     name: Scope
