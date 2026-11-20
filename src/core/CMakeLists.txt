@@ -36,6 +36,8 @@ add_library(gkey-core STATIC
     LcdPages.h
     Macro.cpp
     Macro.h
+    MacroRename.cpp
+    MacroRename.h
     MacroRun.cpp
     MacroRun.h
     JsonFileStore.h

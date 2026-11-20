@@ -33,6 +33,13 @@ public:
     // Deletes the macro's file.
     bool remove(const QString &name, QString *error = nullptr) { return m_store.remove(name, error); }
 
+    // Renames the macro (new file, the old one is removed). Bindings in the
+    // profiles are not changed here, see MacroRename.
+    bool rename(const QString &oldName, const QString &newName, QString *error = nullptr)
+    {
+        return m_store.rename(oldName, newName, error);
+    }
+
     const QStringList &messages() const { return m_store.messages(); }
     const QString &directory() const { return m_store.directory(); }
 

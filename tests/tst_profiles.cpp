@@ -3,10 +3,13 @@
 
 #include "Action.h"
 #include "DaemonState.h"
+#include "MacroRename.h"
+#include "MacroStore.h"
 #include "ModelRegistry.h"
 #include "Profile.h"
 #include "ProfileStore.h"
 
+#include <QDir>
 #include <QFile>
 #include <QJsonDocument>
 #include <QSignalSpy>
@@ -31,6 +34,8 @@ private slots:
     void storeDuplicateNames();
     void storeIgnoresHugeFiles();
     void storeRenameAndRemove();
+    void macrosOfAProfile();
+    void renameMacroEverywhere();
     void state();
 
 private:
@@ -342,6 +347,79 @@ void TestProfiles::storeRenameAndRemove()
     // The changes survive a reload from disk.
     store.reload();
     QCOMPARE(store.names(), QStringList{QStringLiteral("New Name")});
+}
+
+void TestProfiles::macrosOfAProfile()
+{
+    // G1 and G2 (M1), G3 (M2) play macros; G99 does not exist on the G13 and is
+    // kept inactive, its macro still counts.
+    auto profile = Profile::fromJson(R"({"name":"P","modes":{
+        "M1":{"G1":{"type":"macro","macro":"Beta"},"G2":{"type":"macro","macro":"alpha"},
+              "G4":{"type":"key","key":"KEY_A"}},
+        "M2":{"G3":{"type":"macro","macro":"Beta","repeat":"toggle"},"G99":{"type":"macro","macro":"Gamma"}}}})");
+    QVERIFY(profile);
+    profile->validateFor(*g13());
+    QCOMPARE(profile->macros(),
+             (QStringList{QStringLiteral("alpha"), QStringLiteral("Beta"), QStringLiteral("Gamma")}));
+
+    QCOMPARE(profile->renameMacro(QStringLiteral("Beta"), QStringLiteral("Delta")), 2);
+    QCOMPARE(profile->renameMacro(QStringLiteral("Gamma"), QStringLiteral("Epsilon")), 1);
+    QCOMPARE(profile->renameMacro(QStringLiteral("unknown"), QStringLiteral("x")), 0);
+    QCOMPARE(profile->macros(),
+             (QStringList{QStringLiteral("alpha"), QStringLiteral("Delta"), QStringLiteral("Epsilon")}));
+    // Everything else of the binding stays.
+    QCOMPARE(profile->bindings(2).value(QStringLiteral("G3")).repeat(), Action::Repeat::Toggle);
+    const QJsonObject written = object(profile->toJson());
+    QCOMPARE(written[u"modes"][u"M2"][u"G99"][u"macro"].toString(), QStringLiteral("Epsilon"));
+}
+
+// Renaming a macro renames its bindings in the profiles of all models.
+void TestProfiles::renameMacroEverywhere()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const auto profileDir = [&dir](const QString &modelId) {
+        return dir.filePath(QStringLiteral("profiles/") + modelId);
+    };
+    QDir().mkpath(profileDir(QStringLiteral("g13")));
+    QDir().mkpath(profileDir(QStringLiteral("g15")));
+    QDir().mkpath(dir.filePath(QStringLiteral("macros")));
+    writeFile(dir.filePath(QStringLiteral("macros/a.json")), R"({"name":"Old","steps":[{"tap":"KEY_A"}]})");
+    writeFile(dir.filePath(QStringLiteral("macros/b.json")), R"({"name":"Taken","steps":[]})");
+    writeFile(profileDir(QStringLiteral("g13")) + QStringLiteral("/a.json"),
+              R"({"name":"Uses it","modes":{"M1":{"G1":{"type":"macro","macro":"Old"}},
+                                           "M3":{"G2":{"type":"macro","macro":"Old"}}}})");
+    const QByteArray untouched = R"({"name":"Other","modes":{"M1":{"G1":{"type":"macro","macro":"Taken"}}}})";
+    writeFile(profileDir(QStringLiteral("g13")) + QStringLiteral("/b.json"), untouched);
+    writeFile(profileDir(QStringLiteral("g15")) + QStringLiteral("/a.json"),
+              R"({"name":"G15","modes":{"M2":{"G1":{"type":"macro","macro":"Old"}}}})");
+
+    MacroStore macros(dir.filePath(QStringLiteral("macros")));
+    // A name that is taken changes nothing.
+    MacroRename::Result result =
+        MacroRename::rename(macros, QStringLiteral("Old"), QStringLiteral("Taken"), m_registry.models(), profileDir);
+    QVERIFY(!result.renamed);
+    QCOMPARE(result.errors.size(), 1);
+    QCOMPARE(result.bindings, 0);
+
+    result = MacroRename::rename(macros, QStringLiteral("Old"), QStringLiteral("New"), m_registry.models(), profileDir);
+    QVERIFY(result.renamed);
+    QVERIFY2(result.errors.isEmpty(), qPrintable(result.errors.join(u'\n')));
+    QCOMPARE(result.bindings, 3);
+    QCOMPARE(result.profiles, 2);
+    QVERIFY(!macros.macro(QStringLiteral("Old")));
+    QCOMPARE(macros.macro(QStringLiteral("New"))->steps().size(), 1);
+
+    ProfileStore g13Store(*g13(), profileDir(QStringLiteral("g13")));
+    QCOMPARE(g13Store.profile(QStringLiteral("Uses it"))->macros(), QStringList{QStringLiteral("New")});
+    QCOMPARE(g13Store.profile(QStringLiteral("Uses it"))->bindings(3).value(QStringLiteral("G2")).macro(),
+             QStringLiteral("New"));
+    // A profile without the macro is not written again.
+    QFile file(profileDir(QStringLiteral("g13")) + QStringLiteral("/b.json"));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    QCOMPARE(file.readAll(), untouched);
+    ProfileStore g15Store(*m_registry.findById(QStringLiteral("g15")), profileDir(QStringLiteral("g15")));
+    QCOMPARE(g15Store.profile(QStringLiteral("G15"))->macros(), QStringList{QStringLiteral("New")});
 }
 
 void TestProfiles::state()

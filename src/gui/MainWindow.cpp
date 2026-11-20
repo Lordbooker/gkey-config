@@ -264,7 +264,13 @@ void MainWindow::setupUi()
     });
     tabs->addTab(m_lcdPage, tr("LCD"));
 
-    m_macroEditor = new MacroEditor(m_macros, m_client, tabs);
+    m_macroEditor = new MacroEditor(m_macros, m_client, &m_registry, tabs);
+    // The profile on display plays the macro under its new name now.
+    connect(m_macroEditor, &MacroEditor::macroRenamed, this, [this] {
+        if (m_store)
+            m_store->reload();
+        reloadProfiles();
+    });
     tabs->addTab(m_macroEditor, tr("Macros"));
 
     splitter->addWidget(tabs);

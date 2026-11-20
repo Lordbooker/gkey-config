@@ -41,6 +41,13 @@ public:
 
     // Macro
     const QString &macro() const { return m_macro; }
+    // The same action for the macro with another name (renaming a macro).
+    Action withMacro(const QString &name) const
+    {
+        Action action = *this;
+        action.m_macro = name;
+        return action;
+    }
     Repeat repeat() const { return m_repeat; }
     int count() const { return m_count; }
 

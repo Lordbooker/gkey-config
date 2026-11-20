@@ -485,6 +485,36 @@
         <source>Recording...</source>
         <translation>Registrazione…</translation>
     </message>
+    <message>
+        <source>Rename</source>
+        <translation>Rinomina</translation>
+    </message>
+    <message>
+        <source>Renames the macro; keys bound to it in all profiles keep playing it.</source>
+        <translation>Rinomina la macro; i tasti associati in tutti i profili continuano a riprodurla.</translation>
+    </message>
+    <message>
+        <source>Rename macro</source>
+        <translation>Rinomina macro</translation>
+    </message>
+    <message>
+        <source>New name:</source>
+        <translation>Nuovo nome:</translation>
+    </message>
+    <message>
+        <source>The macro is renamed, but these profiles could not be updated; their keys still play &quot;%1&quot;:
+%2</source>
+        <translation>La macro è stata rinominata, ma questi profili non sono stati aggiornati; i loro tasti riproducono ancora «%1»:
+%2</translation>
+    </message>
+    <message>
+        <source>Renamed</source>
+        <translation>Rinominata</translation>
+    </message>
+    <message>
+        <source>Renamed; key bindings updated: %1</source>
+        <translation>Rinominata; associazioni dei tasti aggiornate: %1</translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>

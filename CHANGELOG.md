@@ -6,6 +6,11 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Added
+
+- Macro tab: *Rename*. Keys bound to the macro keep playing it: its bindings in all profiles of
+  all devices get the new name.
+
 ### Changed
 
 - CI runs each check once per change instead of up to five times per release: no second run on

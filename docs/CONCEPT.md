@@ -636,9 +636,11 @@ Qt6 Widgets application `gkey-config` (implemented in milestone 4):
   keys together), mouse button, macro (with repeat mode), layer, profile, LCD page. Every change is
   saved at once; the daemon reloads the file.
 * Backlight tab: colour per profile with live preview on the device while choosing.
-* Macro tab: library (new, delete), step list with in-place editing of times, insertion of
+* Macro tab: library (new, rename, delete), step list with in-place editing of times, insertion of
   press/release/tap/wait steps, moving and removing steps, "set all waits", recording with timing
   (also started/stopped with MR on the device), playback on the device.
+* Renaming a macro *(1.9.0)* renames its bindings in all profiles of all models (`MacroRename`),
+  also inactive ones; profiles without such bindings are not written.
 * Status bar and tray icon show whether the daemon runs; it can be started, stopped and
   restarted (`systemctl --user`). Single instance; closing the window keeps the tray icon.
 * Tray icon variants *(1.8.0, issue #30)*: *Settings > Tray icon* offers the application icon in

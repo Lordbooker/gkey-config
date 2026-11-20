@@ -3,10 +3,13 @@
 
 #include "MacroEditor.h"
 
+#include "ConfigPaths.h"
 #include "DaemonClient.h"
 #include "KeyCaptureEdit.h"
 #include "KeyNames.h"
+#include "MacroRename.h"
 #include "MacroStore.h"
+#include "ModelRegistry.h"
 
 #include <QApplication>
 #include <QFile>
@@ -48,8 +51,8 @@ QString typeText(Macro::Step::Type type)
 
 }
 
-MacroEditor::MacroEditor(MacroStore *store, DaemonClient *client, QWidget *parent)
-    : QWidget(parent), m_store(store), m_client(client)
+MacroEditor::MacroEditor(MacroStore *store, DaemonClient *client, const ModelRegistry *registry, QWidget *parent)
+    : QWidget(parent), m_store(store), m_client(client), m_registry(registry)
 {
     auto *layout = new QHBoxLayout(this);
 
@@ -60,8 +63,11 @@ MacroEditor::MacroEditor(MacroStore *store, DaemonClient *client, QWidget *paren
     libraryLayout->addWidget(m_list);
     auto *libraryButtons = new QHBoxLayout;
     m_new = new QPushButton(tr("New"), this);
+    m_rename = new QPushButton(tr("Rename"), this);
+    m_rename->setToolTip(tr("Renames the macro; keys bound to it in all profiles keep playing it."));
     m_delete = new QPushButton(tr("Delete"), this);
     libraryButtons->addWidget(m_new);
+    libraryButtons->addWidget(m_rename);
     libraryButtons->addWidget(m_delete);
     libraryLayout->addLayout(libraryButtons);
     layout->addLayout(libraryLayout, 1);
@@ -150,6 +156,7 @@ MacroEditor::MacroEditor(MacroStore *store, DaemonClient *client, QWidget *paren
         selectMacro(name);
     });
     connect(m_new, &QPushButton::clicked, this, &MacroEditor::onNew);
+    connect(m_rename, &QPushButton::clicked, this, &MacroEditor::onRename);
     connect(m_delete, &QPushButton::clicked, this, &MacroEditor::onDelete);
     connect(m_save, &QPushButton::clicked, this, &MacroEditor::onSave);
     connect(m_play, &QPushButton::clicked, this, &MacroEditor::onPlay);
@@ -305,6 +312,7 @@ void MacroEditor::updateButtons()
     const bool haveSelection = !m_steps->selectedItems().isEmpty();
     const bool haveKey = !m_stepKey->keyCodes().isEmpty();
     m_delete->setEnabled(haveMacro && !m_recording);
+    m_rename->setEnabled(haveMacro && !m_recording);
     m_description->setEnabled(haveMacro);
     m_steps->setEnabled(haveMacro);
     m_record->setEnabled(haveMacro);
@@ -363,6 +371,43 @@ void MacroEditor::onDelete()
     setDirty(false);
     m_current.clear();
     reloadList();
+}
+
+// The macro file and the bindings of all profiles get the new name.
+void MacroEditor::onRename()
+{
+    if (m_current.isEmpty() || !confirmDiscard())
+        return;
+    const QString oldName = m_current;
+    bool ok = false;
+    const QString name =
+        QInputDialog::getText(this, tr("Rename macro"), tr("New name:"), QLineEdit::Normal, oldName, &ok).trimmed();
+    if (!ok || name.isEmpty() || name == oldName)
+        return;
+    if (m_store->macro(name)) {
+        QMessageBox::warning(this, tr("Rename macro"), tr("A macro \"%1\" already exists.").arg(name));
+        return;
+    }
+    const MacroRename::Result result =
+        MacroRename::rename(*m_store, oldName, name, m_registry->models(), &ConfigPaths::profileDir);
+    if (!result.renamed) {
+        QMessageBox::warning(this, tr("Rename macro"), result.errors.join(u'\n'));
+        return;
+    }
+    setDirty(false);
+    m_current = name;
+    reloadList();
+    emit macroRenamed(oldName, name);
+    if (!result.errors.isEmpty()) {
+        QMessageBox::warning(this, tr("Rename macro"),
+                             tr("The macro is renamed, but these profiles could not be updated; their keys still "
+                                "play \"%1\":\n%2")
+                                 .arg(oldName, result.errors.join(u'\n')));
+    } else if (result.bindings > 0) {
+        m_status->setText(tr("Renamed; key bindings updated: %1").arg(result.bindings));
+    } else {
+        m_status->setText(tr("Renamed"));
+    }
 }
 
 void MacroEditor::onSave()
