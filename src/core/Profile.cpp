@@ -155,6 +155,59 @@ void Profile::removeBinding(int mode, const QString &keyId)
     m_modes[modeIndex(mode)].remove(keyId);
 }
 
+namespace {
+
+// An inactive binding as read: a macro binding has "type": "macro".
+bool isMacroBinding(const QJsonValue &binding, const QString &name)
+{
+    const QJsonObject object = binding.toObject();
+    return object.value(u"type").toString() == u"macro" && object.value(u"macro").toString() == name;
+}
+
+}
+
+QStringList Profile::macros() const
+{
+    QStringList names;
+    for (std::size_t i = 0; i < m_modes.size(); ++i) {
+        for (const Action &action : m_modes[i]) {
+            if (action.type() == Action::Type::Macro)
+                names.append(action.macro());
+        }
+        for (const auto &binding : m_inactive[i]) {
+            const QJsonObject object = binding.toObject();
+            if (object.value(u"type").toString() == u"macro")
+                names.append(object.value(u"macro").toString());
+        }
+    }
+    names.removeAll(QString());
+    names.sort(Qt::CaseInsensitive);
+    names.removeDuplicates();
+    return names;
+}
+
+int Profile::renameMacro(const QString &from, const QString &to)
+{
+    int count = 0;
+    for (std::size_t i = 0; i < m_modes.size(); ++i) {
+        for (Action &action : m_modes[i]) {
+            if (action.type() == Action::Type::Macro && action.macro() == from) {
+                action = action.withMacro(to);
+                ++count;
+            }
+        }
+        for (auto it = m_inactive[i].begin(); it != m_inactive[i].end(); ++it) {
+            if (isMacroBinding(it.value(), from)) {
+                QJsonObject object = it.value().toObject();
+                object.insert(QStringLiteral("macro"), to);
+                it.value() = object;
+                ++count;
+            }
+        }
+    }
+    return count;
+}
+
 std::size_t Profile::modeIndex(int mode)
 {
     return static_cast<std::size_t>(std::clamp(mode, 1, ModeCount) - 1);

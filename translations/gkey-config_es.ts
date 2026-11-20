@@ -485,6 +485,28 @@
         <source>Recording...</source>
         <translation>Grabando…</translation>
     </message>
+    <message>
+        <source>Rename</source>
+        <translation>Renombrar</translation>
+    </message>
+    <message>
+        <source>Renames the macro; keys bound to it in all profiles keep playing it.</source>
+        <translation>Renombra la macro; las teclas asignadas a ella en todos los perfiles la siguen reproduciendo.</translation>
+    </message>
+    <message>
+        <source>Rename macro</source>
+        <translation>Renombrar macro</translation>
+    </message>
+    <message>
+        <source>New name:</source>
+        <translation>Nuevo nombre:</translation>
+    </message>
+    <message>
+        <source>The macro is renamed, but these profiles could not be updated; their keys still play &quot;%1&quot;:
+%2</source>
+        <translation>La macro se ha renombrado, pero estos perfiles no se pudieron actualizar; sus teclas siguen reproduciendo «%1»:
+%2</translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -829,6 +851,74 @@
     <message>
         <source>One colour, dark (for light panels)</source>
         <translation>Monocromo oscuro (para paneles claros)</translation>
+    </message>
+    <message>
+        <source>Export...</source>
+        <translation>Exportar…</translation>
+    </message>
+    <message>
+        <source>Import...</source>
+        <translation>Importar…</translation>
+    </message>
+    <message>
+        <source>Export profile</source>
+        <translation>Exportar perfil</translation>
+    </message>
+    <message>
+        <source>Profiles (*.json)</source>
+        <translation>Perfiles (*.json)</translation>
+    </message>
+    <message>
+        <source>The profile is exported. These macros it plays do not exist and are not in the file:
+%1</source>
+        <translation>El perfil se ha exportado. Estas macros que reproduce no existen y no están en el archivo:
+%1</translation>
+    </message>
+    <message>
+        <source>Profile exported to %1</source>
+        <translation>Perfil exportado a %1</translation>
+    </message>
+    <message>
+        <source>Import profile</source>
+        <translation>Importar perfil</translation>
+    </message>
+    <message>
+        <source>Profiles (*.json);;All files (*)</source>
+        <translation>Perfiles (*.json);;Todos los archivos (*)</translation>
+    </message>
+    <message>
+        <source>The profile belongs to the device model &quot;%1&quot;, which this version does not know.</source>
+        <translation>El perfil pertenece al modelo de dispositivo «%1», que esta versión no conoce.</translation>
+    </message>
+    <message>
+        <source>A profile &quot;%1&quot; already exists for the %2. Name of the imported profile:</source>
+        <translation>Ya existe un perfil «%1» para %2. Nombre del perfil importado:</translation>
+    </message>
+    <message>
+        <source>Imported the profile &quot;%1&quot; for the %2.</source>
+        <translation>Perfil «%1» importado para %2.</translation>
+    </message>
+    <message>
+        <source>New macros: %1</source>
+        <translation>Macros nuevas: %1</translation>
+    </message>
+    <message>
+        <source>Macros that existed already with the same steps: %1</source>
+        <translation>Macros que ya existían con los mismos pasos: %1</translation>
+    </message>
+    <message>
+        <source>Macros whose names were taken by different macros, imported as copies:
+%1</source>
+        <translation>Macros cuyo nombre ya usaba otra macro, importadas como copias:
+%1</translation>
+    </message>
+    <message>
+        <source>Bindings this device cannot use (kept, but inactive): %1</source>
+        <translation>Asignaciones que este dispositivo no puede usar (conservadas, pero inactivas): %1</translation>
+    </message>
+    <message>
+        <source>Macro &quot;%1&quot; renamed to &quot;%2&quot;; key bindings updated: %3</source>
+        <translation>Macro «%1» renombrada a «%2»; asignaciones de teclas actualizadas: %3</translation>
     </message>
 </context>
 <context>

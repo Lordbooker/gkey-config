@@ -77,6 +77,13 @@ public:
     void setBinding(int mode, const QString &keyId, const Action &action);
     void removeBinding(int mode, const QString &keyId);
 
+    // Names of the macros that bindings of all modes play (also inactive ones),
+    // sorted, each once.
+    QStringList macros() const;
+    // Makes all bindings of macro `from` play macro `to` (also inactive ones);
+    // returns their number.
+    int renameMacro(const QString &from, const QString &to);
+
     const QJsonObject &stick() const { return m_stick; }
     StickSettings stickSettings() const { return StickSettings::fromJson(m_stick); }
     void setStickSettings(const StickSettings &settings) { settings.writeTo(m_stick); }

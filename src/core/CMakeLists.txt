@@ -36,6 +36,8 @@ add_library(gkey-core STATIC
     LcdPages.h
     Macro.cpp
     Macro.h
+    MacroRename.cpp
+    MacroRename.h
     MacroRun.cpp
     MacroRun.h
     JsonFileStore.h
@@ -51,6 +53,8 @@ add_library(gkey-core STATIC
     Profile.h
     ProfileStore.cpp
     ProfileStore.h
+    ProfileTransfer.cpp
+    ProfileTransfer.h
     Settings.cpp
     Settings.h
     StickProcessor.cpp

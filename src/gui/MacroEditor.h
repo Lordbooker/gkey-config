@@ -12,6 +12,7 @@
 class DaemonClient;
 class KeyCaptureEdit;
 class MacroStore;
+class ModelRegistry;
 class QLabel;
 class QLineEdit;
 class QListWidget;
@@ -28,7 +29,8 @@ class QTreeWidgetItem;
 class MacroEditor : public QWidget {
     Q_OBJECT
 public:
-    MacroEditor(MacroStore *store, DaemonClient *client, QWidget *parent = nullptr);
+    // registry: the models whose profiles are updated when a macro is renamed.
+    MacroEditor(MacroStore *store, DaemonClient *client, const ModelRegistry *registry, QWidget *parent = nullptr);
 
     bool isRecording() const { return m_recording; }
     // Steps or a description that have not been saved yet.
@@ -36,6 +38,11 @@ public:
     // Asks whether unsaved changes may be discarded; true if there are none or
     // the user agrees.
     bool confirmDiscard();
+
+signals:
+    // A macro was renamed; the profiles on disk play it under the new name
+    // (bindings: how many were changed).
+    void macroRenamed(const QString &from, const QString &to, int bindings);
 
 public slots:
     // Called when MR on the device toggles the recording state.
@@ -56,6 +63,7 @@ private:
 
     void onNew();
     void onDelete();
+    void onRename();
     void onSave();
     void onPlay();
     void startRecording();
@@ -70,6 +78,7 @@ private:
 
     MacroStore *m_store;
     DaemonClient *m_client;
+    const ModelRegistry *m_registry;
     QString m_current;   // name of the macro being edited
     bool m_dirty = false;
     bool m_recording = false;
@@ -79,6 +88,7 @@ private:
     QListWidget *m_list;
     QPushButton *m_new;
     QPushButton *m_delete;
+    QPushButton *m_rename;
     QLineEdit *m_name;
     QLineEdit *m_description;
     QTreeWidget *m_steps;

@@ -3,10 +3,14 @@
 
 #include "Action.h"
 #include "DaemonState.h"
+#include "MacroRename.h"
+#include "MacroStore.h"
 #include "ModelRegistry.h"
 #include "Profile.h"
 #include "ProfileStore.h"
+#include "ProfileTransfer.h"
 
+#include <QDir>
 #include <QFile>
 #include <QJsonDocument>
 #include <QSignalSpy>
@@ -31,6 +35,12 @@ private slots:
     void storeDuplicateNames();
     void storeIgnoresHugeFiles();
     void storeRenameAndRemove();
+    void macrosOfAProfile();
+    void renameMacroEverywhere();
+    void exportAndImport();
+    void importMacroConflicts();
+    void importErrors_data();
+    void importErrors();
     void state();
 
 private:
@@ -342,6 +352,189 @@ void TestProfiles::storeRenameAndRemove()
     // The changes survive a reload from disk.
     store.reload();
     QCOMPARE(store.names(), QStringList{QStringLiteral("New Name")});
+}
+
+void TestProfiles::macrosOfAProfile()
+{
+    // G1 and G2 (M1), G3 (M2) play macros; G99 does not exist on the G13 and is
+    // kept inactive, its macro still counts.
+    auto profile = Profile::fromJson(R"({"name":"P","modes":{
+        "M1":{"G1":{"type":"macro","macro":"Beta"},"G2":{"type":"macro","macro":"alpha"},
+              "G4":{"type":"key","key":"KEY_A"}},
+        "M2":{"G3":{"type":"macro","macro":"Beta","repeat":"toggle"},"G99":{"type":"macro","macro":"Gamma"}}}})");
+    QVERIFY(profile);
+    profile->validateFor(*g13());
+    QCOMPARE(profile->macros(),
+             (QStringList{QStringLiteral("alpha"), QStringLiteral("Beta"), QStringLiteral("Gamma")}));
+
+    QCOMPARE(profile->renameMacro(QStringLiteral("Beta"), QStringLiteral("Delta")), 2);
+    QCOMPARE(profile->renameMacro(QStringLiteral("Gamma"), QStringLiteral("Epsilon")), 1);
+    QCOMPARE(profile->renameMacro(QStringLiteral("unknown"), QStringLiteral("x")), 0);
+    QCOMPARE(profile->macros(),
+             (QStringList{QStringLiteral("alpha"), QStringLiteral("Delta"), QStringLiteral("Epsilon")}));
+    // Everything else of the binding stays.
+    QCOMPARE(profile->bindings(2).value(QStringLiteral("G3")).repeat(), Action::Repeat::Toggle);
+    const QJsonObject written = object(profile->toJson());
+    QCOMPARE(written[u"modes"][u"M2"][u"G99"][u"macro"].toString(), QStringLiteral("Epsilon"));
+}
+
+// Renaming a macro renames its bindings in the profiles of all models.
+void TestProfiles::renameMacroEverywhere()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const auto profileDir = [&dir](const QString &modelId) {
+        return dir.filePath(QStringLiteral("profiles/") + modelId);
+    };
+    QDir().mkpath(profileDir(QStringLiteral("g13")));
+    QDir().mkpath(profileDir(QStringLiteral("g15")));
+    QDir().mkpath(dir.filePath(QStringLiteral("macros")));
+    writeFile(dir.filePath(QStringLiteral("macros/a.json")), R"({"name":"Old","steps":[{"tap":"KEY_A"}]})");
+    writeFile(dir.filePath(QStringLiteral("macros/b.json")), R"({"name":"Taken","steps":[]})");
+    writeFile(profileDir(QStringLiteral("g13")) + QStringLiteral("/a.json"),
+              R"({"name":"Uses it","modes":{"M1":{"G1":{"type":"macro","macro":"Old"}},
+                                           "M3":{"G2":{"type":"macro","macro":"Old"}}}})");
+    const QByteArray untouched = R"({"name":"Other","modes":{"M1":{"G1":{"type":"macro","macro":"Taken"}}}})";
+    writeFile(profileDir(QStringLiteral("g13")) + QStringLiteral("/b.json"), untouched);
+    writeFile(profileDir(QStringLiteral("g15")) + QStringLiteral("/a.json"),
+              R"({"name":"G15","modes":{"M2":{"G1":{"type":"macro","macro":"Old"}}}})");
+
+    MacroStore macros(dir.filePath(QStringLiteral("macros")));
+    // A name that is taken changes nothing.
+    MacroRename::Result result =
+        MacroRename::rename(macros, QStringLiteral("Old"), QStringLiteral("Taken"), m_registry.models(), profileDir);
+    QVERIFY(!result.renamed);
+    QCOMPARE(result.errors.size(), 1);
+    QCOMPARE(result.bindings, 0);
+
+    result = MacroRename::rename(macros, QStringLiteral("Old"), QStringLiteral("New"), m_registry.models(), profileDir);
+    QVERIFY(result.renamed);
+    QVERIFY2(result.errors.isEmpty(), qPrintable(result.errors.join(u'\n')));
+    QCOMPARE(result.bindings, 3);
+    QCOMPARE(result.profiles, 2);
+    QVERIFY(!macros.macro(QStringLiteral("Old")));
+    QCOMPARE(macros.macro(QStringLiteral("New"))->steps().size(), 1);
+
+    ProfileStore g13Store(*g13(), profileDir(QStringLiteral("g13")));
+    QCOMPARE(g13Store.profile(QStringLiteral("Uses it"))->macros(), QStringList{QStringLiteral("New")});
+    QCOMPARE(g13Store.profile(QStringLiteral("Uses it"))->bindings(3).value(QStringLiteral("G2")).macro(),
+             QStringLiteral("New"));
+    // A profile without the macro is not written again.
+    QFile file(profileDir(QStringLiteral("g13")) + QStringLiteral("/b.json"));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    QCOMPARE(file.readAll(), untouched);
+    ProfileStore g15Store(*m_registry.findById(QStringLiteral("g15")), profileDir(QStringLiteral("g15")));
+    QCOMPARE(g15Store.profile(QStringLiteral("G15"))->macros(), QStringList{QStringLiteral("New")});
+}
+
+void TestProfiles::exportAndImport()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    MacroStore macros(dir.filePath(QStringLiteral("macros")));
+    Macro hello;
+    hello.setName(QStringLiteral("Hello"));
+    hello.setSteps({Macro::Step{Macro::Step::Type::Tap, KEY_H, 10}});
+    QVERIFY(macros.save(hello));
+    Macro unused;
+    unused.setName(QStringLiteral("Unused"));
+    QVERIFY(macros.save(unused));
+
+    auto profile = Profile::fromJson(R"({"name":"Shared","backlight":[1,2,3],"modes":{
+        "M1":{"G1":{"type":"macro","macro":"Hello"},"G2":{"type":"macro","macro":"Gone"},
+              "G3":{"type":"key","key":"KEY_A"}}}})");
+    QVERIFY(profile);
+    QStringList missing;
+    const QByteArray data = ProfileTransfer::exportProfile(QStringLiteral("g13"), *profile, macros, &missing);
+    QCOMPARE(missing, QStringList{QStringLiteral("Gone")});
+
+    const auto imported = ProfileTransfer::parse(data, QStringLiteral("g15"));
+    QVERIFY2(imported, imported ? "" : qPrintable(imported.error()));
+    QCOMPARE(imported->modelId, QStringLiteral("g13"));   // from the file, not the fallback
+    QCOMPARE(imported->profile.toJson(), profile->toJson());
+    QCOMPARE(imported->macros.size(), 1);   // only the macros the profile plays
+    QCOMPARE(imported->macros.first().name(), QStringLiteral("Hello"));
+    QCOMPARE(imported->macros.first().steps(), hello.steps());
+
+    // A plain profile file belongs to the model given.
+    const auto plain = ProfileTransfer::parse(profile->toJson(), QStringLiteral("g15"));
+    QVERIFY2(plain, plain ? "" : qPrintable(plain.error()));
+    QCOMPARE(plain->modelId, QStringLiteral("g15"));
+    QVERIFY(plain->macros.isEmpty());
+}
+
+// An imported macro whose name is taken by a different macro is saved under a
+// new name, and the profile plays that copy; an identical one is used as it is.
+void TestProfiles::importMacroConflicts()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    MacroStore macros(dir.filePath(QStringLiteral("macros")));
+    const auto make = [](const QString &name, int key) {
+        Macro macro;
+        macro.setName(name);
+        macro.setSteps({Macro::Step{Macro::Step::Type::Tap, key, 10}});
+        return macro;
+    };
+    QVERIFY(macros.save(make(QStringLiteral("Same"), KEY_S)));
+    QVERIFY(macros.save(make(QStringLiteral("Other"), KEY_O)));
+    QVERIFY(macros.save(make(QStringLiteral("Other (2)"), KEY_P)));   // the first free name is (3)
+
+    // "Other (3)" also comes with the file: the copy of "Other" must not take it.
+    const QList<Macro> imported{make(QStringLiteral("Same"), KEY_S), make(QStringLiteral("Other"), KEY_X),
+                                make(QStringLiteral("Other (3)"), KEY_Y), make(QStringLiteral("New"), KEY_N)};
+    const ProfileTransfer::MacroPlan plan = ProfileTransfer::planMacros(imported, macros);
+    QCOMPARE(plan.reused, QStringList{QStringLiteral("Same")});
+    QCOMPARE(plan.renamed.value(QStringLiteral("Other")), QStringLiteral("Other (4)"));
+    QCOMPARE(plan.renamed.size(), 1);
+    QCOMPARE(plan.save.size(), 3);
+
+    auto profile = Profile::fromJson(R"json({"name":"P","modes":{"M1":{
+        "G1":{"type":"macro","macro":"Same"},"G2":{"type":"macro","macro":"Other"},
+        "G3":{"type":"macro","macro":"Other (3)"},"G4":{"type":"macro","macro":"New"}}}})json");
+    QVERIFY(profile);
+    QString error;
+    QVERIFY2(ProfileTransfer::applyMacros(plan, macros, *profile, &error), qPrintable(error));
+    const auto &bindings = profile->bindings(1);
+    QCOMPARE(bindings.value(QStringLiteral("G1")).macro(), QStringLiteral("Same"));
+    QCOMPARE(bindings.value(QStringLiteral("G2")).macro(), QStringLiteral("Other (4)"));
+    QCOMPARE(bindings.value(QStringLiteral("G3")).macro(), QStringLiteral("Other (3)"));
+    QCOMPARE(bindings.value(QStringLiteral("G4")).macro(), QStringLiteral("New"));
+    // Existing macros are unchanged; the copies are there.
+    QCOMPARE(macros.macro(QStringLiteral("Other"))->steps().first().code, KEY_O);
+    QCOMPARE(macros.macro(QStringLiteral("Other (4)"))->steps().first().code, KEY_X);
+    QCOMPARE(macros.macro(QStringLiteral("Other (3)"))->steps().first().code, KEY_Y);
+    QVERIFY(macros.macro(QStringLiteral("New")));
+
+    QCOMPARE(ProfileTransfer::uniqueName(QStringLiteral("Free"), [](const QString &) { return false; }),
+             QStringLiteral("Free"));
+}
+
+void TestProfiles::importErrors_data()
+{
+    QTest::addColumn<QByteArray>("data");
+    QTest::addColumn<QString>("error");
+    QTest::newRow("no json") << QByteArray("hello") << QStringLiteral("not valid JSON");
+    QTest::newRow("array") << QByteArray("[]") << QStringLiteral("not a profile");
+    QTest::newRow("newer format") << QByteArray(R"({"gkeyConfigExport":2,"model":"g13","profile":{"name":"P"}})")
+                                  << QStringLiteral("not supported");
+    QTest::newRow("no model") << QByteArray(R"({"gkeyConfigExport":1,"profile":{"name":"P"}})")
+                              << QStringLiteral("no device model");
+    QTest::newRow("bad profile") << QByteArray(R"({"gkeyConfigExport":1,"model":"g13","profile":{}})")
+                                 << QStringLiteral("profile:");
+    QTest::newRow("macro twice") << QByteArray(R"({"gkeyConfigExport":1,"model":"g13","profile":{"name":"P"},
+                                       "macros":[{"name":"A","steps":[]},{"name":"A","steps":[]}]})")
+                                 << QStringLiteral("twice");
+    QTest::newRow("huge") << QByteArray(ProfileTransfer::MaxFileSize + 1, ' ') << QStringLiteral("larger than");
+}
+
+void TestProfiles::importErrors()
+{
+    QFETCH(QByteArray, data);
+    QFETCH(QString, error);
+    const auto imported = ProfileTransfer::parse(data, QStringLiteral("g13"));
+    QVERIFY(!imported);
+    QVERIFY2(imported.error().contains(error), qPrintable(imported.error()));
 }
 
 void TestProfiles::state()

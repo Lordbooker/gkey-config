@@ -83,6 +83,8 @@ private:
     void onNewProfile();
     void onDuplicateProfile();
     void onRenameProfile();
+    void onExportProfile();
+    void onImportProfile();
     void onDeleteProfile();
     void onStickSettingsChanged(const StickSettings &settings);
     void onStickWasd();

@@ -485,6 +485,28 @@
         <source>Recording...</source>
         <translation>Aufnahme läuft …</translation>
     </message>
+    <message>
+        <source>Rename</source>
+        <translation>Umbenennen</translation>
+    </message>
+    <message>
+        <source>Renames the macro; keys bound to it in all profiles keep playing it.</source>
+        <translation>Benennt das Makro um; daran gebundene Tasten spielen es in allen Profilen weiter.</translation>
+    </message>
+    <message>
+        <source>Rename macro</source>
+        <translation>Makro umbenennen</translation>
+    </message>
+    <message>
+        <source>New name:</source>
+        <translation>Neuer Name:</translation>
+    </message>
+    <message>
+        <source>The macro is renamed, but these profiles could not be updated; their keys still play &quot;%1&quot;:
+%2</source>
+        <translation>Das Makro ist umbenannt, aber diese Profile konnten nicht angepasst werden; ihre Tasten spielen weiter „%1“:
+%2</translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -829,6 +851,74 @@
     <message>
         <source>One colour, dark (for light panels)</source>
         <translation>Einfarbig dunkel (für helle Leisten)</translation>
+    </message>
+    <message>
+        <source>Export...</source>
+        <translation>Exportieren …</translation>
+    </message>
+    <message>
+        <source>Import...</source>
+        <translation>Importieren …</translation>
+    </message>
+    <message>
+        <source>Export profile</source>
+        <translation>Profil exportieren</translation>
+    </message>
+    <message>
+        <source>Profiles (*.json)</source>
+        <translation>Profile (*.json)</translation>
+    </message>
+    <message>
+        <source>The profile is exported. These macros it plays do not exist and are not in the file:
+%1</source>
+        <translation>Das Profil ist exportiert. Diese Makros, die es abspielt, gibt es nicht; sie fehlen in der Datei:
+%1</translation>
+    </message>
+    <message>
+        <source>Profile exported to %1</source>
+        <translation>Profil exportiert nach %1</translation>
+    </message>
+    <message>
+        <source>Import profile</source>
+        <translation>Profil importieren</translation>
+    </message>
+    <message>
+        <source>Profiles (*.json);;All files (*)</source>
+        <translation>Profile (*.json);;Alle Dateien (*)</translation>
+    </message>
+    <message>
+        <source>The profile belongs to the device model &quot;%1&quot;, which this version does not know.</source>
+        <translation>Das Profil gehört zum Gerätemodell „%1“, das diese Version nicht kennt.</translation>
+    </message>
+    <message>
+        <source>A profile &quot;%1&quot; already exists for the %2. Name of the imported profile:</source>
+        <translation>Ein Profil „%1“ gibt es für %2 schon. Name des importierten Profils:</translation>
+    </message>
+    <message>
+        <source>Imported the profile &quot;%1&quot; for the %2.</source>
+        <translation>Profil „%1“ für %2 importiert.</translation>
+    </message>
+    <message>
+        <source>New macros: %1</source>
+        <translation>Neue Makros: %1</translation>
+    </message>
+    <message>
+        <source>Macros that existed already with the same steps: %1</source>
+        <translation>Makros, die es mit denselben Schritten schon gab: %1</translation>
+    </message>
+    <message>
+        <source>Macros whose names were taken by different macros, imported as copies:
+%1</source>
+        <translation>Makros, deren Name schon von einem anderen Makro belegt war, als Kopie importiert:
+%1</translation>
+    </message>
+    <message>
+        <source>Bindings this device cannot use (kept, but inactive): %1</source>
+        <translation>Belegungen, die dieses Gerät nicht nutzen kann (behalten, aber inaktiv): %1</translation>
+    </message>
+    <message>
+        <source>Macro &quot;%1&quot; renamed to &quot;%2&quot;; key bindings updated: %3</source>
+        <translation>Makro „%1“ in „%2“ umbenannt; angepasste Tastenbelegungen: %3</translation>
     </message>
 </context>
 <context>

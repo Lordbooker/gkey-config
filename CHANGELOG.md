@@ -6,6 +6,17 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-11-20
+
+### Added
+
+- Macro tab: *Rename*. Keys bound to the macro keep playing it: its bindings in all profiles of
+  all devices get the new name.
+- Profile menu *Manage*: *Export...* writes the profile together with the macros it plays into one
+  file, *Import...* reads it (or a plain profile file) for the device it belongs to. Nothing
+  existing is overwritten: a taken profile name is asked about, and a macro whose name is taken by a
+  different macro is imported as a copy that the profile then plays.
+
 ### Changed
 
 - CI runs each check once per change instead of up to five times per release: no second run on
@@ -252,7 +263,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/Lordbooker/gkey-config/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/Lordbooker/gkey-config/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/Lordbooker/gkey-config/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/Lordbooker/gkey-config/compare/v1.7.0...v1.7.1

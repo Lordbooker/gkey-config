@@ -14,6 +14,7 @@
 #include "MacroEditor.h"
 #include "MacroStore.h"
 #include "ProfileStore.h"
+#include "ProfileTransfer.h"
 #include "SessionSetup.h"
 #include "Settings.h"
 #include "StickPage.h"
@@ -31,6 +32,8 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDir>
+#include <QFile>
+#include <QFileDialog>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QInputDialog>
@@ -41,6 +44,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QPushButton>
+#include <QSaveFile>
 #include <QSettings>
 #include <QSplitter>
 #include <QStatusBar>
@@ -52,6 +56,8 @@
 #include <QVBoxLayout>
 
 #include <linux/input-event-codes.h>
+
+#include <memory>
 
 namespace {
 
@@ -195,6 +201,9 @@ void MainWindow::setupUi()
     profileMenu->addAction(tr("Duplicate..."), this, &MainWindow::onDuplicateProfile);
     profileMenu->addAction(tr("Rename..."), this, &MainWindow::onRenameProfile);
     profileMenu->addSeparator();
+    profileMenu->addAction(tr("Export..."), this, &MainWindow::onExportProfile);
+    profileMenu->addAction(tr("Import..."), this, &MainWindow::onImportProfile);
+    profileMenu->addSeparator();
     profileMenu->addAction(tr("Delete"), this, &MainWindow::onDeleteProfile);
     m_profileMenuButton->setMenu(profileMenu);
     toolbar->addWidget(m_profileMenuButton);
@@ -264,7 +273,18 @@ void MainWindow::setupUi()
     });
     tabs->addTab(m_lcdPage, tr("LCD"));
 
-    m_macroEditor = new MacroEditor(m_macros, m_client, tabs);
+    m_macroEditor = new MacroEditor(m_macros, m_client, &m_registry, tabs);
+    // The profile on display plays the macro under its new name now.
+    connect(m_macroEditor, &MacroEditor::macroRenamed, this,
+            [this](const QString &from, const QString &to, int bindings) {
+                if (m_store)
+                    m_store->reload();
+                reloadProfiles();
+                // Translated texts are plain string literals throughout.
+                // NOLINTNEXTLINE(modernize-raw-string-literal)
+                const QString message = tr("Macro \"%1\" renamed to \"%2\"; key bindings updated: %3");
+                statusBar()->showMessage(message.arg(from, to).arg(bindings), 8000);
+            });
     tabs->addTab(m_macroEditor, tr("Macros"));
 
     splitter->addWidget(tabs);
@@ -545,6 +565,122 @@ void MainWindow::onDuplicateProfile()
         if (m_client->available())
             m_client->setProfile(m_model.id(), name);
     }
+}
+
+// One file with the profile and the macros it plays, to share or back up.
+void MainWindow::onExportProfile()
+{
+    const Profile *current = currentProfile();
+    if (!current)
+        return;
+    QString fileName = current->name();
+    fileName.replace(u'/', u'_');
+    const QString path = QFileDialog::getSaveFileName(
+        this, tr("Export profile"), QDir::home().filePath(fileName + QStringLiteral(".json")), tr("Profiles (*.json)"));
+    if (path.isEmpty())
+        return;
+    QStringList missing;
+    const QByteArray exported = ProfileTransfer::exportProfile(m_model.id(), *current, *m_macros, &missing);
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly) || file.write(exported) < 0 || !file.commit()) {
+        QMessageBox::warning(this, tr("Export profile"), QStringLiteral("%1: %2").arg(path, file.errorString()));
+        return;
+    }
+    if (!missing.isEmpty()) {
+        QMessageBox::information(this, tr("Export profile"),
+                                 tr("The profile is exported. These macros it plays do not exist and are not in "
+                                    "the file:\n%1")
+                                     .arg(missing.join(u'\n')));
+    } else {
+        statusBar()->showMessage(tr("Profile exported to %1").arg(path), 6000);
+    }
+}
+
+// Imports an export (or a plain profile file) for the model it belongs to.
+// Nothing existing is overwritten: a taken profile name is asked about, macros
+// whose names are taken by different macros are saved as copies.
+void MainWindow::onImportProfile()
+{
+    const QString path = QFileDialog::getOpenFileName(this, tr("Import profile"), QDir::homePath(),
+                                                      tr("Profiles (*.json);;All files (*)"));
+    if (path.isEmpty())
+        return;
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::warning(this, tr("Import profile"), QStringLiteral("%1: %2").arg(path, file.errorString()));
+        return;
+    }
+    auto imported = ProfileTransfer::parse(file.read(ProfileTransfer::MaxFileSize + 1), m_model.id());
+    if (!imported) {
+        QMessageBox::warning(this, tr("Import profile"), QStringLiteral("%1: %2").arg(path, imported.error()));
+        return;
+    }
+    const DeviceModel *model = m_registry.findById(imported->modelId);
+    if (!model) {
+        QMessageBox::warning(this, tr("Import profile"),
+                             tr("The profile belongs to the device model \"%1\", which this version does not know.")
+                                 .arg(imported->modelId));
+        return;
+    }
+
+    // The profiles of that model (the shown ones, or those of another model).
+    std::unique_ptr<ProfileStore> otherStore;
+    ProfileStore *store = m_store;
+    if (model->id() != m_model.id() || !store) {
+        otherStore = std::make_unique<ProfileStore>(*model, ConfigPaths::profileDir(model->id()));
+        store = otherStore.get();
+    }
+
+    Profile &profile = imported->profile;
+    QString name = profile.name();
+    while (store->profile(name)) {
+        bool ok = false;
+        const QString suggestion =
+            ProfileTransfer::uniqueName(name, [store](const QString &candidate) { return store->profile(candidate); });
+        name = QInputDialog::getText(this, tr("Import profile"),
+                                     tr("A profile \"%1\" already exists for the %2. Name of the imported profile:")
+                                         .arg(name, model->name()),
+                                     QLineEdit::Normal, suggestion, &ok)
+                   .trimmed();
+        if (!ok || name.isEmpty())
+            return;
+    }
+    profile.setName(name);
+    profile.validateFor(*model);
+
+    const ProfileTransfer::MacroPlan plan = ProfileTransfer::planMacros(imported->macros, *m_macros);
+    QString error;
+    if (!ProfileTransfer::applyMacros(plan, *m_macros, profile, &error) || !store->save(profile, &error)) {
+        QMessageBox::warning(this, tr("Import profile"), error);
+        return;
+    }
+
+    // Show the imported profile (switching to its device if needed).
+    if (model->id() != m_model.id())
+        showModel(model->id());
+    m_store->reload();
+    m_profileName = name;
+    reloadProfiles();
+    if (m_client->available())
+        m_client->setProfile(m_model.id(), name);
+
+    QStringList report{tr("Imported the profile \"%1\" for the %2.").arg(name, model->name())};
+    const int added = static_cast<int>(plan.save.size()) - static_cast<int>(plan.renamed.size());
+    if (added > 0)
+        report.append(tr("New macros: %1").arg(added));
+    if (!plan.reused.isEmpty())
+        report.append(
+            tr("Macros that existed already with the same steps: %1").arg(plan.reused.join(QStringLiteral(", "))));
+    if (!plan.renamed.isEmpty()) {
+        QStringList renamed;
+        for (auto it = plan.renamed.constBegin(); it != plan.renamed.constEnd(); ++it)
+            renamed.append(QStringLiteral("%1 → %2").arg(it.key(), it.value()));
+        report.append(
+            tr("Macros whose names were taken by different macros, imported as copies:\n%1").arg(renamed.join(u'\n')));
+    }
+    if (!profile.warnings().isEmpty())
+        report.append(tr("Bindings this device cannot use (kept, but inactive): %1").arg(profile.warnings().size()));
+    QMessageBox::information(this, tr("Import profile"), report.join(QStringLiteral("\n\n")));
 }
 
 void MainWindow::onRenameProfile()
