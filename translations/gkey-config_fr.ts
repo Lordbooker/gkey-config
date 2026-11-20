@@ -507,14 +507,6 @@
         <translation>La macro est renommée, mais ces profils n&apos;ont pas pu être mis à jour ; leurs touches jouent toujours « %1 » :
 %2</translation>
     </message>
-    <message>
-        <source>Renamed</source>
-        <translation>Renommée</translation>
-    </message>
-    <message>
-        <source>Renamed; key bindings updated: %1</source>
-        <translation>Renommée ; associations de touches mises à jour : %1</translation>
-    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -923,6 +915,10 @@
     <message>
         <source>Bindings this device cannot use (kept, but inactive): %1</source>
         <translation>Associations que cet appareil ne peut pas utiliser (conservées mais inactives) : %1</translation>
+    </message>
+    <message>
+        <source>Macro &quot;%1&quot; renamed to &quot;%2&quot;; key bindings updated: %3</source>
+        <translation>Macro « %1 » renommée en « %2 » ; associations de touches mises à jour : %3</translation>
     </message>
 </context>
 <context>

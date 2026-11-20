@@ -507,14 +507,6 @@
         <translation>Das Makro ist umbenannt, aber diese Profile konnten nicht angepasst werden; ihre Tasten spielen weiter „%1“:
 %2</translation>
     </message>
-    <message>
-        <source>Renamed</source>
-        <translation>Umbenannt</translation>
-    </message>
-    <message>
-        <source>Renamed; key bindings updated: %1</source>
-        <translation>Umbenannt; angepasste Tastenbelegungen: %1</translation>
-    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -923,6 +915,10 @@
     <message>
         <source>Bindings this device cannot use (kept, but inactive): %1</source>
         <translation>Belegungen, die dieses Gerät nicht nutzen kann (behalten, aber inaktiv): %1</translation>
+    </message>
+    <message>
+        <source>Macro &quot;%1&quot; renamed to &quot;%2&quot;; key bindings updated: %3</source>
+        <translation>Makro „%1“ in „%2“ umbenannt; angepasste Tastenbelegungen: %3</translation>
     </message>
 </context>
 <context>

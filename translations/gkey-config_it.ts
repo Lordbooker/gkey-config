@@ -507,14 +507,6 @@
         <translation>La macro è stata rinominata, ma questi profili non sono stati aggiornati; i loro tasti riproducono ancora «%1»:
 %2</translation>
     </message>
-    <message>
-        <source>Renamed</source>
-        <translation>Rinominata</translation>
-    </message>
-    <message>
-        <source>Renamed; key bindings updated: %1</source>
-        <translation>Rinominata; associazioni dei tasti aggiornate: %1</translation>
-    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -923,6 +915,10 @@
     <message>
         <source>Bindings this device cannot use (kept, but inactive): %1</source>
         <translation>Associazioni che questo dispositivo non può usare (mantenute ma inattive): %1</translation>
+    </message>
+    <message>
+        <source>Macro &quot;%1&quot; renamed to &quot;%2&quot;; key bindings updated: %3</source>
+        <translation>Macro «%1» rinominata in «%2»; associazioni dei tasti aggiornate: %3</translation>
     </message>
 </context>
 <context>

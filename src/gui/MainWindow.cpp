@@ -275,11 +275,16 @@ void MainWindow::setupUi()
 
     m_macroEditor = new MacroEditor(m_macros, m_client, &m_registry, tabs);
     // The profile on display plays the macro under its new name now.
-    connect(m_macroEditor, &MacroEditor::macroRenamed, this, [this] {
-        if (m_store)
-            m_store->reload();
-        reloadProfiles();
-    });
+    connect(m_macroEditor, &MacroEditor::macroRenamed, this,
+            [this](const QString &from, const QString &to, int bindings) {
+                if (m_store)
+                    m_store->reload();
+                reloadProfiles();
+                // Translated texts are plain string literals throughout.
+                // NOLINTNEXTLINE(modernize-raw-string-literal)
+                const QString message = tr("Macro \"%1\" renamed to \"%2\"; key bindings updated: %3");
+                statusBar()->showMessage(message.arg(from, to).arg(bindings), 8000);
+            });
     tabs->addTab(m_macroEditor, tr("Macros"));
 
     splitter->addWidget(tabs);

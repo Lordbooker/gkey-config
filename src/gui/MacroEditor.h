@@ -40,8 +40,9 @@ public:
     bool confirmDiscard();
 
 signals:
-    // A macro was renamed; the profiles on disk play it under the new name.
-    void macroRenamed(const QString &from, const QString &to);
+    // A macro was renamed; the profiles on disk play it under the new name
+    // (bindings: how many were changed).
+    void macroRenamed(const QString &from, const QString &to, int bindings);
 
 public slots:
     // Called when MR on the device toggles the recording state.

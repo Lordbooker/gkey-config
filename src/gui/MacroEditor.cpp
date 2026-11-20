@@ -397,16 +397,12 @@ void MacroEditor::onRename()
     setDirty(false);
     m_current = name;
     reloadList();
-    emit macroRenamed(oldName, name);
+    emit macroRenamed(oldName, name, result.bindings);
     if (!result.errors.isEmpty()) {
         QMessageBox::warning(this, tr("Rename macro"),
                              tr("The macro is renamed, but these profiles could not be updated; their keys still "
                                 "play \"%1\":\n%2")
                                  .arg(oldName, result.errors.join(u'\n')));
-    } else if (result.bindings > 0) {
-        m_status->setText(tr("Renamed; key bindings updated: %1").arg(result.bindings));
-    } else {
-        m_status->setText(tr("Renamed"));
     }
 }
 
