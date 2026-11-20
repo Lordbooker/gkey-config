@@ -26,7 +26,10 @@ Result rename(MacroStore &macros, const QString &from, const QString &to, const 
     for (const DeviceModel &model : models) {
         ProfileStore store(model, profileDir(model.id()));
         for (const QString &name : store.names()) {
-            Profile profile = *store.profile(name);
+            const Profile *stored = store.profile(name);
+            if (!stored)
+                continue;
+            Profile profile = *stored;
             const int count = profile.renameMacro(from, to);
             if (count == 0)
                 continue;
