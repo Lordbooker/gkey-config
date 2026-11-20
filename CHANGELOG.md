@@ -6,6 +6,8 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-11-20
+
 ### Added
 
 - Macro tab: *Rename*. Keys bound to the macro keep playing it: its bindings in all profiles of
@@ -261,7 +263,8 @@ First release.
 - Translations: English, German, French, Italian, Spanish, Portuguese.
 - Packages for Ubuntu 26.04 and Fedora 44, AUR package `gkey-config`.
 
-[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/Lordbooker/gkey-config/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/Lordbooker/gkey-config/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/Lordbooker/gkey-config/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/Lordbooker/gkey-config/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/Lordbooker/gkey-config/compare/v1.7.0...v1.7.1

@@ -88,6 +88,12 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.9.0" date="2026-11-20">
+      <description>
+        <p>Macros can be renamed; keys bound to them keep playing them. Profiles can be exported
+          together with their macros and imported again.</p>
+      </description>
+    </release>
     <release version="1.8.1" date="2026-11-18">
       <description>
         <p>The configuration tool no longer freezes while the daemon is busy; a macro started over
