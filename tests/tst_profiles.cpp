@@ -449,7 +449,7 @@ void TestProfiles::exportAndImport()
     QCOMPARE(missing, QStringList{QStringLiteral("Gone")});
 
     const auto imported = ProfileTransfer::parse(data, QStringLiteral("g15"));
-    QVERIFY2(imported, qPrintable(imported.error()));
+    QVERIFY2(imported, imported ? "" : qPrintable(imported.error()));
     QCOMPARE(imported->modelId, QStringLiteral("g13"));   // from the file, not the fallback
     QCOMPARE(imported->profile.toJson(), profile->toJson());
     QCOMPARE(imported->macros.size(), 1);   // only the macros the profile plays
@@ -458,7 +458,7 @@ void TestProfiles::exportAndImport()
 
     // A plain profile file belongs to the model given.
     const auto plain = ProfileTransfer::parse(profile->toJson(), QStringLiteral("g15"));
-    QVERIFY2(plain, qPrintable(plain.error()));
+    QVERIFY2(plain, plain ? "" : qPrintable(plain.error()));
     QCOMPARE(plain->modelId, QStringLiteral("g15"));
     QVERIFY(plain->macros.isEmpty());
 }
