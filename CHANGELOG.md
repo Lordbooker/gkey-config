@@ -10,6 +10,10 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 - Macro tab: *Rename*. Keys bound to the macro keep playing it: its bindings in all profiles of
   all devices get the new name.
+- Profile menu *Manage*: *Export...* writes the profile together with the macros it plays into one
+  file, *Import...* reads it (or a plain profile file) for the device it belongs to. Nothing
+  existing is overwritten: a taken profile name is asked about, and a macro whose name is taken by a
+  different macro is imported as a copy that the profile then plays.
 
 ### Changed
 

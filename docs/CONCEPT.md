@@ -632,6 +632,12 @@ Qt6 Widgets application `gkey-config` (implemented in milestone 4):
   a key on the device also selects it while the window is active.
 * Profile selection (activates the profile on the device) and profile management (new, duplicate,
   rename, delete); layer buttons M1–M3 (switch the device as well and choose the edited layer).
+* Profile export and import *(1.9.0, `ProfileTransfer`)*: one JSON file with the profile, its
+  model and the macros it plays (`{"gkeyConfigExport": 1, "model", "profile", "macros"}`); a plain
+  profile file is accepted too and belongs to the model shown. Nothing existing is overwritten: a
+  taken profile name is asked about (suggestion "Name (2)"); a macro is used as it is if one with
+  the same name, steps and description exists, else saved under a new name ("Name (2)") that the
+  imported profile then plays. An import for another model switches the view to that model.
 * Binding editor for the selected key: not bound, key, key combination (captured by pressing the
   keys together), mouse button, macro (with repeat mode), layer, profile, LCD page. Every change is
   saved at once; the daemon reloads the file.

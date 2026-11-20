@@ -53,6 +53,8 @@ add_library(gkey-core STATIC
     Profile.h
     ProfileStore.cpp
     ProfileStore.h
+    ProfileTransfer.cpp
+    ProfileTransfer.h
     Settings.cpp
     Settings.h
     StickProcessor.cpp

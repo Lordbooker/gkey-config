@@ -860,6 +860,70 @@
         <source>One colour, dark (for light panels)</source>
         <translation>Monocromático escuro (para painéis claros)</translation>
     </message>
+    <message>
+        <source>Export...</source>
+        <translation>Exportar…</translation>
+    </message>
+    <message>
+        <source>Import...</source>
+        <translation>Importar…</translation>
+    </message>
+    <message>
+        <source>Export profile</source>
+        <translation>Exportar perfil</translation>
+    </message>
+    <message>
+        <source>Profiles (*.json)</source>
+        <translation>Perfis (*.json)</translation>
+    </message>
+    <message>
+        <source>The profile is exported. These macros it plays do not exist and are not in the file:
+%1</source>
+        <translation>O perfil foi exportado. Estas macros que ele reproduz não existem e não estão no arquivo:
+%1</translation>
+    </message>
+    <message>
+        <source>Profile exported to %1</source>
+        <translation>Perfil exportado para %1</translation>
+    </message>
+    <message>
+        <source>Import profile</source>
+        <translation>Importar perfil</translation>
+    </message>
+    <message>
+        <source>Profiles (*.json);;All files (*)</source>
+        <translation>Perfis (*.json);;Todos os arquivos (*)</translation>
+    </message>
+    <message>
+        <source>The profile belongs to the device model &quot;%1&quot;, which this version does not know.</source>
+        <translation>O perfil pertence ao modelo de dispositivo “%1”, que esta versão não conhece.</translation>
+    </message>
+    <message>
+        <source>A profile &quot;%1&quot; already exists for the %2. Name of the imported profile:</source>
+        <translation>Já existe um perfil “%1” para %2. Nome do perfil importado:</translation>
+    </message>
+    <message>
+        <source>Imported the profile &quot;%1&quot; for the %2.</source>
+        <translation>Perfil “%1” importado para %2.</translation>
+    </message>
+    <message>
+        <source>New macros: %1</source>
+        <translation>Novas macros: %1</translation>
+    </message>
+    <message>
+        <source>Macros that existed already with the same steps: %1</source>
+        <translation>Macros que já existiam com os mesmos passos: %1</translation>
+    </message>
+    <message>
+        <source>Macros whose names were taken by different macros, imported as copies:
+%1</source>
+        <translation>Macros cujo nome já era usado por outra macro, importadas como cópias:
+%1</translation>
+    </message>
+    <message>
+        <source>Bindings this device cannot use (kept, but inactive): %1</source>
+        <translation>Associações que este dispositivo não pode usar (mantidas, mas inativas): %1</translation>
+    </message>
 </context>
 <context>
     <name>SessionSetup</name>
