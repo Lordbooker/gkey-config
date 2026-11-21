@@ -12,11 +12,13 @@
 
 #include <QDir>
 #include <QFile>
+#include <QLibrary>
 #include <QTemporaryDir>
 #include <QTest>
 
 #include <cstring>
 #include <memory>
+#include <utility>
 
 class TestSystemStats : public QObject {
     Q_OBJECT
@@ -30,6 +32,11 @@ private slots:
     void cpuDetailIntelHybrid();
     void amdGpuDetail();
     void nvidiaWithoutDriver();
+    void nvidiaWithoutGpu();
+    void nvidiaValues();
+    void nvidiaAsleep();
+    void nvidiaPowerManaged();
+    void largerGpu();
     void renderCpuBars_data();
     void renderCpuBars();
     void renderCpuTemperatures();
@@ -48,6 +55,7 @@ private:
     QString proc() const { return m_dir->filePath(QStringLiteral("proc")); }
     QString sys() const { return m_dir->filePath(QStringLiteral("sys")); }
     void addAmdGpu();
+    void addNvidiaGpu(const QByteArray &control, const QByteArray &status);
 
     std::unique_ptr<QTemporaryDir> m_dir;
 };
@@ -95,6 +103,21 @@ void TestSystemStats::addAmdGpu()
     write(card + QStringLiteral("/hwmon/hwmon1/temp2_label"), "junction\n");
     write(card + QStringLiteral("/hwmon/hwmon1/temp2_input"), "80000\n");
     QVERIFY(QDir().mkpath(sys() + QStringLiteral("/class/drm/card1-DP-1")));
+}
+
+// An NVIDIA graphics card in sysfs (and, before it, a device of another
+// vendor and an NVIDIA device that is not a graphics device).
+void TestSystemStats::addNvidiaGpu(const QByteArray &control, const QByteArray &status)
+{
+    const QString devices = sys() + QStringLiteral("/bus/pci/devices/");
+    write(devices + QStringLiteral("0000:00:02.0/vendor"), "0x8086\n");
+    write(devices + QStringLiteral("0000:00:02.0/class"), "0x030000\n");
+    write(devices + QStringLiteral("0000:01:00.1/vendor"), "0x10de\n");
+    write(devices + QStringLiteral("0000:01:00.1/class"), "0x040300\n");   // audio of the card
+    write(devices + QStringLiteral("0000:01:00.0/vendor"), "0x10de\n");
+    write(devices + QStringLiteral("0000:01:00.0/class"), "0x030000\n");
+    write(devices + QStringLiteral("0000:01:00.0/power/control"), control + '\n');
+    write(devices + QStringLiteral("0000:01:00.0/power/runtime_status"), status + '\n');
 }
 
 void TestSystemStats::cpuLoad()
@@ -229,13 +252,165 @@ void TestSystemStats::amdGpuDetail()
     QVERIFY(detail->vram);
 }
 
+namespace {
+
+// Controls the fake NVML (tests/fake_nvml.cpp), which NvidiaStats loads by the
+// same path, so both see the same library.
+struct FakeNvml {
+    QLibrary library{QStringLiteral(GKEY_FAKE_NVML), 1};
+    using Set = void (*)(unsigned, unsigned, unsigned, unsigned long long, unsigned long long, unsigned, unsigned,
+                         unsigned, unsigned, int);
+    using Calls = void (*)(int *, int *);
+
+    bool load() { return library.load(); }
+    void set(unsigned count, unsigned gpuPercent, unsigned long long total, unsigned long long used, int fanPercent)
+    {
+        reinterpret_cast<Set>(library.resolve("fakeNvmlSet"))(count, gpuPercent, 12, total, used, 61, 2520, 10501,
+                                                              285500, fanPercent);
+    }
+    std::pair<int, int> calls()
+    {
+        int init = 0;
+        int shutdown = 0;
+        reinterpret_cast<Calls>(library.resolve("fakeNvmlCalls"))(&init, &shutdown);
+        return {init, shutdown};
+    }
+};
+
+}
+
 // Without the NVIDIA driver there is no sample and a reason for the page.
 void TestSystemStats::nvidiaWithoutDriver()
 {
-    NvidiaStats nvidia(QStringLiteral("gkey-config-no-such-library"));
+    addNvidiaGpu("on", "active");
+    NvidiaStats nvidia(QStringLiteral("gkey-config-no-such-library"), sys());
     QVERIFY(!nvidia.sample());
-    QVERIFY(!nvidia.problem().isEmpty());
+    QCOMPARE(nvidia.problem(), QStringLiteral("no NVIDIA driver (NVML)"));
     QVERIFY(!nvidia.sample());   // tried once, no second attempt that could log again
+    QVERIFY(!nvidia.systemSample());
+}
+
+// Without an NVIDIA graphics device NVML is not even loaded.
+void TestSystemStats::nvidiaWithoutGpu()
+{
+    FakeNvml fake;
+    QVERIFY2(fake.load(), qPrintable(fake.library.errorString()));
+    const auto [initBefore, shutdownBefore] = fake.calls();
+    NvidiaStats nvidia(QStringLiteral(GKEY_FAKE_NVML), sys());
+    QVERIFY(!nvidia.sample());
+    QCOMPARE(nvidia.problem(), QStringLiteral("no NVIDIA GPU"));
+    QVERIFY(!nvidia.systemSample());
+    QCOMPARE(fake.calls().first, initBefore);
+}
+
+void TestSystemStats::nvidiaValues()
+{
+    addNvidiaGpu("on", "active");
+    FakeNvml fake;
+    QVERIFY2(fake.load(), qPrintable(fake.library.errorString()));
+    fake.set(1, 97, 17171480576ULL, 4294967296ULL, 45);
+    {
+        NvidiaStats nvidia(QStringLiteral(GKEY_FAKE_NVML), sys());
+        const auto detail = nvidia.sample();
+        QVERIFY2(detail, qPrintable(nvidia.problem()));
+        QCOMPARE(detail->busyPercent, std::optional<int>(97));
+        QCOMPARE(detail->memBusyPercent, std::optional<int>(12));
+        QCOMPARE(detail->coreMHz, std::optional<int>(2520));
+        QCOMPARE(detail->memMHz, std::optional<int>(10501));
+        QCOMPARE(detail->temperatures.size(), 1);
+        QCOMPARE(detail->temperatures.first().label, QStringLiteral("GPU"));
+        QCOMPARE(detail->temperatures.first().celsius, 61.0);
+        QCOMPARE(detail->vram->used, 4294967296LL);
+        QCOMPARE(detail->vram->total, 17171480576LL);
+        QCOMPARE(detail->powerWatts, std::optional<double>(285.5));
+        QCOMPARE(detail->fanPercent, std::optional<int>(45));
+        QVERIFY(!detail->fanRpm);
+
+        // The system page: load, temperature and VRAM.
+        const auto gpu = nvidia.systemSample();
+        QVERIFY(gpu);
+        QCOMPARE(gpu->busyPercent, std::optional<int>(97));
+        QCOMPARE(gpu->temperature, std::optional<double>(61.0));
+        QCOMPARE(gpu->vram->total, 17171480576LL);
+
+        // A card without a fan of its own reports none; no GPU at all.
+        fake.set(1, 101, 1024, 0, -1);
+        QCOMPARE(nvidia.sample()->busyPercent, std::optional<int>(100));
+        QVERIFY(!nvidia.sample()->fanPercent);
+        fake.set(0, 0, 0, 0, 0);
+        QVERIFY(!nvidia.sample());
+        QCOMPARE(nvidia.problem(), QStringLiteral("no NVIDIA GPU"));
+    }
+}
+
+// A GPU that the kernel has put to sleep is not woken: NVML is not touched.
+void TestSystemStats::nvidiaAsleep()
+{
+    addNvidiaGpu("on", "suspended");
+    FakeNvml fake;
+    QVERIFY2(fake.load(), qPrintable(fake.library.errorString()));
+    fake.set(1, 50, 1024, 0, 0);
+    const int initBefore = fake.calls().first;
+    NvidiaStats nvidia(QStringLiteral(GKEY_FAKE_NVML), sys());
+    QVERIFY(!nvidia.sample());
+    QCOMPARE(nvidia.problem(), QStringLiteral("NVIDIA GPU asleep"));
+    QVERIFY(!nvidia.systemSample());
+    QCOMPARE(fake.calls().first, initBefore);
+
+    // Awake again: now it is read.
+    write(sys() + QStringLiteral("/bus/pci/devices/0000:01:00.0/power/runtime_status"), "active\n");
+    QVERIFY(nvidia.sample());
+    QCOMPARE(fake.calls().first, initBefore + 1);
+}
+
+// With runtime power management (hybrid laptops) the system page leaves NVML
+// alone, and leaving the page "nvidia" closes NVML.
+void TestSystemStats::nvidiaPowerManaged()
+{
+    addNvidiaGpu("auto", "active");
+    FakeNvml fake;
+    QVERIFY2(fake.load(), qPrintable(fake.library.errorString()));
+    fake.set(1, 50, 1024, 0, 0);
+    const auto [initBefore, shutdownBefore] = fake.calls();
+    NvidiaStats nvidia(QStringLiteral(GKEY_FAKE_NVML), sys());
+    QVERIFY(!nvidia.systemSample());
+    QCOMPARE(fake.calls().first, initBefore);
+
+    QVERIFY(nvidia.sample());   // the page "nvidia"
+    QCOMPARE(fake.calls(), std::make_pair(initBefore + 1, shutdownBefore));
+    nvidia.pageLeft();
+    QCOMPARE(fake.calls(), std::make_pair(initBefore + 1, shutdownBefore + 1));
+    nvidia.pageLeft();   // closed already
+    QCOMPARE(fake.calls().second, shutdownBefore + 1);
+    QVERIFY(nvidia.sample());   // shown again: opened again
+    QCOMPARE(fake.calls().first, initBefore + 2);
+
+    // Without power management NVML stays open after the page.
+    write(sys() + QStringLiteral("/bus/pci/devices/0000:01:00.0/power/control"), "on\n");
+    nvidia.pageLeft();
+    QCOMPARE(fake.calls().second, shutdownBefore + 1);
+}
+
+// The system page shows the GPU with more VRAM.
+void TestSystemStats::largerGpu()
+{
+    const auto gpu = [](int percent, std::optional<qint64> total) {
+        SystemStats::Gpu result;
+        result.busyPercent = percent;
+        if (total)
+            result.vram = SystemStats::Memory{0, *total};
+        return result;
+    };
+    const auto chosen = [](const std::optional<SystemStats::Gpu> &result) {
+        return result ? result->busyPercent.value_or(-1) : 0;
+    };
+    QCOMPARE(chosen(SystemStats::largerGpu(std::nullopt, std::nullopt)), 0);
+    QCOMPARE(chosen(SystemStats::largerGpu(gpu(1, 8), std::nullopt)), 1);
+    QCOMPARE(chosen(SystemStats::largerGpu(std::nullopt, gpu(2, 8))), 2);
+    QCOMPARE(chosen(SystemStats::largerGpu(gpu(1, 512), gpu(2, 8192))), 2);    // integrated AMD, NVIDIA card
+    QCOMPARE(chosen(SystemStats::largerGpu(gpu(1, 24576), gpu(2, 8192))), 1);  // AMD card, smaller NVIDIA
+    QCOMPARE(chosen(SystemStats::largerGpu(gpu(1, 8192), gpu(2, 8192))), 1);   // a tie: AMD
+    QCOMPARE(chosen(SystemStats::largerGpu(gpu(1, 512), gpu(2, std::nullopt))), 1);
 }
 
 void TestSystemStats::renderCpuBars_data()

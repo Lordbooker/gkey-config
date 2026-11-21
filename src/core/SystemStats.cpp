@@ -266,3 +266,11 @@ std::optional<SystemStats::GpuDetail> SystemStats::amdGpuDetail()
     }
     return detail;
 }
+
+std::optional<SystemStats::Gpu> SystemStats::largerGpu(const std::optional<Gpu> &amd, const std::optional<Gpu> &nvidia)
+{
+    if (!amd || !nvidia)
+        return amd ? amd : nvidia;
+    const auto vram = [](const Gpu &gpu) { return gpu.vram ? gpu.vram->total : 0; };
+    return vram(*nvidia) > vram(*amd) ? nvidia : amd;
+}

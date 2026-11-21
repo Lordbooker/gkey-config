@@ -472,8 +472,11 @@ buttons are left to the system as well.
   previous refresh), `/proc/meminfo` (used = total − available), hwmon `k10temp`/`zenpower`
   (`Tctl`/`Tdie`) or `coretemp` (`Package id 0`) for the CPU temperature, and for AMD GPUs
   (`amdgpu`) `gpu_busy_percent`, `mem_info_vram_used/total` and the hwmon temperature `edge` of
-  the card with the most VRAM. Intel GPUs have no load value in sysfs; NVIDIA is not supported
-  yet. The values are read once per second, only while the page is shown. The font got a degree
+  the card with the most VRAM. NVIDIA GPUs *(1.10.0)*: load, GPU temperature and VRAM through
+  NVML (`NvidiaStats::systemSample()`, see the page nvidia); with AMD and NVIDIA in one system the
+  GPU with more VRAM is shown (`SystemStats::largerGpu()`, AMD on a tie). Not on devices with
+  runtime power management (hybrid laptops), see below. Intel GPUs have no load value in sysfs.
+  The values are read once per second, only while the page is shown. The font got a degree
   sign (code 127).
 * Hardware pages *(added after 1.3.0, decided 2026-10-24)*, redrawn once per second while shown:
   * cpu: load and all CPU temperatures in the top row (hwmon `k10temp`/`zenpower`/`coretemp`;
@@ -494,7 +497,14 @@ buttons are left to the system as well.
   * nvidia: the first NVIDIA GPU through NVML (`libnvidia-ml.so.1`, loaded at runtime with
     `QLibrary`, no build or package dependency): load, graphics and memory clock, GPU temperature
     (NVML has no hotspot or memory temperature for consumer cards), VRAM, power and fan (percent).
-    Untested on hardware.
+    Untested on hardware. NVML is only touched when sysfs shows an NVIDIA graphics device
+    (`/sys/bus/pci/devices/*`, vendor `0x10de`, class `0x03xxxx`, the first by PCI address)
+    *(1.10.0)*: without one the library is not loaded. A device that the kernel has put to sleep
+    (`power/runtime_status` `suspended`/`suspending`) is not woken; the page says "NVIDIA GPU
+    asleep". Whether an open NVML connection keeps such a GPU from sleeping is not known (no
+    hardware to try), so on devices with runtime power management (`power/control` = `auto`) the
+    system page does not use NVML, and leaving the page nvidia closes NVML (`pageLeft()`). nouveau
+    is not supported (no load values). Tests use a fake NVML library (`tests/fake_nvml.cpp`).
   * Values the driver does not report are shown as "--" or left out; without the GPU the page
     shows the reason (e.g. "no NVIDIA driver (NVML)").
 * A media page is a possible later addition.
@@ -767,17 +777,10 @@ Agreed ideas that are not scheduled yet:
   2026-10-22 (master during the 7.4 merge window). Once merged: model file after the same scheme
   as G510/G15 (untested), `minKernel` = the first release containing it.
 
-* **NVIDIA GPUs on the LCD system page** *(discussed 2026-10-22, postponed)*. Since 2026-10-24
-  NVML is read by `NvidiaStats` for the page `nvidia` (7.2); still open for the system page:
-  * same rows as for AMD (GPU load, GPU temperature, VRAM used/total); with AMD and NVIDIA in one
-    system the GPU with the most VRAM wins;
-  * hybrid laptops: if the NVIDIA PCI device is runtime-suspended
-    (`/sys/bus/pci/devices/…/power/runtime_status`), NVML is not touched so the GPU is not woken;
-    the row shows "--%";
-  * nouveau is not supported (no load values);
-    (this also applies to the page `nvidia`, which reads NVML every second while shown);
-  * tests with a fake NVML library (so far only the case without the library is tested); real
-    hardware not available, so marked untested until someone reports back.
+* **NVIDIA GPUs on the LCD system page** *(done in 1.10.0, see 7.2)*: system page, sleeping GPUs
+  and tests with a fake NVML. Still untested on real hardware; open: whether an open NVML
+  connection keeps a GPU with runtime power management awake (if not, the system page could use
+  NVML there too).
 
 ---
 

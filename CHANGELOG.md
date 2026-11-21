@@ -6,6 +6,18 @@ All notable changes to gkey-config are documented in this file. The format follo
 
 ## [Unreleased]
 
+### Added
+
+- LCD system page: NVIDIA GPUs (load, temperature, VRAM). With an AMD and an NVIDIA GPU the one
+  with more VRAM is shown. Not on laptops whose NVIDIA GPU has runtime power management, see below.
+
+### Changed
+
+- NVIDIA: NVML is only used when the system has an NVIDIA graphics device, and a GPU that the
+  kernel has put to sleep is not woken (the page *NVIDIA GPU* says so). On laptops whose GPU has
+  runtime power management, NVML is closed when the page *NVIDIA GPU* is left, so that the GPU
+  can sleep. Still untested on real NVIDIA hardware.
+
 ## [1.9.0] - 2026-11-20
 
 ### Added

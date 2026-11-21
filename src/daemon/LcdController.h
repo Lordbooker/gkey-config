@@ -87,6 +87,7 @@ private:
     QStringList m_textLines;
     SystemStats m_stats;
     NvidiaStats m_nvidia;
+    QString m_renderedPage;   // page drawn by the last refresh()
     QTimer *m_clockTimer = nullptr;   // ticks while the clock or a page with system values is shown
     QTimer *m_returnTimer = nullptr;   // runs while a temporary page is shown
     std::unique_ptr<LcdIntro> m_intro;   // start animation (kept for its final image)

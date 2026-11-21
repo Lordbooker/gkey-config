@@ -27,7 +27,12 @@ gkey_add_test(tst_lcdcontroller LIBS gkeyd-lib)
 gkey_add_test(tst_daemon LIBS gkeyd-lib)
 gkey_add_test(tst_session)
 gkey_add_test(tst_diagnosis)
+# A stand-in for NVML (libnvidia-ml.so.1), loaded by tst_systemstats.
+add_library(fakenvml SHARED fake_nvml.cpp)
+set_target_properties(fakenvml PROPERTIES VERSION 1 SOVERSION 1)
 gkey_add_test(tst_systemstats)
+add_dependencies(tst_systemstats fakenvml)
+target_compile_definitions(tst_systemstats PRIVATE GKEY_FAKE_NVML="$<TARGET_FILE_DIR:fakenvml>/fakenvml")
 
 # The D-Bus test needs a private session bus.
 find_program(DBUS_RUN_SESSION dbus-run-session)

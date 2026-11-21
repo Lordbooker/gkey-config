@@ -237,6 +237,8 @@ void LcdPage::updatePreview()
 {
     const QString page =
         m_list->currentItem() ? m_list->currentItem()->data(Qt::UserRole).toString() : QStringLiteral("status");
+    if (page != u"nvidia")
+        m_nvidia.pageLeft();   // as on the device
     LcdFrame frame(160, 43);
     if (page == LcdPages::IntroPage) {
         if (!m_intro)
@@ -246,9 +248,11 @@ void LcdPage::updatePreview()
         LcdPages::renderProfile(frame, m_status.profile);
     else if (page == u"clock")
         LcdPages::renderClock(frame, QDateTime::currentDateTime());
-    else if (page == u"system")
-        LcdPages::renderSystem(frame, m_stats.sample());
-    else if (page == u"cpu")
+    else if (page == u"system") {
+        SystemStats::Sample sample = m_stats.sample();
+        sample.gpu = SystemStats::largerGpu(sample.gpu, m_nvidia.systemSample());
+        LcdPages::renderSystem(frame, sample);
+    } else if (page == u"cpu")
         LcdPages::renderCpu(frame, m_stats.cpuDetail());
     else if (page == u"amdgpu")
         LcdPages::renderGpu(frame, QStringLiteral("AMD"), m_stats.amdGpuDetail(),
@@ -288,4 +292,10 @@ void LcdPage::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
     updatePreview();
+}
+
+void LcdPage::hideEvent(QHideEvent *event)
+{
+    QWidget::hideEvent(event);
+    m_nvidia.pageLeft();
 }

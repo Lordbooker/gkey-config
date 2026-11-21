@@ -40,6 +40,8 @@ public:
 protected:
     // Restarts the live preview (clock, system) when the tab is shown again.
     void showEvent(QShowEvent *event) override;
+    // Closes NVML (laptops with a sleeping GPU) while the tab is hidden.
+    void hideEvent(QHideEvent *event) override;
 
 signals:
     void pagesChanged(const QStringList &pages);
@@ -65,7 +67,7 @@ private:
     QPushButton *m_show;
     QTimer *m_clock;   // redraws the preview of the clock and the system values every second
     SystemStats m_stats;   // live values for the system, CPU and AMD GPU preview
-    NvidiaStats m_nvidia;  // live values for the NVIDIA GPU preview
+    NvidiaStats m_nvidia;  // live values for the NVIDIA GPU and system preview
     QString m_modelId;
     std::unique_ptr<LcdIntro> m_intro;   // preview of the start animation
     QTimer *m_introTimer;

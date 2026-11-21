@@ -3,6 +3,8 @@
 
 #include "NvidiaStats.h"
 
+#include <QDir>
+#include <QFile>
 #include <QLoggingCategory>
 
 #include <algorithm>
@@ -18,14 +20,76 @@ constexpr int TemperatureGpu = 0;     // NVML_TEMPERATURE_GPU
 constexpr int ClockGraphics = 0;      // NVML_CLOCK_GRAPHICS
 constexpr int ClockMemory = 2;        // NVML_CLOCK_MEM
 
+// PCI IDs (pci.ids): vendor NVIDIA, base class display controller.
+constexpr auto NvidiaVendor = "0x10de";
+constexpr auto DisplayClassPrefix = "0x03";
+
 }
 
-NvidiaStats::NvidiaStats(const QString &libraryName) : m_libraryName(libraryName) {}
+NvidiaStats::NvidiaStats(const QString &libraryName, const QString &sysRoot)
+    : m_libraryName(libraryName), m_sysRoot(sysRoot)
+{
+}
 
 NvidiaStats::~NvidiaStats()
 {
+    unload();
+}
+
+const QString &NvidiaStats::pciDevice()
+{
+    if (m_pciSearched)
+        return m_pciDevice;
+    m_pciSearched = true;
+    const QDir devices(m_sysRoot + QStringLiteral("/bus/pci/devices"));
+    // Sorted by PCI address, the order in which NVML counts the GPUs.
+    for (const QString &entry : devices.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
+        const QString path = devices.filePath(entry);
+        const auto read = [&path](const char *name) {
+            QFile file(path + u'/' + QLatin1StringView(name));
+            return file.open(QIODevice::ReadOnly) ? QString::fromLatin1(file.readAll()).trimmed() : QString();
+        };
+        if (read("vendor") == QLatin1StringView(NvidiaVendor) &&
+            read("class").startsWith(QLatin1StringView(DisplayClassPrefix))) {
+            m_pciDevice = path;
+            break;
+        }
+    }
+    return m_pciDevice;
+}
+
+QString NvidiaStats::devicePower(const QString &file) const
+{
+    QFile power(m_pciDevice + QStringLiteral("/power/") + file);
+    return power.open(QIODevice::ReadOnly) ? QString::fromLatin1(power.readAll()).trimmed() : QString();
+}
+
+// The kernel has put the GPU to sleep (or is doing so).
+bool NvidiaStats::asleep() const
+{
+    const QString status = devicePower(QStringLiteral("runtime_status"));
+    return status == u"suspended" || status == u"suspending";
+}
+
+// Runtime power management is on: the GPU may sleep when it is not used.
+bool NvidiaStats::powerManaged() const
+{
+    return devicePower(QStringLiteral("control")) == u"auto";
+}
+
+void NvidiaStats::unload()
+{
     if (m_initialized && m_shutdown)
         m_shutdown();
+    m_initialized = false;
+}
+
+void NvidiaStats::pageLeft()
+{
+    if (m_initialized && powerManaged()) {
+        unload();
+        m_tried = false;   // opened again the next time the page is shown
+    }
 }
 
 bool NvidiaStats::load()
@@ -59,6 +123,14 @@ bool NvidiaStats::load()
 
 std::optional<SystemStats::GpuDetail> NvidiaStats::sample()
 {
+    if (pciDevice().isEmpty()) {
+        m_problem = QStringLiteral("no NVIDIA GPU");
+        return std::nullopt;
+    }
+    if (asleep()) {
+        m_problem = QStringLiteral("NVIDIA GPU asleep");
+        return std::nullopt;
+    }
     if (!m_tried)
         load();
     if (!m_initialized)
@@ -93,4 +165,19 @@ std::optional<SystemStats::GpuDetail> NvidiaStats::sample()
     if (m_fan(device, &value) == Success)
         detail.fanPercent = static_cast<int>(value);
     return detail;
+}
+
+std::optional<SystemStats::Gpu> NvidiaStats::systemSample()
+{
+    if (pciDevice().isEmpty() || powerManaged())
+        return std::nullopt;
+    const auto detail = sample();
+    if (!detail)
+        return std::nullopt;
+    SystemStats::Gpu gpu;
+    gpu.busyPercent = detail->busyPercent;
+    if (!detail->temperatures.isEmpty())
+        gpu.temperature = detail->temperatures.first().celsius;
+    gpu.vram = detail->vram;
+    return gpu;
 }

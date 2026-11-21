@@ -182,15 +182,20 @@ void LcdController::returnFromTemporaryPage()
 
 void LcdController::refresh()
 {
+    if (m_renderedPage == u"nvidia" && m_page != u"nvidia")
+        m_nvidia.pageLeft();
+    m_renderedPage = m_page;
     if (m_page == LcdPages::IntroPage) {
         if (!m_intro)
             m_intro = std::make_unique<LcdIntro>(m_model.id());
         m_intro->render(m_frame);
     } else if (m_page == u"clock")
         LcdPages::renderClock(m_frame, QDateTime::currentDateTime());
-    else if (m_page == u"system")
-        LcdPages::renderSystem(m_frame, m_stats.sample());
-    else if (m_page == u"cpu")
+    else if (m_page == u"system") {
+        SystemStats::Sample sample = m_stats.sample();
+        sample.gpu = SystemStats::largerGpu(sample.gpu, m_nvidia.systemSample());
+        LcdPages::renderSystem(m_frame, sample);
+    } else if (m_page == u"cpu")
         LcdPages::renderCpu(m_frame, m_stats.cpuDetail());
     else if (m_page == u"amdgpu")
         LcdPages::renderGpu(m_frame, QStringLiteral("AMD"), m_stats.amdGpuDetail(),

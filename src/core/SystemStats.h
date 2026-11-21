@@ -57,7 +57,7 @@ public:
         std::optional<double> cpuTemperature;
         std::optional<Memory> ram;
         std::optional<Memory> swap;          // only when swap is configured
-        std::optional<Gpu> gpu;              // the GPU with the most VRAM (AMD, amdgpu)
+        std::optional<Gpu> gpu;              // the AMD GPU (amdgpu) with the most VRAM, see largerGpu()
     };
 
     // procRoot and sysRoot are "/proc" and "/sys"; tests pass fake trees.
@@ -72,6 +72,10 @@ public:
 
     // The AMD GPU (amdgpu) with the most VRAM; nullopt without one.
     std::optional<GpuDetail> amdGpuDetail();
+
+    // The GPU for the system page when there are two kinds: the one with more
+    // VRAM (a GPU without a VRAM value counts as 0); amd on a tie.
+    static std::optional<Gpu> largerGpu(const std::optional<Gpu> &amd, const std::optional<Gpu> &nvidia);
 
 private:
     void findSensors();
